@@ -1,0 +1,36 @@
+# alongor666-skills
+
+个人自建的 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) 技能集。
+
+## 安装
+
+使用 [skills CLI](https://github.com/vercel-labs/skills)（基于 `npx`）一行安装：
+
+```bash
+# 安装全部技能（全局）
+npx skills add alongor666/alongor666-skills -g --all
+
+# 安装单个技能
+npx skills add alongor666/alongor666-skills -g --skill auto-channel
+
+# 查看仓库中有哪些技能
+npx skills add alongor666/alongor666-skills -l
+```
+
+### 替代方式：git clone
+
+```bash
+git clone https://github.com/alongor666/alongor666-skills.git ~/.claude/plugins/alongor666-skills
+```
+
+## 技能
+
+| 技能 | 说明 |
+|------|------|
+| **auto-channel** | 车险渠道评估 — 评估是否应该投入、继续或退出一个分销渠道（4S 店、二级经销商、经纪人、代理人等） |
+| **auto-ir-diagnosis** | 出险率诊断 — 诊断车险出险率恶化，调查出险率上升原因，对赔付频率进行根因分析 |
+| **auto-market-analysis** | 车险市场分析 — 分析车险市场的竞争格局、增长机会和风险评估 |
+| **auto-ops-review** | 车险经营复盘 — 结合市场、定价和渠道分析，形成完整诊断与资源配置建议 |
+| **auto-pricing** | 车险定价 — 商业车险保费报价、核保决策、费率水平判断 |
+| **company-vortex** | 涡旋分析 — 通过结构动力学/涡旋模型分析上市公司，生成全生命周期诊断报告 |
+| **rewrite-conclusion** | 诊断结论重写 — 将 L1 脚本产出的规则化数据提炼为管理层可直接阅读的结构化判断 |
