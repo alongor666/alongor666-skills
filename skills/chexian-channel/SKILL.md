@@ -1,6 +1,8 @@
 ---
-name: auto-channel
-description: Use when evaluating whether to invest in, continue, or exit a distribution channel for auto insurance — including 4S dealers, sub-dealers, brokers, agents, and any channel where fee levels, customer quality, or renewal retention need to be assessed
+name: chexian-channel
+description: Use when evaluating whether to invest in, continue, or exit a distribution channel for auto insurance — including 4S dealers, sub-dealers, brokers, agents, and any channel where fee levels, customer quality, or renewal retention need to be assessed. 2026-05-18 由 auto-channel 改名归入 chexian 簇。
+version: 1.1.0
+user_invocable: true
 ---
 
 # 车险渠道策略

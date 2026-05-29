@@ -1,6 +1,8 @@
 ---
-name: auto-market-analysis
-description: Use when analyzing an auto insurance market for competitive structure, growth opportunities, or risk assessment — including city-level market entry decisions, market attractiveness evaluation, or identifying structural gaps for Hua'an Insurance in any province
+name: chexian-market-analysis
+description: Use when analyzing an auto insurance market for competitive structure, growth opportunities, or risk assessment — including city-level market entry decisions, market attractiveness evaluation, or identifying structural gaps for Hua'an Insurance in any province. 2026-05-18 由 auto-market-analysis 改名归入 chexian 簇。
+version: 1.1.0
+user_invocable: true
 ---
 
 # 车险市场分析

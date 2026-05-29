@@ -1,6 +1,8 @@
 ---
 name: rewrite-conclusion
 description: L2诊断结论重写。读取L1脚本产出的车型子文档和机构诊断卡，以世界顶级数据分析师的视角，将规则化数据提炼为管理层可直接阅读的结构化判断。Use when asked to "重写结论", "AI解读", "rewrite conclusion", or after running 出险率/费用率/保费达成 5Why脚本。支持参数 --topic 出险率|费用率|保费达成。
+version: 1.0.0
+user_invocable: true
 ---
 
 # L2 诊断结论重写

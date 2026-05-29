@@ -1,6 +1,8 @@
 ---
-name: auto-pricing
-description: Use when deciding how to price auto insurance business — including commercial vehicle premium quotes, underwriting acceptance decisions, rate level judgments, or evaluating whether specific business segments are worth writing at current market conditions
+name: chexian-pricing-decision
+description: Use when deciding how to price auto insurance business — including commercial vehicle premium quotes, underwriting acceptance decisions, rate level judgments, or evaluating whether specific business segments are worth writing at current market conditions. 2026-05-18 由 auto-pricing 改名归入 chexian 簇（命名加 -decision 后缀以区分既有的 chexian-pricing-redline 反事实定价 skill）。
+version: 1.1.0
+user_invocable: true
 ---
 
 # 车险定价决策

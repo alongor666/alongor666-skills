@@ -1,6 +1,8 @@
 ---
-name: auto-ops-review
-description: Use when conducting a full city-level auto insurance operating review for Hua'an Insurance — combining market, pricing, and channel analysis into a complete diagnosis with resource allocation recommendations
+name: chexian-ops-review
+description: Use when conducting a full city-level auto insurance operating review for Hua'an Insurance — combining market, pricing, and channel analysis into a complete diagnosis with resource allocation recommendations. 2026-05-18 由 auto-ops-review 改名归入 chexian 簇。
+version: 1.1.0
+user_invocable: true
 ---
 
 # 车险城市经营诊断
@@ -14,11 +16,11 @@ description: Use when conducting a full city-level auto insurance operating revi
    → 字段规范见 AI决策协议体系_v2.0.md 第八条
    → 直接可用 / 可推导 / 暂缺，三类分层标注
 
-2. /auto-market-analysis → 市场结论（四选一）
+2. /chexian-market-analysis → 市场结论（四选一）
 
-3. /auto-channel → 渠道分层与合作模式建议
+3. /chexian-channel → 渠道分层与合作模式建议
 
-4. /auto-pricing → 分渠道/分车型定价策略
+4. /chexian-pricing-decision → 分渠道/分车型定价策略
 
 5. 整合输出（统一8段格式）
 ```

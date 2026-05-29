@@ -1,6 +1,8 @@
 ---
-name: auto-ir-diagnosis
-description: Use when diagnosing auto insurance incident rate deterioration, investigating why 出险率 is worsening, or performing root cause analysis on loss frequency. Trigger phrases — 分析出险率, 出险率恶化, 出险率诊断, 为什么出险率上升, incident rate drill-down.
+name: chexian-ir-diagnosis
+description: Use when diagnosing auto insurance incident rate deterioration, investigating why 出险率 is worsening, or performing root cause analysis on loss frequency. Trigger phrases — 分析出险率, 出险率恶化, 出险率诊断, 为什么出险率上升, incident rate drill-down. 2026-05-18 由 auto-ir-diagnosis 改名归入 chexian 簇（ir=Incident Rate 出险率）。
+version: 1.1.0
+user_invocable: true
 ---
 
 # 出险率自主诊断
