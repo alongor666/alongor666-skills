@@ -1,6 +1,6 @@
 ---
 name: chexian-pricing-decision
-description: Use when deciding how to price auto insurance business — including commercial vehicle premium quotes, underwriting acceptance decisions, rate level judgments, or evaluating whether specific business segments are worth writing at current market conditions. 2026-05-18 由 auto-pricing 改名归入 chexian 簇（命名加 -decision 后缀以区分既有的 chexian-pricing-redline 反事实定价 skill）。
+description: Use when deciding how to price auto insurance business — including commercial vehicle premium quotes, underwriting acceptance decisions, rate level judgments, or evaluating whether specific business segments are worth writing at current market conditions. 当用户问"这单该不该接 / 报多少 / 这价能不能成交 / 某车型某渠道定价决策 / 核保该不该接 / 报这个价合不合适"时触发。面向前瞻报价决策；与 chexian-pricing-redline（已成交业务的反事实定价复盘）相区分。
 version: 1.1.0
 user_invocable: true
 ---
@@ -8,6 +8,16 @@ user_invocable: true
 # 车险定价决策
 
 回答"该不该承接、报多少、成交和利润如何"，不是输出理论保费。
+
+> 2026-05-18 由 auto-pricing 改名归入 chexian 簇（加 -decision 后缀以区分 chexian-pricing-redline）。前缀治理史见 `.claude/rules/skill-prefix.md`，不在 description 复述。
+
+## 何时用 / 何时不用
+
+- **用本 skill**：前瞻定价——给某区域/客户/车型/渠道的业务报多少、该不该承接、这价能否成交、是否值得写。
+- **不用本 skill**：
+  - 已成交业务的反事实定价复盘 → 走 `chexian-pricing-redline`
+  - 出险率恶化根因分析 → 走 `chexian-ir-diagnosis`
+  - 纯交强险查询（制度化基准，无自由报价空间）
 
 ## 核心定价模型
 
@@ -19,23 +29,20 @@ user_invocable: true
 
 ## 六步推理链
 
-**Step 1 — 明确对象**
-- 哪个区域 × 哪类客户 × 哪种车型 × 哪个渠道 × 续保/转保/新增 × 险种
+> Step 1-4 为信息采集：先把对象、因子、约束整理成结构化中间产物（不要急于报价）。Step 5-6 再基于该产物做判断；给结论前先显式列出 2-3 个关键假设并自检。
 
-**Step 2 — 拆分价格构成**
-- 交强险部分 / 商业险主险 / 附加险 / 渠道费用 / 隐性成本
-
-**Step 3 — 识别通用因子**
-- 车价与维修成本、车型与零整比、能源类型、使用性质、出险历史、区域环境、保额、车龄
-
-**Step 4 — 识别特殊因子**
-- 渠道费用率、渠道掌控客户程度、市场竞争价格带、战略意图、客户价值等级、续保黏性
-
-**Step 5 — 判断主导约束**（五选一）
-- 风险约束 / 成交约束 / 费用约束 / 战略约束 / 渠道维护约束
-
-**Step 6 — 形成定价结论**（五选一）
-- 进攻型（低价换规模）/ 平衡型（兼顾利润与成交）/ 利润型（优先利润）/ 筛选型（高价筛风险）/ 放弃型
+- [ ] **Step 1 — 明确对象**
+  - 哪个区域 × 哪类客户 × 哪种车型 × 哪个渠道 × 续保/转保/新增 × 险种
+- [ ] **Step 2 — 拆分价格构成**
+  - 交强险部分 / 商业险主险 / 附加险 / 渠道费用 / 隐性成本
+- [ ] **Step 3 — 识别通用因子**
+  - 车价与维修成本、车型与零整比、能源类型、使用性质、出险历史、区域环境、保额、车龄
+- [ ] **Step 4 — 识别特殊因子**
+  - 渠道费用率、渠道掌控客户程度、市场竞争价格带、战略意图、客户价值等级、续保黏性
+- [ ] **Step 5 — 判断主导约束**（五选一）
+  - 风险约束 / 成交约束 / 费用约束 / 战略约束 / 渠道维护约束
+- [ ] **Step 6 — 形成定价结论**（五选一）
+  - 进攻型（低价换规模）/ 平衡型（兼顾利润与成交）/ 利润型（优先利润）/ 筛选型（高价筛风险）/ 放弃型
 
 ## 必答5问
 
@@ -54,11 +61,11 @@ user_invocable: true
 
 ## 华安专用检查
 
-1. 是否必须通过价格补偿品牌弱势？
-2. 在哪些板块有可接受的价格优势空间？
-3. 低价承保后是否容易赔付率反噬？
-4. 费用能力是否足以支撑该报价？
-5. 该报价是否有助于提升商业险渗透和续保价值？
+- [ ] 是否必须通过价格补偿品牌弱势？
+- [ ] 在哪些板块有可接受的价格优势空间？
+- [ ] 低价承保后是否容易赔付率反噬？
+- [ ] 费用能力是否足以支撑该报价？
+- [ ] 该报价是否有助于提升商业险渗透和续保价值？
 
 ## 分析铁律
 
@@ -70,4 +77,4 @@ user_invocable: true
 
 成交率 / 赔付率 / 件均 / 商业险渗透率 / 渠道费用率 / 变动成本率
 
-> 完整输出模板见项目文件 `定价决策协议_v1.0.md`
+> 完整输出模板由项目侧维护（`定价决策协议_v1.0.md`，属 chexian-api 项目运行时产物），不随本 skill 分发。

@@ -1,7 +1,7 @@
 ---
 name: chexian-market-analysis
-description: Use when analyzing an auto insurance market for competitive structure, growth opportunities, or risk assessment — including city-level market entry decisions, market attractiveness evaluation, or identifying structural gaps for Hua'an Insurance in any province. 2026-05-18 由 auto-market-analysis 改名归入 chexian 簇。
-version: 1.1.0
+description: Use when analyzing an auto insurance market for competitive structure, growth opportunities, or risk assessment — including city-level market entry decisions, market attractiveness evaluation, or identifying structural gaps for Hua'an Insurance in any province. 当用户说「分析XX市场」「市场吸引力评估」「市场进入决策」「该不该进这个城市」「结构性机会」「这个市场值不值得做」时使用。
+version: 1.2.0
 user_invocable: true
 ---
 
@@ -9,7 +9,21 @@ user_invocable: true
 
 回答"这个市场值不值得做、该做什么"，不是解释市场概况。
 
+## When to Use
+
+触发场景：
+- 城市/省份级市场进入决策（"该不该进 XX 市场"）
+- 市场吸引力评估、竞争结构分析
+- 识别华安在某省的结构性机会与缺口
+
+何时不用（导航到同簇 skill）：
+- 单点渠道是否值得投入/退出 → `chexian-channel`
+- 定价 / 核保 / 报价段位决策 → `chexian-pricing-decision`
+- 完整城市级经营复盘（市场+定价+渠道+承保理赔合并视图）→ `chexian-ops-review`
+
 ## 六步推理链
+
+> 先基于已有数据列出市场阶段的候选假设，再逐步证伪收敛，最后才下结论——不要直接给定调。需要多维取数时（保费容量/赔付/渠道/续保），并行发起查询再汇总。
 
 **Step 1 — 判断市场阶段**（五选一）
 - 红海价格战 / 结构性分层 / 渠道垄断 / 风险筛选 / 高速增长高波动
@@ -53,14 +67,14 @@ user_invocable: true
 - **广东**：渠道强势、中介/4S/二网主导成交；珠三角与粤东西北分化显著
 - **四川**：成都占全省40%+保费；川西/川南/川北差异大；货车险占比高
 
-## 分析铁律
+## Common Mistakes（错误 → 修法）
 
-- 不准只看规模，不看成本
-- 不准只看价格，不看成交
-- 赔付率异常时必须拆解：`赔付率 = 出险频度 × 案均赔款 ÷ 件均保费`，频度驱动和案均驱动的对策完全不同
+- ❌ 只看规模不看成本 → ✅ 规模与变动成本率/费用率同屏，规模大但成本失控不构成机会
+- ❌ 只看价格不看成交 → ✅ 价格优势必须验证渠道是否愿意成交，报价低≠拿得到业务
+- ❌ 赔付率异常直接归因 → ✅ 必须拆解 `赔付率 = 出险频度 × 案均赔款 ÷ 件均保费`，频度驱动和案均驱动的对策完全不同
 
 ## 输出结构（8段）
 
 1. 市场本质判断（一句话） 2. 竞争格局判断 3. 机会板块（3-5个） 4. 风险板块（3-5个） 5. 对华安的经营含义 6. 资源配置建议 7. 风险提示 8. 缺失数据
 
-> 完整输出模板见项目文件 `市场分析协议_v1.0.md`
+> 完整字段、表格与套用规则见 [references/output-template.md](references/output-template.md)。
