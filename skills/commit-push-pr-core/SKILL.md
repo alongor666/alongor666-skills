@@ -108,8 +108,10 @@ find . -not -path './.git/*' -not -path './node_modules/*' -size +50M -exec ls -
 ```bash
 # 必须先 fetch 并对 origin/$BASE 判断：仅有 origin/main、无本地 main 的检出（worktree/
 # 单分支克隆）下 `git merge-base main HEAD` 会因 main 不是有效对象而误报"无共同祖先"，
-# 把正常分支推向下面破坏性的 clean-branch/cherry-pick 路径
-git fetch origin "$BASE" 2>/dev/null
+# 把正常分支推向下面破坏性的 clean-branch/cherry-pick 路径。
+# 注意带显式目标的 refspec：`git fetch origin $BASE` 只写 FETCH_HEAD，不会更新
+# origin/$BASE 远程跟踪引用，缺该引用的检出里下一行仍会报 "not a valid object name"
+git fetch origin "+refs/heads/$BASE:refs/remotes/origin/$BASE" 2>/dev/null
 git merge-base "origin/$BASE" HEAD || echo "⚠️ 无共同祖先"
 ```
 
@@ -122,7 +124,8 @@ git cherry-pick <本分支独有 commit...>
 ### 3.1 同步远端 + 处理 lockfile
 
 ```bash
-git fetch origin "$BASE"
+# 同上：显式目标 refspec 才会更新 origin/$BASE，下面的 rebase/cherry-pick 才有对象可用
+git fetch origin "+refs/heads/$BASE:refs/remotes/origin/$BASE"
 ```
 
 分支落后 `$BASE`（有共同祖先，常规情况）：

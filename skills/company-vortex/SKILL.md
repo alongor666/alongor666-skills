@@ -69,7 +69,7 @@ user_invocable: true
 **并行执行三件事**（一条消息发出）：
 1. 读 `references/vortex-framework.md`，内化三才框架，不输出框架内容。
 2. 后台 `lark-cli auth status`（前缀见 `references/lark-publish-protocol.md`），记录 tokenStatus / userOpenId；过期则后台 refresh → 失败则 `auth login --recommend` 输出链接（不阻塞）。
-3. 确认工作目录：`ls $WORKDIR/scripts/quick_profile.py`。
+3. 设置并确认工作目录：`export WORKDIR="${WORKDIR:-/Users/alongor666/Desktop/上市公司研究}" && ls "$WORKDIR/scripts/quick_profile.py"`。
 
 完成后立即进入 Step 1+2（并行）。
 
@@ -77,7 +77,8 @@ user_invocable: true
 
 **A股/港股代码 →** 后台运行，失败/超时/残缺则不重试、由 Step 2 补全：
 ```bash
-cd $WORKDIR && .venv/bin/python3 scripts/quick_profile.py {代码}
+export WORKDIR="${WORKDIR:-/Users/alongor666/Desktop/上市公司研究}"
+cd "$WORKDIR" && .venv/bin/python3 scripts/quick_profile.py {代码}
 ```
 提取：公司全称、行业、近5年营收/净利/毛利率/净利率/ROE。
 
@@ -162,6 +163,7 @@ c) **ASCII 涡旋快照** — 上方外部压力（向下箭头）/ 中间涡旋
 
 对文稿运行自动化质检（认知负荷/结构/格式/情绪弧线/对话真实感五维）：
 ```bash
+export WORKDIR="${WORKDIR:-/Users/alongor666/Desktop/上市公司研究}"
 .venv/bin/python3 $WORKDIR/scripts/podcast_qa.py \
   --script {公司名}_{股票代码}_播客文稿.md \
   --config $WORKDIR/scripts/podcast_standards.yaml \
@@ -184,6 +186,7 @@ Edge TTS 转音频，**默认 2 倍速**（`--rate "+100%"`）。脚本自动解
 | `zh-CN-XiaoyiNeural` | 女 · 晓伊 | 甜美活泼 | 备选分析师 |
 
 ```bash
+export WORKDIR="${WORKDIR:-/Users/alongor666/Desktop/上市公司研究}"
 # 双人（默认云阳+晓晓，2倍速）
 .venv/bin/python3 $WORKDIR/scripts/podcast_tts.py \
   --script {公司名}_{股票代码}_播客文稿.md \
