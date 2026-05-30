@@ -39,6 +39,7 @@ git clone https://github.com/alongor666/alongor666-skills.git ~/.claude/plugins/
 
 | 技能 | 说明 |
 |------|------|
+| **commit-push-pr-core** | 提交建 PR 工作流基座 — 项目无关的 commit→push→PR 流程，含跨项目通用 git 护栏（大文件拦截 / unrelated-histories / rebase 后 lockfile 同步 / push 后回主干）+ 可挂载的项目红线自审与自进化机制；设计为被各项目薄 wrapper 复用 |
 | **company-vortex** | 涡旋分析 — 通过结构动力学/涡旋模型分析上市公司，生成全生命周期诊断报告 |
 | **rewrite-conclusion** | 诊断结论重写 — 将 L1 脚本产出的规则化数据提炼为管理层可直接阅读的结构化判断 |
 
@@ -46,3 +47,4 @@ git clone https://github.com/alongor666/alongor666-skills.git ~/.claude/plugins/
 
 - **2026-05-18**: `auto-*` → `chexian-*` 重命名归簇（auto-channel → chexian-channel, auto-ir-diagnosis → chexian-ir-diagnosis, auto-market-analysis → chexian-market-analysis, auto-ops-review → chexian-ops-review, auto-pricing → chexian-pricing-decision）
 - **2026-05-29**: 全量同步本地最新版本到仓库
+- **2026-05-30**: 新增 `commit-push-pr-core` — 从 chexian 项目 `commit-push-pr` 抽象出的项目无关基座（L1 骨架 + L2 通用护栏 + L3 方法层），「方法复用，非内容复用」
