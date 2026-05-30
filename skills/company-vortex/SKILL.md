@@ -3,44 +3,59 @@ name: company-vortex
 description: >
   Use when analyzing a publicly listed company through structural dynamics / vortex model —
   producing a full lifecycle diagnosis report. Trigger: "分析XX公司", "涡旋分析", "结构诊断",
-  "company-vortex", stock codes, or any request for a 结构诊断.md report.
+  "company-vortex", stock codes, or any request for a 结构诊断.md report. Also when user pastes
+  a stock ticker (A-share/HK/US) and wants a lifecycle structural teardown (listed company
+  structural diagnosis).
 version: 1.3.0
 user_invocable: true
 ---
 
 # Company Vortex: 上市公司涡旋结构诊断
 
-你是一位系统战略分析师。万物皆为「结构」，结构是在压力下由向心力与离心力动态平衡形成的涡漩体。每次分析从执行步骤开始，不要输出角色描述。
+## Overview
+
+把一家上市公司当作"在压力下由向心力与离心力动态平衡形成的涡漩体"，做全生命周期结构演变诊断，产出 `结构诊断.md` 报告，并可衍生飞书有声长文与双人/单人播客音频。分析口径采用李继刚「商业结构」三才框架（天/人/地）。每次从执行步骤开始，不输出角色描述。
+
+## When to Use
+
+- ✅ 上市公司（A股/港股/美股）的结构演变诊断、全生命周期拆解、涡旋分析、结构诊断报告
+- ❌ 非上市公司、纯财务估值/DCF、单纯财报解读——本框架不适用，请勿套用
+
+## Quick Reference
+
+| 项 | 值 |
+|----|----|
+| **WORKDIR**（工作目录） | 默认 `/Users/alongor666/Desktop/上市公司研究`，下文统一引用 `$WORKDIR` |
+| 框架 | `references/vortex-framework.md`（三才/涡旋概念） |
+| 搜索协议 | `references/search-protocol.md`（信息源/5+1 轮/三角验证） |
+| 报告骨架 | `references/output-template.md`（必选/可选 + 四维★评分） |
+| 有声长文 Prompt | `references/lark-longform-prompt.md` |
+| 播客文稿 Prompt | `references/podcast-script-prompt.md`（含单人模式） |
+| 飞书发布命令 | `references/lark-publish-protocol.md`（含 lark-cli 环境前缀） |
+
+> **工作目录约定**：脚本与产出文件均位于 `$WORKDIR`。脚本（quick_profile.py / vortex_draw_html.py / podcast_tts.py / podcast_qa.py / podcast_standards.yaml / markers.json）为外部依赖，不在 skill 包内；若 `$WORKDIR` 不存在则脚本步骤 fallback 到搜索补全（见执行原则 3）。
 
 ## ⚡ 执行原则（最高优先级）
 
-1. **不停顿原则**：Step 0→11 为连续流程，中间 **不得暂停询问用户**。只在工具权限被拒绝或外部服务不可用时才跳过该步骤并继续。
-2. **并行优先原则**：能并行的步骤必须并行。具体地：
-   - Step 1（脚本画像）与 Step 2（搜索）**并行发起**——脚本放后台，同时开始搜索。
-   - Step 2 的中英文搜索**同一维度并行发起**（一次消息中发多个 WebSearch 调用）。
-   - Step 7（飞书文档）与 Step 8（消息通知）中，auth status 只查一次，后续步骤复用结果。
-3. **脚本 fallback 原则**：quick_profile.py 失败（超时/SSL/数据残缺）时，不重试，直接用 Step 2 搜索结果补全财务数据。
-4. **飞书 auth 预检**：在 Step 0 阶段即检查 `lark-cli auth status`（后台运行）。若 token 过期：
-   - 先尝试 `lark-cli auth refresh`
-   - refresh 失败 → 输出登录链接，**但不阻塞 Step 1-6**
-   - Step 6 结束时检查 auth 是否已就绪，未就绪则跳过 Step 7-8 并告知用户
-5. **工作目录原则**：优先使用固定路径 `/Users/alongor666/Desktop/上市公司研究`，避免 cwd 不一致导致脚本找不到。
+1. **不停顿**：Step 0→11 为连续流程，中间不得暂停询问用户。仅在工具权限被拒或外部服务不可用时跳过该步并继续。
+2. **并行优先**：能并行必并行——
+   - Step 1（脚本画像，后台）与 Step 2（搜索）并行发起。
+   - Step 2 同维度中英文搜索同批并行（一条消息多个 WebSearch）。
+   - Step 7/8 中 `auth status` 只查一次，后续复用。
+3. **脚本 fallback**：quick_profile.py 失败（超时/SSL/数据残缺）不重试，直接用 Step 2 搜索补全。
+4. **飞书 auth 预检**：Step 0 即后台查 `lark-cli auth status`。token 过期 → 先 `auth refresh`；refresh 失败 → 输出登录链接但不阻塞 Step 1-6。Step 6 结束时检查 auth 是否就绪，未就绪则跳过 Step 7-8/11 并告知。
 
 ## 输入解析
-
-接受以下任意格式，自动识别：
 
 | 输入示例 | 解析结果 |
 |---------|---------|
 | `阳光电源` | 公司名；搜索确认股票代码；默认中英双语 |
 | `601609` | A股代码；Step 1 获取公司名 |
 | `300274 纯英文资料` | A股代码 + 语言约束（仅英文搜索） |
-| `SEDG` 或 `SolarEdge` | 非A股；跳过AKShare；FinanceToolkit或搜索补全 |
-| `更新诊断` | UPDATE模式（见 Step U） |
+| `SEDG` / `SolarEdge` | 非A股；跳过 AKShare；FinanceToolkit 或搜索补全 |
+| `更新诊断` | UPDATE 模式（见 Step U） |
 
 ## 模式判断
-
-在执行任何步骤前，判断模式：
 
 - **NEW** — 首次分析，执行 Step 0→11
 - **UPDATE** — 用户说"更新诊断/补充诊断/新信息/修正一下/最新数据"，执行 Step U
@@ -51,498 +66,150 @@ user_invocable: true
 
 ### Step 0: 加载框架 + 环境预检
 
-**并行执行以下三件事**（一次消息中发出）：
-
-1. 读取 `references/vortex-framework.md`，内化三才框架（天/人/地）和涡旋结构概念。不输出框架内容。
-2. 后台运行 `lark-cli auth status`，记录 tokenStatus 和 userOpenId。
-   - 若 tokenStatus=expired → 后台尝试 `lark-cli auth refresh`
-   - refresh 失败 → 后台运行 `lark-cli auth login --recommend`，输出授权链接（不阻塞后续步骤）
-3. 确认工作目录：`ls /Users/alongor666/Desktop/上市公司研究/scripts/quick_profile.py`
+**并行执行三件事**（一条消息发出）：
+1. 读 `references/vortex-framework.md`，内化三才框架，不输出框架内容。
+2. 后台 `lark-cli auth status`（前缀见 `references/lark-publish-protocol.md`），记录 tokenStatus / userOpenId；过期则后台 refresh → 失败则 `auth login --recommend` 输出链接（不阻塞）。
+3. 确认工作目录：`ls $WORKDIR/scripts/quick_profile.py`。
 
 完成后立即进入 Step 1+2（并行）。
 
-### Step 1: 数据快速画像（与 Step 2 并行启动）
+### Step 1: 数据快速画像（与 Step 2 并行启动，后台运行不等待）
 
-按输入类型分支获取基础数据。**脚本以后台模式运行，不等待结果，同时进入 Step 2。**
-
-**A股/港股代码 →**
-
-在固定路径运行（后台）：
+**A股/港股代码 →** 后台运行，失败/超时/残缺则不重试、由 Step 2 补全：
 ```bash
-cd /Users/alongor666/Desktop/上市公司研究 && .venv/bin/python3 scripts/quick_profile.py {代码}
+cd $WORKDIR && .venv/bin/python3 scripts/quick_profile.py {代码}
 ```
-- 脚本失败/超时/数据残缺 → 不重试，Step 2 搜索补全
+提取：公司全称、行业、近5年营收/净利/毛利率/净利率/ROE。
 
-从输出中提取：公司全称、行业、近5年营收/净利/毛利率/净利率/ROE。
+**美股/其他 →** 检测 `.env` 的 FMP_API_KEY（先 cwd 再 `$WORKDIR`）：
+- 有 Key → FinanceToolkit：`Toolkit(["{TICKER}"], api_key=key, start_date="5年前").ratios.collect_profitability_ratios()`
+- 无 Key → 跳过，Step 2 补全
 
-**美股/其他交易所 →**
-
-检测 `.env` 文件中 FMP_API_KEY（先查cwd，再查固定路径）：
-- 有Key → 用 FinanceToolkit 获取基本面数据：
-  ```python
-  from financetoolkit import Toolkit
-  tk = Toolkit(["{TICKER}"], api_key=key, start_date="5年前")
-  tk.ratios.collect_profitability_ratios()
-  ```
-- 无Key → 跳过，Step 2 搜索补全
-
-**仅公司名（无代码）→** 跳过脚本，Step 2 搜索时同步确认股票代码。
+**仅公司名 →** 跳过脚本，Step 2 搜索时同步确认股票代码。
 
 ### Step 2: 双语信息搜索（与 Step 1 并行启动）
 
-参考 `references/search-protocol.md` 的信息源优先级和搜索轮次规则。
+参考 `references/search-protocol.md` 的信息源优先级与轮次规则，执行 5+1 轮搜索。
 
-执行 5+1 轮搜索（语言配比由约束决定）。
-
-**并行策略**：每次消息最多发 3 个 WebSearch 调用，分 2-3 批完成全部搜索。同维度的中英文搜索放在同一批中。
+**并行策略**：每条消息最多 3 个 WebSearch，分 2-3 批；同维度中英文同批。
 
 | 批次 | 轮次 | 关键词模式 |
 |------|------|-----------|
-| **批次1** | 1-中 | {公司名} 创始人 发展历史 |
-|  | 1-英 | {Company} founder history |
-|  | 2-中 | {公司名} {年份} 业绩 营收 净利润 |
-| **批次2** | 2-英 | {Company} {year} revenue earnings |
-|  | 3-中 | {公司名} 竞争格局 市场份额 |
-|  | 3-英 | {Company} market share competition |
-| **批次3** | 4 | {公司名} 技术路线 风险 / {Company} technology roadmap risk |
-|  | 5 | {公司名} 海外市场 政策 / {Company} overseas policy tariff |
-|  | **R** | {公司名} 风险 失败 争议 做空 / {Company} risk failure controversy |
+| 批次1 | 1-中 / 1-英 / 2-中 | {公司名} 创始人 发展历史 · {Company} founder history · {公司名} {年份} 业绩 营收 净利润 |
+| 批次2 | 2-英 / 3-中 / 3-英 | {Company} {year} revenue earnings · {公司名} 竞争格局 市场份额 · {Company} market share competition |
+| 批次3 | 4 / 5 / **R** | {公司名} 技术路线 风险 / {Company} technology roadmap risk · {公司名} 海外市场 政策 / {Company} overseas policy tariff · {公司名} 风险 失败 争议 做空 / {Company} risk failure controversy |
 
-语言约束处理：
-- 默认 → 每维度1轮中文 + 1轮英文
-- "纯英文资料" → 仅英文
-- "纯中文" → 仅中文
-
-**批次3 必须包含逆向搜索（R轮），不可省略。**
+语言约束：默认每维度 1 中 + 1 英；"纯英文资料"仅英文；"纯中文"仅中文。
+**批次3 必含逆向搜索（R 轮），不可省略。**
 
 ### Step 3: 三角验证
+
+> 先列出每个关键判断的候选证据及其来源强度（一手 > 二手 > 媒体），再下结论。
 
 - 每个关键判断须有 ≥2 个独立来源交叉确认
 - 中文看国内视角+政策信号，英文看全球格局+国际投资者态度
 - 区分事实与观点：年报数据是事实，券商目标价是观点
-- 信息不足时标注「信息不足」，不编造
+- 信息不足标注「信息不足」，不编造
 
 ### Step 4: 涡旋结构分析
 
-读取 `references/vortex-framework.md` 的三才分析框架。
+读取 `references/vortex-framework.md` 的三才分析框架。对公司全生命周期划分 **3-5 个关键转折阶段**（按真实转折点，不按年份平均切分）。
 
-对公司全生命周期划分 **3-5个关键转折阶段**（按真实转折点，不按年份平均切分）。
+> 形态判定前：先列出候选结构形态假设（如"钻头/堡垒/蛛网/等离子体"等隐喻）及各自证据强度，再选定最贴合的一个并下结论。
 
-每个阶段必须包含：
+每阶段必须包含：
 
-a) **三才拆解**
-   - 天（外部压力）：时代制约、熵增威胁来源
-   - 人（向心力）：核心凝聚力、最高密度点
-   - 地（离心力）：业务边界、扩张疆域
+a) **三才拆解** — 天（外部压力：时代制约、熵增威胁来源）/ 人（向心力：核心凝聚力、最高密度点）/ 地（离心力：业务边界、扩张疆域）
 
 b) **结构形态命名**（物理/几何隐喻 + 为什么必须是这个形状）
 
-c) **ASCII涡旋快照**
-   - 上方：外部压力（向下箭头）
-   - 中间：涡旋主体（边界+核心）
-   - 标注力量方向和关键节点
-   - 使用 Unicode 方框字符（═ │ ┌ └ ┐ ┘ ╔ ╗ ╚ ╝ 等）
+c) **ASCII 涡旋快照** — 上方外部压力（向下箭头）/ 中间涡旋主体（边界+核心）/ 标注力量方向与关键节点 / 用 Unicode 方框字符（═ │ ┌ └ ┐ ┘ ╔ ╗ ╚ ╝）
 
 分析深度：解释"为什么这个结构在当时能赢"和"为什么后来失效了"，不做历史流水账。
 
 ### Step 5: 生成诊断报告
 
-按 `references/output-template.md` 的骨架生成完整报告。
+按 `references/output-template.md` 骨架生成完整报告。
 
-**语言风格**：冷静、犀利、透彻。物理学+哲学词汇（熵增、矢量、阻尼、相变、奇点、向心力、离心力）。
+**语言风格**：冷静、犀利、透彻；物理学+哲学词汇（熵增、矢量、阻尼、相变、奇点、向心力、离心力）。
 
-**必含元素**（参见 output-template.md 中的【必选】标注）：
-- 每阶段：三才 + 形态 + 涡旋快照（Markdown 文件中保留 ASCII art；飞书文档中替换为 HTML→PNG 图片）
-- 终局判断表：核心密度 / 边界扩张力 / 抗熵增能力 / 相变概率（四维★评分）
-- 一句话定义：物理学隐喻，能脱离正文独立成立
-- Sources列表：中英文分组，Markdown超链接
+**必含元素**（template 中【必选】）：每阶段三才+形态+涡旋快照（MD 保留 ASCII；飞书替换为 HTML→PNG）· 终局判断表（核心密度/边界扩张力/抗熵增能力/相变概率，四维★评分）· 一句话定义（物理学隐喻，可独立成立）· Sources（中英分组，MD 超链接）。
 
-**行业自适应元素**（参见 output-template.md 中的【可选】标注）：
-- 财务数据表格、利润结构图、产能矩阵、客户集中度图等，根据行业特征选用
+**行业自适应元素**（template 中【可选】）：财务表格、利润结构图、产能矩阵、客户集中度图等，按行业选用。
+
+生成后用文末「质量检查」清单做一次自检回路，再进入 Step 6。
 
 ### Step 6: 保存文件（完成后立即进入 Step 7，不暂停）
 
-文件名格式：`{公司名}_{股票代码}_结构诊断.md`
-保存路径：固定路径 `/Users/alongor666/Desktop/上市公司研究/`
+文件名 `{公司名}_{股票代码}_结构诊断.md`（非A股用 `{交易所代码}`），保存至 `$WORKDIR/`。保存后告知路径，**立即继续 Step 7**，不要输出确认性问句。
 
-若无股票代码（非A股），格式为：`{公司名}_{交易所代码}_结构诊断.md`
+### Step 7: 创建飞书云文档（依赖 Step 0 的 auth 预检）
 
-保存后在输出中告知文件路径，**然后立即继续 Step 7**。不要输出"需要继续吗？"等确认性问句。
+**前置**：auth 未就绪 → 跳过 Step 7-8，提示"飞书授权未完成，报告已保存至本地，完成授权后说'发布飞书'即可补发。"
 
-### Step 7: 创建飞书云文档（依赖 Step 0 的 auth 预检结果）
-
-**前置检查**：回顾 Step 0 的 auth 预检结果。
-- auth 就绪 → 继续执行
-- auth 未就绪（用户未完成授权）→ 跳过 Step 7-8，输出提示："飞书授权未完成，报告已保存至本地。完成授权后说'发布飞书'即可补发。"
-
-#### Step 7a: 将研究报告转换为"有声长文"体
-
-飞书文档支持语音朗读。直接贴研究报告会导致表格被念成"竖线维度竖线数据"、ASCII Art 变成乱码、★评分变成"星星星星"。因此，飞书文档必须是一篇**被朗读时仍然流畅的连续段落长文**。
-
-**文体转换 Prompt**（以诊断报告全文作为输入）：
-
-你是一位资深财经撰稿人。请将以下结构诊断报告转化为一篇可被飞书语音朗读功能流畅朗读的有声长文。
-
-**文体定位**：介于研究报告和播客之间的第三态——书面但有节奏感的单人分析长文。
-
-**转换规则（必须全部执行）：**
-
-1. **表格 → 嵌入式对比句**
-   - ❌ `| 2024 | 2130亿 | 135.3亿 | +64% |`
-   - ✅ "二零二四年，公司营收首次突破两千亿，达到两千一百三十亿元；归母净利润一百三十五亿，同比增长超过六成。"
-
-2. **ASCII 涡旋图 → 空间叙述段落**
-   - ❌ 整个 ASCII 代码块
-   - ✅ "此时的洛阳钼业像一个高速旋转的等离子体。外层是IXM贸易带来的一千五百亿规模，中间是铜矿构成的稳定磁约束区，而内核——刚果的TFM和KFM——既是最大的能量源，也是最不稳定的断层带。"
-
-3. **★评分 → 判断句**
-   - ❌ `核心密度：★★★★☆`
-   - ✅ "核心密度接近顶级，但尚未固化——从一个人的判断力切换为组织能力，这道坎还没完全跨过去。"
-
-4. **列表 → 递进段落**
-   - ❌ `- 2013：澳大利亚NPM`（换行）`- 2016：巴西铌磷`
-   - ✅ "从二零一三年拿下澳大利亚铜金矿开始，于泳在三年内连续出手。先是十五亿美元买下巴西的铌磷业务，紧接着以二十六亿美元从深陷债务危机的Freeport手中截获了刚果的TFM铜钴矿。每一笔都精准踩在卖方最绝望的时刻。"
-
-5. **所有数字 → 中文读法**（"一百三十五亿"不是"135亿"）
-
-6. **Sources 列表 → 删除**（朗读时无意义）
-
-**节奏设计（必须遵守）：**
-- 句长 ≤ 50 字，均值约 30 字。长句铺陈 → 短句冲击 → 中句沉淀，三拍循环
-- 段落之间用过渡句串联（"但真正的转折发生在……"），而非标题跳转
-- 每段第一句是该段核心判断（听众走神后重新抓回来的钩子）
-- 保留所有关键判断和核心数据，删除冗余细节
-- 保留"一句话定义"作为全文收束
-
-**不需要的元素**：
-- 不需要角色标签（无对话）
-- 不需要 `[pause:Xs]` 或 `(情绪)` 标记（飞书 TTS 不支持）
-- 不需要 H1/H2 标题（飞书朗读会念"井号井号"）——用过渡句替代章节切换
-
-**长度**：约 2000-2500 字（朗读约 8-10 分钟）
-
-**输出格式**：纯段落文本，段间空一行。
-
-将有声长文保存为 `{公司名}_{股票代码}_有声长文.md`，与诊断报告同目录。
-
-#### Step 7b: 将有声长文写入飞书云文档
-
-使用 `/lark-doc` 技能将有声长文发布到飞书云文档。同时在文档末尾追加涡旋快照图片。
-
-**执行流程：**
-
-1. **准备 Lark-flavored Markdown**：将有声长文转换为飞书格式
-   - 移除 H1 标题（由 `--title` 参数设置）
-   - 将「一句话定义」转为 `<callout emoji="🔭" background-color="light-blue">`
-   - 将风险断层线段落转为 `<callout emoji="⚠️" background-color="light-red/light-yellow">`
-   - **涡旋快照转为 PNG 图片**，追加在文末图集章节
-
-1b. **生成涡旋快照图片（HTML+CSS → Chrome 截图）**：
-
-   为每个阶段生成 JSON 数据文件，调用通用脚本 `scripts/vortex_draw_html.py` 生成 HTML 并截图为 PNG。
-
-   **JSON 数据格式**（写入 `/tmp/vortex_phase{N}.json`）：
-   ```json
-   {
-     "title": "第N阶段：形态名（年份范围）",
-     "pressures": ["外部压力1", "外部压力2"],
-     "entities": ["关键实体1", "关键实体2"],
-     "demand": "核心需求/主题",
-     "core_title": "{公司名} · 核心涡旋",
-     "core_items": ["核心能力1", "核心能力2", "核心能力3"],
-     "expansions": ["扩张方向1", "扩张方向2"],
-     "risks": [
-       {"text": "风险描述", "level": "critical"},
-       {"text": "风险描述", "level": "warning"}
-     ],
-     "footer": "一句话总结"
-   }
-   ```
-   所有字段除 `title` 外均可选——早期阶段可省略 `entities`/`demand`/`risks` 等。
-
-   **视觉规范**（脚本内置，无需手动控制）：
-   - 深色渐变背景、系统字体栈、三层结构（天=橙色/人=蓝色/地=灰蓝）
-   - 画布 1200×900px、圆角卡片、虚线断层线
-
-   **生成流程：**
-   ```bash
-   # 为每个阶段写入 JSON 并生成 PNG
-   .venv/bin/python3 scripts/vortex_draw_html.py \
-     --data /tmp/vortex_phase{N}.json \
-     --output assets/images/vortex_phase{N}.png
-   ```
-
-   **Fallback**：Chrome 不可用 → Playwright → 都不可用则输出 HTML 路径提示手动截图。
-
-   在飞书 Markdown 中用斜体占位引用 `*涡旋快照见文末图集 · 第N阶段*`
-
-2. **分段创建文档**（长文档需分批，提高成功率）：
-   ```bash
-   # 第一段：概览 + 财务数据
-   lark-cli docs +create --title "{公司名}（{代码}）· 结构演变全景分析" --markdown "$(cat /tmp/lark_chunk1.md)"
-   # 记录返回的 doc_id
-
-   # 后续段：逐段追加
-   lark-cli docs +update --doc "{doc_id}" --mode append --markdown "$(cat /tmp/lark_chunkN.md)"
-
-   # 添加图集章节标题
-   lark-cli docs +update --doc "{doc_id}" --mode insert_before \
-     --selection-with-ellipsis "## 资料来源" --markdown "## 涡旋结构图集"
-
-   # 逐个插入涡旋图片（末尾追加，位于资料来源之后）
-   lark-cli docs +media-insert --doc "{doc_id}" --file ./assets/images/vortex_phaseN.png \
-     --align center --caption "{阶段标题}"
-   ```
-
-3. **授权文档所有者**（bot 身份创建时必须）：
-   ```bash
-   # 获取用户 open_id
-   lark-cli auth status  # 从 userOpenId 字段获取
-
-   # 授予 full_access 权限
-   lark-cli drive permission.members create \
-     --params '{"token":"{doc_id}","type":"docx","need_notification":"true"}' \
-     --data '{"member_type":"openid","member_id":"{open_id}","perm":"full_access","type":"user"}' \
-     --as bot
-   ```
-
-4. 输出文档 URL 告知用户
+- **7a 有声长文**：按 `references/lark-longform-prompt.md` 把诊断报告转为可被飞书 TTS 流畅朗读的有声长文，保存为 `{公司名}_{股票代码}_有声长文.md`（与诊断报告同目录）。
+- **7b 写入飞书**：按 `references/lark-publish-protocol.md`（分段创建文档 + 生成涡旋 PNG 图集 + media-insert + 授权所有者 + 输出 URL）。
 
 ### Step 8: 发送飞书消息通知
 
-使用 `/lark-im` 技能将文档链接发送给所有者。
+按 `references/lark-publish-protocol.md` Step 8（`/lark-im` 发文档链接给所有者）。
 
-**执行流程：**
+### Step 9: 生成播客文稿（Step 6 后即可启动，与 Step 7/8 并行）
 
-1. **获取接收者 open_id**：从 Step 7 的 `lark-cli auth status` 中获取 `userOpenId`
-2. **发送消息**：
-   ```bash
-   lark-cli im +messages-send \
-     --user-id {open_id} \
-     --markdown "**{公司名}（{代码}）结构诊断报告已生成**\n\n文档链接：[点击查看]({doc_url})\n\n报告包含：{阶段数}阶段涡旋演变分析、风险矩阵、终局四维评分。" \
-     --as bot
-   ```
+按 `references/podcast-script-prompt.md` 生成约 1200-1500 字播客文稿（默认双人云阳/晓晓，单人模式见同文件），保存为 `{公司名}_{股票代码}_播客文稿.md`（与诊断报告同目录）。
 
-**注意事项：**
-- 发送前需确认 bot 具有 `im:message:send_as_bot` scope
-- 如 bot 无 IM 权限，提示用户在飞书开发者后台开通
+### Step 9.5: 文稿质检（Step 9 后自动执行）
 
-**lark-cli 环境加载**：所有使用 lark-cli 的 Bash 命令必须以此前缀开头：
+对文稿运行自动化质检（认知负荷/结构/格式/情绪弧线/对话真实感五维）：
 ```bash
-export PATH="$HOME/.nvm/versions/node/$(ls $HOME/.nvm/versions/node/ | tail -1)/bin:$PATH" &&
-```
-此前缀在整个 Step 0/7/8 中统一使用，不要遗漏。
-
-### Step 9: 生成播客文稿（Step 6 完成后即可启动，与 Step 7/8 并行）
-
-从诊断报告生成一份约 1200-1500 字的播客文稿（朗读约 5 分钟），支持单人独白或双人对话。
-
-**模式选择**：
-- 默认：双人对话（更有节奏感和听感张力）
-- 用户指定"单人播客"时：单人独白
-
-**双人角色设定**：
-- **云阳**（男，主持人）：抛出问题、串联逻辑、推动节奏。口头禅："有意思的是…" "换句话说…"
-- **晓晓**（女，分析师）：输出判断、给出证据、做认知降维。口头禅："从结构上看…" "本质上这是…"
-
-**文稿生成 Prompt**（以诊断报告全文作为输入）：
-
-你是一位资深播客编剧。请将以下上市公司结构诊断报告转化为一期 5 分钟的双人播客文稿。
-
-**核心原则：认知降维**
-- 把物理学隐喻翻译成日常比喻（"核心密度压缩" → "把所有鸡蛋放在一个越来越精致的篮子里"）
-- 把数据变成故事（"客户集中度75.98%" → "四分之三的收入来自四家公司，任何一家转身都是地震"）
-- 把评分变成判断（"★★★★☆" → "离满分只差一步，但那一步可能永远跨不过去"）
-- 不丢信息，只换容器：每个关键判断必须保留，但包装成听众能「哦！」的瞬间
-
-**结构要求（弹性骨架）：**
-1. **钩子**（前 30 秒 / 前 50 字内）：必须包含反直觉事实、悬念问题或转折（"但"/"却"/"？"）
-2. **背景**（1 分钟）：公司是谁、做什么、为什么值得关注。→ 此处插一个 [追问]，晓晓追问一个细节
-3. **涡旋演变**（2 分钟）：挑 2-3 个最有戏剧性的阶段转折。事实段(A)和判断段(R)交替出现，不允许连续两段同类型。→ 此处安排一个 [情绪低谷]，(轻声) 讲一个人味细节
-4. **风险与终局 / 高潮**（1 分钟，定位在全文 60%-75%）：断层线在哪、相变可能性、一句话定义。用密集短句制造冲击。高潮后必须有 3-5 句舒缓沉淀
-5. **收尾**（30 秒）：末句必须是开放问句（以"？"结尾），不要总结
-
-**认知负荷硬约束（不可违反）：**
-- 单句 ≤ 35 个中文字。超了就拆，在逗号或转折处断开
-- 单人连续发言 ≤ 120 字。超了就换人接话
-- 句长要有变化：穿插 8-10 字的短句和 25-35 字的长句，不要每句都差不多长
-- 每句话最多引入 2 个新概念/术语，多了听众跟不上
-- 所有数字用中文读法："一百五十九亿"不是"159亿"，"百分之七十"不是"70%"
-
-**对话真实感要求：**
-- 追问/质疑至少占总发言的 20%：晓晓要经常追问（"等等，什么意思？""你确定？"），不要只接力念稿
-- 至少 2 处自我修正："不对，应该说…""准确地说…"——说到一半改口才像人在想
-- 至少 3 处知识不对称：一方表达不知道/惊讶（"哦原来""这我倒没想过"），另一方才有解释的理由
-- 每 200 字含 3-7 个语气词（嗯、对、其实、说白了、你想啊）——太少干涩，太多油腻
-
-**格式要求：**
-- 每行以 `【云阳】：` 或 `【晓晓】：` 开头（注意是中文方括号 + 冒号）
-- 停顿标记：在高潮前后、话题转换处插入 `[pause:1s]` 或 `[pause:2s]`，全篇至少 5 处
-- 情绪标记：在需要变化语速/语气的段落前加 `(轻声)` `(加重)` `(放慢)`，全篇至少 3 处
-- 每段不超过 3 句话，超了换人接话
-- 禁止播客套话（"今天我们有幸请到"、"非常感谢收听"）
-- 禁止念数据表格，把数字嵌入判断句中
-
-**单人模式**：去掉角色标记，以第一人称"我"叙述，保持同样的认知降维原则和结构。停顿标记和情绪标记仍需保留。
-
-**文稿保存**：`{公司名}_{股票代码}_播客文稿.md`，与诊断报告同目录。
-
-### Step 9.5: 文稿质检（Step 9 完成后自动执行）
-
-对生成的播客文稿运行自动化质检，覆盖认知负荷、结构、格式、情绪弧线、对话真实感五个维度。
-
-```bash
-.venv/bin/python3 scripts/podcast_qa.py \
+.venv/bin/python3 $WORKDIR/scripts/podcast_qa.py \
   --script {公司名}_{股票代码}_播客文稿.md \
-  --config scripts/podcast_standards.yaml \
-  --markers scripts/markers.json
+  --config $WORKDIR/scripts/podcast_standards.yaml \
+  --markers $WORKDIR/scripts/markers.json
 ```
-
-**处理规则**：
-- **PASS**（全过）→ 直接进入 Step 10
-- **WARN**（有警告无红线）→ 输出警告项供参考，继续 Step 10（不阻塞）
-- **FAIL**（有红线）→ 根据报告中的 FAIL 项和 suggestion 修正文稿，重新运行质检，直到达到 PASS 或 WARN。最多重试 2 次
-
-质检标准配置见 `scripts/podcast_standards.yaml`（三层架构：宪法/场景/派生参数）。
-词表见 `scripts/markers.json`（追问/语气词/修正/知识不对称四类）。
+处理规则：**PASS** → 进 Step 10；**WARN** → 输出警告项继续 Step 10（不阻塞）；**FAIL** → 按报告 FAIL 项与 suggestion 修正后重跑，直到 PASS/WARN，最多重试 2 次。
+标准配置 `podcast_standards.yaml`（三层：宪法/场景/派生参数）；词表 `markers.json`（追问/语气词/修正/知识不对称）。
 
 ### Step 10: 生成播客音频（Step 9.5 通过后执行）
 
-使用 Edge TTS 将文稿转为音频。脚本位于 `scripts/podcast_tts.py`。
+Edge TTS 转音频，**默认 2 倍速**（`--rate "+100%"`）。脚本自动解析文稿标记：`[pause:Xs]` → 段后静音；`(放慢)` → +60%（≈1.6×）；`(加重)` → +120%（≈2.2×）；`(轻声)` → +80% 且音量 -30%（≈1.8×）；`[BGM:*]`/`[音效:*]` → 忽略。以上 rate 魔数为 2 倍速基线下的换算。
 
-**默认 2 倍速**（`--rate "+100%"`）。脚本会自动解析文稿中的格式标记：
-- `[pause:Xs]` → 段后插入 X 秒静音（替代固定间隔）
-- `(放慢)` → 该段语速 +60%（2倍速基线下的"放慢"≈1.6倍速）
-- `(加重)` → 该段语速 +120%（≈2.2倍速）
-- `(轻声)` → 该段语速 +80%，音量 -30%（≈1.8倍速）
-- `[BGM:*]` `[音效:*]` → 自动忽略（未来扩展）
+**可用声音**（经验证；若失效见脚本 Old patterns / 重新探测）：
 
-**可用声音**（经验证当前可用）：
-
-| 声音 ID | 性别 | 风格 | 用途 |
+| 声音 ID | 性别 · 别名 | 风格 | 用途 |
 |---------|------|------|------|
 | `zh-CN-YunyangNeural` | 男 · 云阳 | 新闻播报，权威 | 主持人 / 单人独白 |
 | `zh-CN-XiaoxiaoNeural` | 女 · 晓晓 | 温暖自然 | 分析师 |
 | `zh-CN-YunxiNeural` | 男 · 云希 | 阳光活泼 | 备选主持人 |
 | `zh-CN-XiaoyiNeural` | 女 · 晓伊 | 甜美活泼 | 备选分析师 |
 
-**生成命令**：
 ```bash
-# 双人播客（默认：云阳 + 晓晓，2倍速）
-.venv/bin/python3 scripts/podcast_tts.py \
+# 双人（默认云阳+晓晓，2倍速）
+.venv/bin/python3 $WORKDIR/scripts/podcast_tts.py \
   --script {公司名}_{股票代码}_播客文稿.md \
-  --output {公司名}_{股票代码}_播客.mp3 \
-  --rate "+100%"
+  --output {公司名}_{股票代码}_播客.mp3 --rate "+100%"
 
-# 单人播客（仅云阳，2倍速）
-.venv/bin/python3 scripts/podcast_tts.py \
-  --script {公司名}_{股票代码}_播客文稿.md \
-  --output {公司名}_{股票代码}_播客.mp3 \
-  --voice-a zh-CN-YunyangNeural \
-  --rate "+100%"
+# 单人（仅云阳，2倍速）：追加 --voice-a zh-CN-YunyangNeural
 ```
+**时长控制**：目标 5 分钟 ≈ 1200-1500 字（约 250 字/分钟）；偏差超 ±1 分钟则调文稿长度重生成。音频保存 `{公司名}_{股票代码}_播客.mp3`。完成后告知路径与时长，**立即继续 Step 11**。
 
-**时长控制**：
-- 目标 5 分钟 ≈ 1200-1500 字（中文语速约 250 字/分钟）
-- 生成后检查时长，若偏差超过 ±1 分钟，调整文稿长度后重新生成
+### Step 11: 发送播客音频到飞书（Step 10 后执行，依赖 auth 预检）
 
-**音频保存**：`{公司名}_{股票代码}_播客.mp3`，与诊断报告同目录。
-
-完成后告知用户文稿路径和音频路径、时长，**然后立即继续 Step 11**。
-
-### Step 11: 发送播客音频到飞书（Step 10 完成后执行，依赖 Step 0 的 auth 预检结果）
-
-将播客音频文件通过飞书消息发送给用户，方便在手机端直接收听。
-
-**前置检查**：回顾 Step 0 的 auth 预检结果。
-- auth 就绪 → 继续执行
-- auth 未就绪 → 跳过此步骤，输出提示："飞书授权未完成，播客音频已保存至本地。完成授权后说'发送播客'即可补发。"
-
-**执行流程：**
-
-1. **获取接收者 open_id**：复用 Step 7/8 中已获取的 `userOpenId`
-2. **发送音频文件**：
-   ```bash
-   export PATH="$HOME/.nvm/versions/node/$(ls $HOME/.nvm/versions/node/ | tail -1)/bin:$PATH" &&
-   lark-cli im +messages-send \
-     --user-id {open_id} \
-     --file /Users/alongor666/Desktop/上市公司研究/{公司名}_{股票代码}_播客.mp3 \
-     --as bot
-   ```
-
-**注意事项：**
-- 使用 `--file`（而非 `--audio`）发送 mp3 文件，兼容性更好
-- lark-cli 会自动上传文件再发送，无需手动调用上传接口
-- 发送前需确认 bot 具有 `im:message:send_as_bot` + `im:resource:upload` scope
-- 文件大小限制：飞书单文件上限 30MB，5 分钟播客 mp3 通常 < 5MB，无需担心
-
-完成后告知用户音频已发送至飞书。
+**前置**：auth 未就绪 → 跳过，提示"飞书授权未完成，播客音频已保存至本地，完成授权后说'发送播客'即可补发。"
+执行命令见 `references/lark-publish-protocol.md` Step 11（`--file` 方式，复用 `userOpenId`）。
 
 ---
 
 ## UPDATE 模式
 
-当检测到 UPDATE 模式时执行以下步骤，不执行 Step 0-6。
+检测到 UPDATE 时执行以下，不执行 Step 0-6。
 
-### U1: 定位现有诊断文件
-
-在当前目录搜索 `*_结构诊断.md`。若有多个，询问用户确认哪份。
-读取现有诊断文件全文。
-
-### U2: 搜索新证据
-
-针对用户提供的更新方向（或默认搜索最新年度数据），执行 2-3 轮搜索。
-执行三角验证。
-
-### U3: 输出增量修正
-
-每个修正项格式：
-
-```
-## 诊断修正{N}：{标题}
-
-### 新证据链
-{来源+数据}
-
-### 旧诊断 vs 新诊断
-- 旧：...
-- 新：...
-
-### 评分变化
-{维度} {旧★} → {新★} {↑/↓/→}（原因一句话）
-```
-
-### U4: 更新终局判断表
-
-在表中每个变化维度标注 ↑/↓/→ 和变化原因。
-
-### U5: 写回文件
-
-将修正内容合并入现有诊断文件，生成完整文档（读者无需看两份文件）。
-告知用户更新了哪些章节、评分变化条数。
-
-### U6: 同步飞书文档
-
-若之前已创建过飞书文档（搜索同名文档），使用 `docs +update` 同步修正内容：
-
-```bash
-# 搜索现有文档
-lark-cli docs +search --query "{公司名} 结构演变全景分析"
-
-# 追加修正内容到文档末尾
-lark-cli docs +update --doc "{doc_id}" --mode append --markdown "{修正内容}"
-```
-
-若未找到飞书文档，执行 Step 7-8 创建新文档并通知。
-
-### U7: 发送更新通知
-
-```bash
-lark-cli im +messages-send \
-  --user-id {open_id} \
-  --markdown "**{公司名}（{代码}）结构诊断已更新**\n\n更新内容：{修正项摘要}\n评分变化：{变化条数}项\n\n文档链接：[点击查看]({doc_url})" \
-  --as bot
-```
+- **U1 定位**：当前目录搜 `*_结构诊断.md`；多个则询问确认，读取全文。
+- **U2 搜证**：针对更新方向（或默认最新年度数据）搜 2-3 轮 + 三角验证。
+- **U3 增量修正**：每项含「新证据链」「旧诊断 vs 新诊断」「评分变化（{维度} {旧★}→{新★} {↑/↓/→}，原因一句话）」。
+- **U4 更新终局表**：每个变化维度标 ↑/↓/→ 与原因。
+- **U5 写回**：修正合并入现有诊断文件，生成完整文档（读者无需看两份）；告知更新章节与评分变化条数。
+- **U6 同步飞书 / U7 更新通知**：命令见 `references/lark-publish-protocol.md`（UPDATE 段）；未找到文档则执行 Step 7-8 新建。
 
 ---
 
@@ -562,6 +229,14 @@ lark-cli im +messages-send \
 - [ ] 播客文稿已生成（1200-1500 字，约 5 分钟）
 - [ ] 播客音频已生成（Edge TTS，时长 4-6 分钟）
 - [ ] 播客音频已发送至飞书（`--file` 方式）
+
+## Common Mistakes
+
+- ❌ 对非上市公司套用本框架 → 见 When to Use 边界
+- ❌ 飞书文档直贴诊断报告（表格/ASCII/★被 TTS 念成乱码）→ 必走 Step 7a 有声长文转换
+- ❌ ASCII 涡旋图在飞书未转 PNG → Step 7b 必生成图集
+- ❌ 省略逆向 R 轮搜索 → 批次3 必含
+- ❌ 暂停询问用户 → 违反不停顿原则，仅工具不可用才跳过
 
 ## 输出格式约束
 
