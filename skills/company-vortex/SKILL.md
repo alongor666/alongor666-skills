@@ -33,7 +33,7 @@ user_invocable: true
 | 播客文稿 Prompt | `references/podcast-script-prompt.md`（含单人模式） |
 | 飞书发布命令 | `references/lark-publish-protocol.md`（含 lark-cli 环境前缀） |
 
-> **工作目录约定**：脚本与产出文件均位于 `$WORKDIR`。脚本（quick_profile.py / vortex_draw_html.py / podcast_tts.py / podcast_qa.py / podcast_standards.yaml / markers.json）为外部依赖，不在 skill 包内；若 `$WORKDIR` 不存在则脚本步骤 fallback 到搜索补全（见执行原则 3）。
+> **工作目录约定**：脚本与产出文件均位于 `$WORKDIR`。**`$WORKDIR` 不会自动存在——每个 bash 片段开头必须先设置（shell 状态不跨片段保留）**：`export WORKDIR="${WORKDIR:-/Users/alongor666/Desktop/上市公司研究}"`，否则 `ls $WORKDIR/...`、`cd $WORKDIR` 会展开成 `/...` 或回到 `$HOME` 而全部失败。脚本（quick_profile.py / vortex_draw_html.py / podcast_tts.py / podcast_qa.py / podcast_standards.yaml / markers.json）为外部依赖，不在 skill 包内；若 `$WORKDIR` 不存在则脚本步骤 fallback 到搜索补全（见执行原则 3）。
 
 ## ⚡ 执行原则（最高优先级）
 
