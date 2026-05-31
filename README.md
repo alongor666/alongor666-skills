@@ -42,6 +42,7 @@ git clone https://github.com/alongor666/alongor666-skills.git ~/.claude/plugins/
 | **commit-push-pr-core** | 提交建 PR 工作流基座 — 项目无关的 commit→push→PR 流程，含跨项目通用 git 护栏（大文件拦截 / unrelated-histories / rebase 后 lockfile 同步 / push 后回主干）+ 可挂载的项目红线自审与自进化机制；设计为被各项目薄 wrapper 复用 |
 | **company-vortex** | 涡旋分析 — 通过结构动力学/涡旋模型分析上市公司，生成全生命周期诊断报告 |
 | **rewrite-conclusion** | 诊断结论重写 — 将 L1 脚本产出的规则化数据提炼为管理层可直接阅读的结构化判断 |
+| **ui-redesign** | 页面/模块视觉重做编排 — 配合 Claude Design，项目无关（现场发现技术栈/设计系统），含确定性验收与自进化 |
 
 ## 变更记录
 
