@@ -36,11 +36,16 @@ BASE="$(git remote show origin 2>/dev/null | sed -n 's/.*HEAD branch: //p')"; BA
 git diff --stat "origin/$BASE" 2>/dev/null || git diff --stat "$BASE"
 
 # 0.2 自动探测包管理器（用于 lockfile 同步与项目脚本）
-if   [ -f bun.lock ] || [ -f bun.lockb ]; then PM="bun";  RUN="bun run"; LOCK="bun.lock"
-elif [ -f pnpm-lock.yaml ];               then PM="pnpm"; RUN="pnpm";    LOCK="pnpm-lock.yaml"
-elif [ -f yarn.lock ];                    then PM="yarn"; RUN="yarn";    LOCK="yarn.lock"
-elif [ -f package-lock.json ];            then PM="npm";  RUN="npm run"; LOCK="package-lock.json"
-else PM=""; RUN=""; LOCK=""; fi
+# RUN  = 跑 package.json 脚本（如 `$RUN governance`）
+# EXEC = 跑脚本文件（如 `$EXEC scripts/x.mjs`）；只有 bun 的 `run` 能直接吃文件路径，
+#        npm/pnpm/yarn 的 `run` 会把路径当成脚本名而报错，故非 bun 一律用 node 执行文件
+# LOCK = 实际存在的锁文件名（bun.lockb 旧二进制锁不可重写成 bun.lock，否则同步时 git add 到不存在的文件）
+if   [ -f bun.lock ];          then PM="bun";  RUN="bun run"; EXEC="bun";  LOCK="bun.lock"
+elif [ -f bun.lockb ];         then PM="bun";  RUN="bun run"; EXEC="bun";  LOCK="bun.lockb"
+elif [ -f pnpm-lock.yaml ];    then PM="pnpm"; RUN="pnpm";    EXEC="node"; LOCK="pnpm-lock.yaml"
+elif [ -f yarn.lock ];         then PM="yarn"; RUN="yarn";    EXEC="node"; LOCK="yarn.lock"
+elif [ -f package-lock.json ]; then PM="npm";  RUN="npm run"; EXEC="node"; LOCK="package-lock.json"
+else PM=""; RUN=""; EXEC="node"; LOCK=""; fi
 echo "包管理器: ${PM:-无}  锁文件: ${LOCK:-无}"
 ```
 
@@ -101,7 +106,13 @@ find . -not -path './.git/*' -not -path './node_modules/*' -size +50M -exec ls -
 ### 3.0b 共同祖先检查（防 unrelated histories）
 
 ```bash
-git merge-base "$BASE" HEAD || echo "⚠️ 无共同祖先"
+# 必须先 fetch 并对 origin/$BASE 判断：仅有 origin/main、无本地 main 的检出（worktree/
+# 单分支克隆）下 `git merge-base main HEAD` 会因 main 不是有效对象而误报"无共同祖先"，
+# 把正常分支推向下面破坏性的 clean-branch/cherry-pick 路径。
+# 注意带显式目标的 refspec：`git fetch origin $BASE` 只写 FETCH_HEAD，不会更新
+# origin/$BASE 远程跟踪引用，缺该引用的检出里下一行仍会报 "not a valid object name"
+git fetch origin "+refs/heads/$BASE:refs/remotes/origin/$BASE" 2>/dev/null
+git merge-base "origin/$BASE" HEAD || echo "⚠️ 无共同祖先"
 ```
 
 **无共同祖先**：禁止 rebase（会产生大量 add/add 冲突）。改用 cherry-pick：
@@ -113,7 +124,8 @@ git cherry-pick <本分支独有 commit...>
 ### 3.1 同步远端 + 处理 lockfile
 
 ```bash
-git fetch origin "$BASE"
+# 同上：显式目标 refspec 才会更新 origin/$BASE，下面的 rebase/cherry-pick 才有对象可用
+git fetch origin "+refs/heads/$BASE:refs/remotes/origin/$BASE"
 ```
 
 分支落后 `$BASE`（有共同祖先，常规情况）：
@@ -136,13 +148,13 @@ git config "lfs.$(git remote get-url origin | sed 's#.*github.com/#https://githu
 ### 3.2 项目冲突检测钩子（若存在则运行）
 
 ```bash
-[ -f scripts/check-write-conflict.mjs ] && $RUN scripts/check-write-conflict.mjs
+[ -f scripts/check-write-conflict.mjs ] && $EXEC scripts/check-write-conflict.mjs
 ```
 
 ### 3.3 项目治理校验钩子（若存在则运行）
 
 ```bash
-[ -f scripts/check-governance.mjs ] && $RUN scripts/check-governance.mjs
+[ -f scripts/check-governance.mjs ] && $EXEC scripts/check-governance.mjs
 # 通用兜底：有 governance / lint / build 脚本则跑
 [ -n "$PM" ] && grep -q '"governance"' package.json 2>/dev/null && $RUN governance || true
 ```
