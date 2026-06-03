@@ -34,10 +34,12 @@ HIGH_CARDINALITY_DIMS: set[str] = {"salesman_chinese"}
 
 
 # (指标 ID, 中文名, 格式 kind, alerts.TH key 用于打灯；None=不打灯, sort_dir: lower_better=越小越好)
+# 注：earned_premium_sum 是聚合原料列（非二次派生），直接作为可切换指标（规模视角，不打灯）。
 METRIC_DEFS: list[tuple[str, str, str, Optional[str]]] = [
     ("mature_loss_ratio",       "满期赔付率",   "pct",    "earned_loss_ratio_pct"),
     ("mature_incident_rate",    "满期出险率",   "pct",    "earned_loss_freq_pct"),
     ("avg_claim_amount",        "案均赔款",     "money0", None),
+    ("earned_premium_sum",      "满期保费(万)", "wan",    None),
     ("bi_case_ratio_pct",       "人伤案占比",   "pct",    None),
     ("bi_amount_ratio_pct",     "人伤金额占比", "pct",    None),
 ]
