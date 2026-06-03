@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<!--
+═══════════════════════════════════════════════════════════════════
+ 上市公司「结构诊断」视觉卡片模板 · 中国国家地理杂志风格 · 印刷级 PDF
+ 范例=京东方(000725)。套用时整体替换正文，CSS 与版面/分页规则勿动。
+───────────────────────────────────────────────────────────────────
+ 架构（关键）：固定 A4 版面盒，不用浏览器自动流式分页。
+  · 每页 = 一个 <section class="page">，固定 210mm×297mm、overflow:hidden、
+    打印 break-after:page —— 内容绝不跨页、绝不串页、无半空白页。
+  · 内容放进 .inner（绝对定位，四周留版心边距）。封面用 .cover-page。
+  · 页眉 .rhead（刊名+栏目+刊号，红细线）/ 页脚 .rfoot（出处+页码）。
+ 视觉规范：
+  · 纯浅色基底（屏幕 #cdbf9c，页纸宣纸渐变），朱红(--cng-red)刊头/编号/表头点缀，
+    宋体大标题，无深色大色块；涡旋核心保留暖色径向渐变作焦点。
+ 组件 class：.sec-head/.sec-no/.rule .dossier .stage-tag/.stage-h/.triad(tian/ren/di)
+   /.shape/.vortex .lede/.bar-row .table.data .verdict/.vbox .opt-row/.badge .calc .quote .note
+ 涡旋图：SVG（浅底深字）。语义色——向心/吸积金 #7a6433、离心/利好玉绿 #2f6b4f、
+   外部压力橙 #a8541f、警示朱红 #a8341f；核心渐变 g1..gN 暖亮，核心文字 #1a140a。
+   阶段页把 SVG 放进 .inner.flexcol，.vortex{flex:1} 自动撑满下半页 → 版面饱满。
+ ★ 排版铁律（达到顶级杂志水准的验收线）：
+   1) 每个 .page 内容填充率 80–100%，无半页空白；内容少的页补「实质内容」
+      （小数据表/补充说明/引言），不要靠拉间距充数。
+   2) 任何图/表/块都不得跨页（固定盒 overflow:hidden 已保证，但内容别堆超一页）。
+   3) 验收方法：本地起 http 服务，用无头浏览器在 A4 宽度下测每个 .inner 子元素
+      底部相对 inner 顶部的高度，对照可用高 ≈1005px(96dpi)，控制 80–100% 且 ≤0 溢出。
+ 打印成 PDF：
+   · Cmd/Ctrl+P → 另存为PDF → 取消「页眉和页脚」→ 边距默认/无。
+   · 或无头：chrome --headless --no-pdf-header-footer --print-to-pdf=out.pdf file.html
+ 保存路径：{公司名}_{股票代码}_视觉卡片.html
+═══════════════════════════════════════════════════════════════════
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>京东方结构诊断 · 一颗主序前恒星 | 商业地理</title>
+<style>
+  :root{
+    --cng-red:#9e1813; --ink:#16140f; --ink2:#26221a;
+    --paper:#f4eede; --paper2:#ece2c8; --gold:#bd9b52; --gold-d:#8a6f2c;
+    --jade:#2f6b4f; --rust:#a8431f; --line:#cbbd9b; --dim:#7a715b; --hair:#d8cba6;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+    background:#cdbf9c;color:var(--ink);line-height:1.8;-webkit-font-smoothing:antialiased;
+    padding:24px 0;}
+  .serif{font-family:"Noto Serif SC","Songti SC","STSong","SimSun",serif;}
+
+  /* ====== A4 版面盒 ====== */
+  .page{
+    width:210mm;height:297mm;margin:0 auto 9mm;position:relative;overflow:hidden;
+    background:linear-gradient(168deg,#f5efe0,#ece1c6);
+    box-shadow:0 14px 40px rgba(0,0,0,.42);
+  }
+  .inner{position:absolute;left:16mm;right:16mm;top:17mm;bottom:14mm;}
+  .inner.flexcol{display:flex;flex-direction:column;}
+  /* 页眉/页脚 */
+  .rhead{position:absolute;top:8.5mm;left:16mm;right:16mm;display:flex;
+    justify-content:space-between;align-items:flex-end;
+    border-bottom:1.6px solid var(--cng-red);padding-bottom:2mm;}
+  .rhead .l{font-weight:900;letter-spacing:.22em;font-size:10.5px;color:var(--cng-red);}
+  .rhead .l span{color:var(--dim);font-weight:400;letter-spacing:.16em;margin-left:6px;}
+  .rhead .r{font-size:9.5px;letter-spacing:.18em;color:var(--dim);}
+  .rfoot{position:absolute;bottom:7.5mm;left:16mm;right:16mm;display:flex;
+    justify-content:space-between;align-items:center;
+    border-top:1px solid var(--hair);padding-top:1.8mm;
+    font-size:9px;letter-spacing:.14em;color:var(--dim);}
+  .rfoot .pg{font-family:"Noto Serif SC",serif;font-weight:900;color:var(--cng-red);letter-spacing:.05em;}
+
+  /* 章节标题 */
+  .sec-head{display:flex;align-items:baseline;gap:13px;margin-bottom:6px;}
+  .sec-no{font-family:"Noto Serif SC",serif;font-size:14px;font-weight:900;color:#fff;
+    background:var(--cng-red);width:38px;height:38px;flex:none;display:flex;
+    align-items:center;justify-content:center;border-radius:2px;}
+  .sec-title{font-size:28px;font-weight:900;letter-spacing:.04em;color:var(--ink);}
+  .sec-en{font-size:11px;letter-spacing:.32em;color:var(--dim);text-transform:uppercase;margin-top:3px;}
+  .rule{height:2px;background:linear-gradient(90deg,var(--cng-red),var(--gold) 32%,transparent);margin:14px 0 20px;}
+
+  /* ====== 封面 ====== */
+  .cover-page .inner{top:0;bottom:0;left:0;right:0;
+    padding:60px 56px;display:flex;flex-direction:column;}
+  .cover-page{background:
+    radial-gradient(circle at 76% 24%, rgba(189,155,82,.34), transparent 46%),
+    radial-gradient(circle at 14% 86%, rgba(168,84,42,.15), transparent 50%),
+    linear-gradient(165deg,#f6efdb 0%,#ece1c4 60%,#e2d4b0 100%);}
+  .cover-page .top{display:flex;justify-content:space-between;align-items:center;
+    border-bottom:2px solid var(--cng-red);padding-bottom:10px;}
+  .cover-page .top .logo{font-weight:900;letter-spacing:.28em;font-size:13px;color:var(--cng-red);}
+  .cover-page .top .logo b{border:2px solid var(--cng-red);padding:2px 8px;margin-right:8px;}
+  .cover-page .top .iss{font-size:10px;letter-spacing:.2em;color:var(--dim);}
+  .kicker{color:var(--gold-d);font-size:13px;letter-spacing:.4em;
+    border-left:3px solid var(--cng-red);padding-left:13px;margin:54px 0 26px;}
+  .cover-page h1{font-size:62px;font-weight:900;line-height:1.1;letter-spacing:.04em;color:var(--ink);}
+  .cover-page h1 .red{color:#bb301a;}
+  .cover-page .sub{font-size:18px;color:#6b5f44;margin-top:18px;letter-spacing:.12em;}
+  .cover-page .code{display:inline-block;margin-top:24px;font-size:12px;letter-spacing:.28em;
+    color:var(--gold-d);border:1px solid #c9b277;padding:6px 15px;border-radius:2px;}
+  .defn{margin-top:auto;padding:24px 28px;border-radius:3px;
+    background:rgba(255,250,235,.6);border:1px solid #d2c4a0;border-left:4px solid var(--cng-red);
+    font-size:14.5px;line-height:1.95;color:var(--ink2);}
+  .defn b{color:var(--rust);font-weight:700;}
+
+  /* ====== 档案 ====== */
+  .dossier{display:grid;grid-template-columns:repeat(2,1fr);border-top:2px solid var(--ink);}
+  .dossier .row{display:flex;border-bottom:1px solid var(--line);padding:13px 4px;font-size:14.5px;}
+  .dossier .row .k{color:var(--cng-red);font-weight:700;width:86px;flex:none;}
+  .dossier .row .v{color:var(--ink2);}
+
+  /* ====== 阶段 ====== */
+  .stage-tag{display:inline-block;font-size:12px;letter-spacing:.26em;color:#1a140a;
+    background:var(--gold);padding:5px 16px;border-radius:2px;font-weight:700;}
+  .stage-tag.crit{background:#cf4a26;color:#fff;}
+  .stage-h{font-size:33px;font-weight:900;color:var(--ink);margin:16px 0 3px;letter-spacing:.03em;}
+  .stage-yr{font-size:14px;color:var(--gold-d);letter-spacing:.18em;margin-bottom:20px;}
+  .triad{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0 22px;}
+  .triad .t{background:#f1e8d4;border:1px solid #d4c6a2;border-radius:3px;padding:18px 17px;}
+  .triad .t .lab{font-size:13.5px;font-weight:900;letter-spacing:.08em;margin-bottom:10px;
+    display:flex;gap:7px;align-items:center;}
+  .triad .t .lab .dot{width:9px;height:9px;border-radius:50%;flex:none;}
+  .triad .t.tian .dot{background:#c06a3a;} .triad .t.tian .lab{color:#a8541f;}
+  .triad .t.ren .dot{background:#bb301a;}  .triad .t.ren  .lab{color:#a8341f;}
+  .triad .t.di  .dot{background:#3f8a66;}  .triad .t.di   .lab{color:#2f6b4f;}
+  .triad .t p{font-size:13.5px;line-height:1.9;color:var(--ink2);}
+  .shape{border-left:3px solid var(--rust);padding:3px 0 3px 17px;margin:6px 0 20px;}
+  .shape .name{font-family:"Noto Serif SC",serif;font-size:19px;color:var(--rust);font-weight:700;margin-bottom:6px;}
+  .shape p{font-size:14px;color:var(--ink2);line-height:1.9;}
+  .vortex{width:100%;height:auto;display:block;background:#efe6d0;
+    border:1px solid #cbbd9b;border-radius:3px;flex:1 1 auto;min-height:0;}
+  .vortex .core{font-family:"Noto Serif SC",serif;font-weight:700;}
+
+  /* ====== 图表 ====== */
+  .lede{font-size:15px;color:var(--ink2);margin-bottom:6px;}
+  .bar-row{display:flex;align-items:center;gap:12px;margin:10px 0;font-size:13.5px;}
+  .bar-row .lbl{width:64px;flex:none;text-align:right;color:var(--dim);font-variant-numeric:tabular-nums;}
+  .bar-track{flex:1;height:28px;background:rgba(120,110,80,.16);border-radius:2px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:2px;display:flex;align-items:center;justify-content:flex-end;
+    padding-right:10px;font-size:12px;color:#fff;font-weight:700;white-space:nowrap;}
+  .bar-rev{background:linear-gradient(90deg,#7a3326,#a8542a);}
+  .bar-prof{background:linear-gradient(90deg,#8a6f2c,#bd9b52);}
+  .bar-peak{background:linear-gradient(90deg,#9e1813,#d0563a)!important;}
+  table.data{width:100%;border-collapse:collapse;margin-top:16px;font-size:14px;}
+  table.data th{background:var(--cng-red);color:#fbf3df;padding:13px 10px;text-align:left;font-weight:700;letter-spacing:.04em;}
+  table.data td{padding:13px 10px;border-bottom:1px solid var(--line);color:var(--ink2);font-variant-numeric:tabular-nums;}
+  table.data tr:nth-child(even) td{background:rgba(155,140,100,.08);}
+  table.data .hot{color:var(--cng-red);font-weight:700;}
+  .caption{font-size:12px;color:var(--dim);letter-spacing:.04em;margin-top:16px;font-style:italic;line-height:1.7;}
+
+  /* ====== 判断/期权/测算 ====== */
+  .verdict{display:grid;grid-template-columns:repeat(2,1fr);gap:17px;margin-top:8px;}
+  .vbox{background:#f1e8d4;border:1px solid #d4c6a2;border-radius:3px;padding:24px 26px;}
+  .vbox .vt{font-size:16px;font-weight:900;color:var(--cng-red);margin-bottom:6px;}
+  .vbox .stars{font-size:17px;color:#a07f2c;letter-spacing:2px;margin-bottom:10px;}
+  .vbox p{font-size:12.5px;color:var(--ink2);line-height:1.85;}
+  .opt-row{display:grid;grid-template-columns:1.5fr 1fr 1.1fr;border-bottom:1px solid var(--line);align-items:center;}
+  .opt-row.head{border-bottom:2px solid var(--ink);font-weight:900;}
+  .opt-row .c{padding:13px 10px;font-size:13.5px;}
+  .opt-row .c0{font-weight:700;color:var(--ink2);}
+  .opt-row .c2{color:var(--dim);font-size:12.5px;}
+  .badge{display:inline-block;font-size:11.5px;padding:4px 9px;border-radius:2px;font-weight:700;}
+  .b-opt{background:#e7dcc0;color:#8a6f2c;border:1px solid #c9b277;}
+  .b-zero{background:#f2dcd6;color:var(--cng-red);border:1px solid #d8a99e;}
+  .b-eng{background:#dbe8d8;color:#2f6b4f;border:1px solid #a7c4ad;}
+  .calc{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:22px 0;}
+  .calc .cc{background:#f1e8d4;border:1px solid #d4c6a2;border-radius:3px;padding:28px 18px;text-align:center;}
+  .calc .cc .big{font-family:"Noto Serif SC",serif;font-size:40px;font-weight:900;color:#bb301a;line-height:1.1;}
+  .calc .cc .unit{font-size:13px;color:var(--gold-d);}
+  .calc .cc .desc{font-size:12px;color:var(--dim);margin-top:10px;line-height:1.65;}
+  .quote{font-family:"Noto Serif SC",serif;font-size:16px;line-height:2.05;color:var(--ink2);
+    border:1px solid #d4c6a2;border-left:4px solid var(--cng-red);
+    padding:26px 30px;margin-top:22px;border-radius:3px;background:#f1e8d4;}
+  .quote b{color:var(--rust);}
+  .note{font-size:14px;color:var(--ink2);line-height:1.85;}
+  .note b{color:var(--cng-red);}
+  .seal{position:absolute;top:0;right:0;width:62px;height:62px;border:2px solid var(--cng-red);
+    border-radius:4px;color:var(--cng-red);display:flex;align-items:center;justify-content:center;
+    font-family:"Noto Serif SC",serif;font-weight:900;font-size:12px;text-align:center;line-height:1.3;
+    transform:rotate(-7deg);opacity:.85;}
+
+  /* ====== 屏幕：横向翻页（仅屏幕生效，不影响打印） ====== */
+  @media screen{
+    body.deck{margin:0;height:100vh;overflow-x:auto;overflow-y:hidden;padding:0;
+      display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;
+      scroll-snap-type:x mandatory;scroll-behavior:smooth;}
+    body.deck .slide{flex:0 0 auto;height:100vh;display:flex;align-items:center;
+      justify-content:center;scroll-snap-align:center;}
+    body.deck .slide .page{margin:0;transform-origin:center center;}
+    .deck-hint{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:99;
+      background:rgba(158,24,19,.92);color:#fbf3df;font-size:12px;letter-spacing:.1em;
+      padding:7px 18px;border-radius:20px;box-shadow:0 4px 14px rgba(0,0,0,.3);
+      font-family:"Noto Sans SC",sans-serif;user-select:none;}
+    .deck-nav{position:fixed;top:0;height:100vh;width:50vw;z-index:80;display:flex;
+      align-items:center;cursor:pointer;opacity:0;transition:opacity .25s;}
+    .deck-nav span{font-family:"Noto Serif SC",serif;font-size:46px;color:var(--cng-red);opacity:.55;padding:0 26px;}
+    .deck-nav.prev{left:0;justify-content:flex-start;}
+    .deck-nav.next{right:0;justify-content:flex-end;}
+    .deck-nav.prev:hover{opacity:1;background:linear-gradient(90deg,rgba(158,24,19,.09),transparent 42%);}
+    .deck-nav.next:hover{opacity:1;background:linear-gradient(270deg,rgba(158,24,19,.09),transparent 42%);}
+  }
+
+  /* ====== 打印：一盒一页，绝不跨页 ====== */
+  @page{ size:A4; margin:0; }
+  @media print{
+    body{background:#fff;padding:0;display:block;}
+    .slide{display:block!important;height:auto!important;width:auto!important;}
+    .page{margin:0;box-shadow:none;transform:none!important;break-after:page;page-break-after:always;}
+    .page:last-child{break-after:auto;page-break-after:auto;}
+    .deck-hint,.deck-nav{display:none!important;}
+    *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════ P1 封面 ════════ -->
+<section class="page cover-page">
+  <div class="inner">
+    <div class="top">
+      <div class="logo"><b>商业地理</b>BUSINESS GEOGRAPHIC</div>
+      <div class="iss">结构诊断特辑 · 第 000725 号 · 2026</div>
+    </div>
+    <div class="kicker">深度勘探 · 中国半导体显示版图</div>
+    <h1>京东方<br><span class="red">一颗主序前恒星</span><br>的引力坍缩</h1>
+    <div class="sub">从北京电子管厂到全球显示霸主 · 一部用资本对抗熵增的演化史</div>
+    <div><span class="code">BOE TECHNOLOGY ｜ 000725.SZ ｜ 涡旋体结构模型</span></div>
+    <div class="defn">
+      🔭 京东方是一座由国家意志点火、地方政府金融杠杆持续吸积而成的<b>"主序前恒星"</b>——它靠不断俘获外部资本（补贴+定增）的引力坍缩对抗面板周期的熵增；质量（产能/份额）已大到产生自身引力场（寡头定价权），但能量转化效率（ROE）长期被重资产折旧的强引力"红移"。2024 年它首次逼近<b>氢聚变点火线</b>（自主造血），却仍未确认能否成为稳定燃烧的主序星，还是一颗永远靠外部输血发光的低效巨物。
+    </div>
+  </div>
+</section>
+
+<!-- ════════ P2 档案 ════════ -->
+<section class="page">
+  <div class="rhead"><div class="l">商业地理<span>BUSINESS GEOGRAPHIC</span></div><div class="r">京东方 BOE · 000725 · 结构诊断</div></div>
+  <div class="inner">
+    <div class="sec-head"><div class="sec-no">壹</div><div><div class="sec-title">天体档案</div><div class="sec-en">The Dossier</div></div></div>
+    <div class="rule"></div>
+    <div class="dossier">
+      <div class="row"><span class="k">全称</span><span class="v">京东方科技集团股份有限公司</span></div>
+      <div class="row"><span class="k">代码</span><span class="v">000725.SZ / 200725(B)</span></div>
+      <div class="row"><span class="k">前身</span><span class="v">北京电子管厂（774厂，1956苏援）</span></div>
+      <div class="row"><span class="k">创始人</span><span class="v">王东升（会计师出身，1992救厂）</span></div>
+      <div class="row"><span class="k">改制</span><span class="v">1993，职工自筹+债转股</span></div>
+      <div class="row"><span class="k">主业</span><span class="v">半导体显示·物联网·传感·MLED·医工</span></div>
+      <div class="row"><span class="k">实控人</span><span class="v">无实际控制人（北京国资协同）</span></div>
+      <div class="row"><span class="k">董事长</span><span class="v">陈炎顺（CEO 冯强）</span></div>
+      <div class="row"><span class="k">2025营收</span><span class="v">2,045.90 亿元（+3.13%）</span></div>
+      <div class="row"><span class="k">2025净利</span><span class="v">58.57 亿元 · ROE 3.17%</span></div>
+    </div>
+    <div class="caption">图注：一家股权分散于多个国资主体的"无实控人"巨型显示天体，其存续本身即具国家战略目的——理解它一切补贴与融资行为的前提。</div>
+
+    <div class="sec-head" style="margin-top:26px;"><div class="sec-no">序</div><div><div class="sec-title">五个相变阶段</div><div class="sec-en">Five Phases of Stellar Evolution</div></div></div>
+    <div class="rule"></div>
+    <table class="data">
+      <tr><th>阶段</th><th>时期</th><th>结构形态</th></tr>
+      <tr><td>一 · 改制求生</td><td>1956–1993</td><td>抛掉外壳的红巨星残核</td></tr>
+      <tr><td>二 · 海外点火</td><td>2003–2009</td><td>俘获外部物质的原恒星</td></tr>
+      <tr><td>三 · 疯狂吸积</td><td>2008–2018</td><td>主序前引力坍缩狂飙</td></tr>
+      <tr><td>四 · 周期震荡</td><td>2019–2023</td><td>吸积盘潮汐 + 超级耀斑</td></tr>
+      <tr><td class="hot">五 · 临界点火</td><td>2024–2026</td><td class="hot">逼近氢聚变点火线</td></tr>
+    </table>
+    <div class="caption">恒星演化隐喻贯穿全篇——质量（产能）持续增长，但"发光机制"直到第五阶段才可能从引力坍缩切换为核聚变自持。</div>
+  </div>
+  <div class="rfoot"><div>李继刚『商业结构』· 涡旋体模型</div><div><span class="pg">01</span> / 11</div></div>
+</section>
+
+<!-- ════════ P3 阶段一 ════════ -->
+<section class="page">
+  <div class="rhead"><div class="l">恒星演化<span>PHASE 01</span></div><div class="r">京东方 BOE · 000725 · 结构诊断</div></div>
+  <div class="inner flexcol">
+    <span class="stage-tag">PHASE 01 · 1956–1993</span>
+    <div class="stage-h">红巨星抛壳</div>
+    <div class="stage-yr">电子管帝国的坍缩与残核改制</div>
+    <div class="triad">
+      <div class="t tian"><div class="lab"><span class="dot"></span>天 · 外部压力</div><p>集成电路取代电子管，技术范式相变。旧晶格的燃料被全球抽空，工厂连亏 7 年、2 万人濒临解体——不是竞争，是整个物种的灭绝。</p></div>
+      <div class="t ren"><div class="lab"><span class="dot"></span>人 · 向心力</div><p>35 岁会计师王东升临危受命。唯一向心力是"不甘死"与对现金流的本能。2600 名职工自筹 650 万元，债转股组建股份公司。</p></div>
+      <div class="t di"><div class="lab"><span class="dot"></span>地 · 离心力</div><p>近乎为零。无新产品、无新市场，边界收缩到只剩"如何不死"，能量全部向内收拢偿债。</p></div>
+    </div>
+    <div class="shape"><div class="name">▸ 形态：抛掉外壳的红巨星残核</div><p>燃料耗尽的红巨星，唯一生路是猛烈抛壳、把剩余物质坍缩成高密度残核。改制不为扩张，而为把弥散的能量重新压回一个能再次点火的奇点。</p></div>
+    <svg class="vortex" viewBox="0 0 680 286" role="img">
+      <defs><radialGradient id="g1" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#f6e6b0"/><stop offset="55%" stop-color="#e0653f"/><stop offset="100%" stop-color="#7a2418"/></radialGradient>
+      <marker id="m1" markerWidth="10" markerHeight="10" refX="7" refY="3.2" orient="auto"><path d="M0,0 L7,3.2 L0,6.4 Z" fill="#bd9b52"/></marker></defs>
+      <text x="340" y="26" fill="#6b5f44" font-size="13" text-anchor="middle">技术范式相变：集成电路取代电子管 · 旧产业整体灭绝</text>
+      <circle cx="340" cy="160" r="116" fill="none" stroke="#b8975a" stroke-width="1.4" stroke-dasharray="10 9"/>
+      <line x1="406" y1="96"  x2="470" y2="54"  stroke="#bd9b52" stroke-width="1.6" stroke-dasharray="4 4" marker-end="url(#m1)"/>
+      <line x1="274" y1="96"  x2="210" y2="54"  stroke="#bd9b52" stroke-width="1.6" stroke-dasharray="4 4" marker-end="url(#m1)"/>
+      <line x1="406" y1="224" x2="470" y2="266" stroke="#bd9b52" stroke-width="1.6" stroke-dasharray="4 4" marker-end="url(#m1)"/>
+      <line x1="274" y1="224" x2="210" y2="266" stroke="#bd9b52" stroke-width="1.6" stroke-dasharray="4 4" marker-end="url(#m1)"/>
+      <text x="500" y="50" fill="#6b5f44" font-size="11">电子管业务弥散</text>
+      <circle cx="340" cy="160" r="52" fill="url(#g1)" stroke="#c47a2a" stroke-width="1.5"/>
+      <text class="core" x="340" y="152" fill="#1a140a" font-size="15" text-anchor="middle">◉ 残核</text>
+      <text x="340" y="170" fill="#3a2a12" font-size="10.5" text-anchor="middle">王东升+2600职工</text>
+      <text x="340" y="185" fill="#3a2a12" font-size="10.5" text-anchor="middle">650万·债转股</text>
+      <text x="340" y="276" fill="#a8341f" font-size="12" text-anchor="middle">连亏7年 · 濒死 · 能量向内坍缩成高密度奇点</text>
+    </svg>
+  </div>
+  <div class="rfoot"><div>李继刚『商业结构』· 涡旋体模型</div><div><span class="pg">02</span> / 11</div></div>
+</section>
+
+<!-- ════════ P4 阶段二 ════════ -->
+<section class="page">
+  <div class="rhead"><div class="l">恒星演化<span>PHASE 02</span></div><div class="r">京东方 BOE · 000725 · 结构诊断</div></div>
+  <div class="inner flexcol">
+    <span class="stage-tag">PHASE 02 · 2003–2009</span>
+    <div class="stage-h">原恒星点火</div>
+    <div class="stage-yr">俘获外部种子物质 · 引力点燃</div>
+    <div class="triad">
+      <div class="t tian"><div class="lab"><span class="dot"></span>天 · 外部压力</div><p>"缺芯少屏"——面板是第四大进口商品，国产化率不足 5%。TFT-LCD 被日韩台三重封锁：技术、专利、资本。</p></div>
+      <div class="t ren"><div class="lab"><span class="dot"></span>人 · 向心力</div><p>命运一跃：2003 年以 3.8 亿美元收购韩国现代 HYDIS，一次性俘获产线+FFS 广视角专利。2005 北京 5 代线量产，终结"无自主液晶屏"。</p></div>
+      <div class="t di"><div class="lab"><span class="dot"></span>地 · 离心力</div><p>极微弱。产能爬坡即遇价格暴跌，长期亏损，2009 年靠 8.3 亿政府补贴勉强扭亏。</p></div>
+    </div>
+    <div class="shape"><div class="name">▸ 形态：靠俘获物质勉强点燃的原恒星</div><p>原恒星之光来自引力坍缩势能，而非核聚变——京东方此时的光不来自盈利，而来自一次性技术俘获与外部补贴注入。燃料一断，立刻冷却为褐矮星。</p></div>
+    <svg class="vortex" viewBox="0 0 680 270" role="img">
+      <defs><radialGradient id="g2" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff4cf"/><stop offset="50%" stop-color="#e6b24f"/><stop offset="100%" stop-color="#8a5a16"/></radialGradient>
+      <marker id="m2" markerWidth="10" markerHeight="10" refX="7" refY="3.2" orient="auto"><path d="M0,0 L7,3.2 L0,6.4 Z" fill="#c06a3a"/></marker>
+      <marker id="m2g" markerWidth="10" markerHeight="10" refX="7" refY="3.2" orient="auto"><path d="M0,0 L7,3.2 L0,6.4 Z" fill="#3f8a66"/></marker></defs>
+      <text x="200" y="22" fill="#a8541f" font-size="12" text-anchor="middle">缺芯少屏·国家焦虑</text>
+      <text x="480" y="22" fill="#a8541f" font-size="12" text-anchor="middle">日韩台技术封锁</text>
+      <line x1="200" y1="30" x2="200" y2="82" stroke="#c06a3a" stroke-width="2" marker-end="url(#m2)"/>
+      <line x1="340" y1="30" x2="340" y2="74" stroke="#c06a3a" stroke-width="2" marker-end="url(#m2)"/>
+      <line x1="480" y1="30" x2="480" y2="82" stroke="#c06a3a" stroke-width="2" marker-end="url(#m2)"/>
+      <circle cx="340" cy="158" r="50" fill="url(#g2)" stroke="#c47a2a" stroke-width="1.5"/>
+      <text class="core" x="340" y="152" fill="#1a140a" font-size="14" text-anchor="middle">◉ 点火核</text>
+      <text x="340" y="170" fill="#3a2a12" font-size="10.5" text-anchor="middle">FFS技术+5代线2005</text>
+      <circle cx="118" cy="158" r="30" fill="none" stroke="#bd9b52" stroke-width="1.4" stroke-dasharray="5 4"/>
+      <text x="118" y="155" fill="#7a6433" font-size="10" text-anchor="middle">HYDIS</text>
+      <text x="118" y="168" fill="#7a6433" font-size="10" text-anchor="middle">3.8亿$</text>
+      <line x1="152" y1="158" x2="282" y2="158" stroke="#bd9b52" stroke-width="2" marker-end="url(#m2)"/>
+      <text x="210" y="148" fill="#6b5f44" font-size="10" text-anchor="middle">引力俘获</text>
+      <line x1="560" y1="158" x2="398" y2="158" stroke="#3f8a66" stroke-width="2" marker-end="url(#m2g)"/>
+      <text x="560" y="148" fill="#2f6b4f" font-size="10" text-anchor="middle">政府补贴</text>
+      <text x="560" y="170" fill="#2f6b4f" font-size="10" text-anchor="middle">8.3亿托底</text>
+      <text x="340" y="252" fill="#a8341f" font-size="12" text-anchor="middle">⚠ 光来自引力坍缩势能，非盈利 · 燃料中断即冷却为褐矮星</text>
+    </svg>
+  </div>
+  <div class="rfoot"><div>李继刚『商业结构』· 涡旋体模型</div><div><span class="pg">03</span> / 11</div></div>
+</section>
+
+<!-- ════════ P5 阶段三 ════════ -->
+<section class="page">
+  <div class="rhead"><div class="l">恒星演化<span>PHASE 03</span></div><div class="r">京东方 BOE · 000725 · 结构诊断</div></div>
+  <div class="inner flexcol">
+    <span class="stage-tag">PHASE 03 · 2008–2018</span>
+    <div class="stage-h">疯狂吸积</div>
+    <div class="stage-yr">合肥模式驱动 · 主序前引力坍缩狂飙</div>
+    <div class="triad">
+      <div class="t tian"><div class="lab"><span class="dot"></span>天 · 外部压力</div><p>"王氏定律"：价格每 36 月腰斩。环境从"技术封锁"切换为"资本饥渴"——不以超过跌价的速度扩产升级，就被周期碾死。</p></div>
+      <div class="t ren"><div class="lab"><span class="dot"></span>人 · 向心力</div><p>核心是"合肥模式"：地方政府以定增+委贷+产业基金做耐心资本，撬动百亿产线。上市累计股权融资超 800 亿。</p></div>
+      <div class="t di"><div class="lab"><span class="dot"></span>地 · 离心力</div><p>以吸积盘方式膨胀：京沪渝鄂多地高世代线点亮，2018 年 TV 面板出货全球第一，五大应用 LCD 出货量全部登顶。</p></div>
+    </div>
+    <div class="shape"><div class="name">▸ 形态：靠引力坍缩发光的主序前恒星</div><p>产能、份额、营收暴涨，"全球第一"光芒四射，但利润极薄、ROE 个位数，盈利依赖补贴（2016 年占净利约 100%）。它发的光来自坍缩势能，不是核聚变——代价是被锁进重资产、高折旧、低回报的引力深井。</p></div>
+    <svg class="vortex" viewBox="0 0 680 300" role="img">
+      <defs><radialGradient id="g3" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff4cf"/><stop offset="45%" stop-color="#e6b24f"/><stop offset="100%" stop-color="#7a3326"/></radialGradient>
+      <marker id="m3i" markerWidth="10" markerHeight="10" refX="7" refY="3.2" orient="auto"><path d="M0,0 L7,3.2 L0,6.4 Z" fill="#bd9b52"/></marker>
+      <marker id="m3o" markerWidth="10" markerHeight="10" refX="7" refY="3.2" orient="auto"><path d="M0,0 L7,3.2 L0,6.4 Z" fill="#3f8a66"/></marker></defs>
+      <text x="340" y="20" fill="#a8541f" font-size="12" text-anchor="middle">王氏定律：价格每36月腰斩 ▼ 资本饥渴</text>
+      <g font-size="10" fill="#7a6433"><text x="14" y="88">北京国资</text><text x="14" y="138">合肥定增</text><text x="14" y="188">武汉基金</text><text x="14" y="238">460亿定增</text></g>
+      <line x1="92" y1="84"  x2="262" y2="146" stroke="#bd9b52" stroke-width="1.8" marker-end="url(#m3i)"/>
+      <line x1="92" y1="134" x2="262" y2="156" stroke="#bd9b52" stroke-width="1.8" marker-end="url(#m3i)"/>
+      <line x1="92" y1="184" x2="262" y2="168" stroke="#bd9b52" stroke-width="1.8" marker-end="url(#m3i)"/>
+      <line x1="98" y1="234" x2="262" y2="180" stroke="#bd9b52" stroke-width="1.8" marker-end="url(#m3i)"/>
+      <circle cx="340" cy="162" r="56" fill="url(#g3)" stroke="#c47a2a" stroke-width="1.6"/>
+      <text class="core" x="340" y="156" fill="#1a140a" font-size="14" text-anchor="middle">◉◉◉ 吸积核</text>
+      <text x="340" y="174" fill="#3a2a12" font-size="10" text-anchor="middle">逆周期·融资&gt;800亿</text>
+      <line x1="398" y1="146" x2="568" y2="88"  stroke="#3f8a66" stroke-width="1.8" marker-end="url(#m3o)"/>
+      <line x1="398" y1="158" x2="568" y2="144" stroke="#3f8a66" stroke-width="1.8" marker-end="url(#m3o)"/>
+      <line x1="398" y1="170" x2="568" y2="196" stroke="#3f8a66" stroke-width="1.8" marker-end="url(#m3o)"/>
+      <line x1="396" y1="182" x2="568" y2="244" stroke="#3f8a66" stroke-width="1.8" marker-end="url(#m3o)"/>
+      <g font-size="10" fill="#2f6b4f" text-anchor="end"><text x="666" y="86">全球LCD第一(2018)</text><text x="666" y="144">五大应用出货第一</text><text x="666" y="196">高世代线遍地</text><text x="666" y="246">营收368→971亿</text></g>
+      <ellipse cx="340" cy="276" rx="150" ry="18" fill="#ddd0b0" stroke="#b09a6a" stroke-width="1"/>
+      <text x="340" y="281" fill="#6b5f44" font-size="11" text-anchor="middle">折旧黑洞越挖越深 · 补贴占净利~100%(2016)</text>
+    </svg>
+  </div>
+  <div class="rfoot"><div>李继刚『商业结构』· 涡旋体模型</div><div><span class="pg">04</span> / 11</div></div>
+</section>
+
+<!-- ════════ P6 阶段四 ════════ -->
+<section class="page">
+  <div class="rhead"><div class="l">恒星演化<span>PHASE 04</span></div><div class="r">京东方 BOE · 000725 · 结构诊断</div></div>
+  <div class="inner flexcol">
+    <span class="stage-tag">PHASE 04 · 2019–2023</span>
+    <div class="stage-h">潮汐与超级耀斑</div>
+    <div class="stage-yr">吸积盘的剧烈震荡</div>
+    <div class="triad">
+      <div class="t tian"><div class="lab"><span class="dot"></span>天 · 外部压力</div><p>韩台退出 LCD（结构性利好）叠加周期潮汐空前剧烈：2021 超级周期暴利，2022–23 价格雪崩。振幅大到撕裂任何重资产结构。</p></div>
+      <div class="t ren"><div class="lab"><span class="dot"></span>人 · 向心力</div><p>王东升退休、陈炎顺接棒。2021 超级周期中规模+成本短暂点燃耀斑级盈利：净利 259.61 亿、ROE 23.84%——历史唯一一次接近稳定恒星亮度。</p></div>
+      <div class="t di"><div class="lab"><span class="dot"></span>地 · 离心力</div><p>巨幅震荡：2022 净利暴跌 71%、扣非转亏却获补 54.58 亿（补贴峰值），2023 净利再跌至 25 亿。规模巨大但抗震性弱。</p></div>
+    </div>
+    <div class="shape"><div class="name">▸ 形态：被潮汐反复撕扯的吸积盘 + 一次超级耀斑</div><p>259 亿暴利不是结构成熟的证明，而是周期外力引发的偶发耀斑。潮汐退去，立刻打回"增收不增利"原形——它缺乏稳定核聚变来熨平波动。</p></div>
+    <svg class="vortex" viewBox="0 0 680 270" role="img">
+      <defs><radialGradient id="g4" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff6d2"/><stop offset="40%" stop-color="#f0b24f"/><stop offset="100%" stop-color="#9e1813"/></radialGradient></defs>
+      <text x="190" y="22" fill="#a8541f" font-size="11.5" text-anchor="middle">↑ 潮汐压缩·点火</text>
+      <text x="500" y="22" fill="#2f6b4f" font-size="11.5" text-anchor="middle">↓ 潮汐拉伸·冷却</text>
+      <path d="M40,140 C140,42 240,42 340,140 C440,238 540,238 640,140" fill="none" stroke="#b8975a" stroke-width="2"/>
+      <g transform="translate(190,88)"><polygon points="0,-44 11,-13 42,-13 16,7 26,38 0,19 -26,38 -16,7 -42,-13 -11,-13" fill="url(#g4)" stroke="#c47a2a" stroke-width="1.2"/>
+      <text class="core" x="0" y="-2" fill="#1a140a" font-size="11" text-anchor="middle">⚡耀斑</text><text x="0" y="11" fill="#3a1410" font-size="8.5" text-anchor="middle">259亿</text></g>
+      <text x="190" y="162" fill="#a8431f" font-size="11" text-anchor="middle">2021 · ROE 23.84%</text>
+      <text x="190" y="178" fill="#6b5f44" font-size="10" text-anchor="middle">唯一接近稳定恒星亮度</text>
+      <ellipse cx="500" cy="200" rx="92" ry="32" fill="#ddd0b0" stroke="#b09a6a" stroke-width="1.2"/>
+      <text x="500" y="194" fill="#a8341f" font-size="11" text-anchor="middle">2022 扣非亏·补贴54.58亿</text>
+      <text x="500" y="210" fill="#6b5f44" font-size="10.5" text-anchor="middle">2023 净利跌至25亿（峰值补贴年）</text>
+      <text x="340" y="256" fill="#a8341f" font-size="12" text-anchor="middle">⚠ 259亿是周期外力引发的偶发耀斑，不是自持核聚变</text>
+    </svg>
+  </div>
+  <div class="rfoot"><div>李继刚『商业结构』· 涡旋体模型</div><div><span class="pg">05</span> / 11</div></div>
+</section>
+
+<!-- ════════ P7 阶段五 ════════ -->
+<section class="page">
+  <div class="rhead"><div class="l">恒星演化<span>PHASE 05 · 临界</span></div><div class="r">京东方 BOE · 000725 · 结构诊断</div></div>
+  <div class="inner flexcol">
+    <span class="stage-tag crit">PHASE 05 · 2024–2026 · 临界</span>
+    <div class="stage-h">逼近氢聚变点火线</div>
+    <div class="stage-yr">寡头控产与第二曲线点火</div>
+    <div class="triad">
+      <div class="t tian"><div class="lab"><span class="dot"></span>天 · 外部压力</div><p>力场反转：韩台退出，中国掌握全球约 72% LCD 产能。"反内卷"控产时代——外部压力首次部分转化为可掌控的定价权。地缘成为新变量。</p></div>
+      <div class="t ren"><div class="lab"><span class="dot"></span>人 · 向心力</div><p>首次从"靠补贴/周期发光"转向"靠结构自持"：2024 扣非 +706% 转正，补贴从 54.58 亿骤降至 12.21 亿；OLED 进苹果、8.6 代线抢先量产、与三星诉讼和解。</p></div>
+      <div class="t di"><div class="lab"><span class="dot"></span>地 · 离心力</div><p>向"屏之物联"扩张，四大创新业务占营收 24.81%，车载显示全球第一。但显示器件仍占 81–83%，离心扩张未改收入结构。</p></div>
+    </div>
+    <div class="shape"><div class="name">▸ 形态：减速增稳、逼近点火线的临界恒星</div><p>核心温度（盈利）首次接近不依赖外部输血即可自持的临界点。寡头控产是"引力压实"，OLED 是新聚变燃料，补贴退坡是引力红移减弱。京东方第一次有可能从"低效巨物"相变为"稳定主序星"。</p></div>
+    <svg class="vortex" viewBox="0 0 680 300" role="img">
+      <defs><radialGradient id="g5" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fffbe6"/><stop offset="38%" stop-color="#f4d06a"/><stop offset="100%" stop-color="#c47a2a"/></radialGradient>
+      <marker id="m5i" markerWidth="10" markerHeight="10" refX="7" refY="3.2" orient="auto"><path d="M0,0 L7,3.2 L0,6.4 Z" fill="#bd9b52"/></marker>
+      <marker id="m5o" markerWidth="10" markerHeight="10" refX="7" refY="3.2" orient="auto"><path d="M0,0 L7,3.2 L0,6.4 Z" fill="#3f8a66"/></marker></defs>
+      <text x="340" y="20" fill="#a8541f" font-size="12" text-anchor="middle">韩台退出→中国占LCD产能72% · 地缘风险(1260H/关税)</text>
+      <line x1="40" y1="116" x2="640" y2="116" stroke="#cf4a26" stroke-width="1.4" stroke-dasharray="7 5"/>
+      <text x="638" y="110" fill="#bb301a" font-size="11" text-anchor="end">— 氢聚变点火线 —</text>
+      <circle cx="340" cy="170" r="62" fill="none" stroke="#b8975a" stroke-width="1.2" stroke-dasharray="4 4"/>
+      <circle cx="340" cy="170" r="50" fill="url(#g5)" stroke="#d99a3a" stroke-width="1.8"/>
+      <text class="core" x="340" y="164" fill="#1a140a" font-size="13" text-anchor="middle">◉ 临界核</text>
+      <text x="340" y="181" fill="#3a2a12" font-size="9.5" text-anchor="middle">2024扣非+706%·自主造血</text>
+      <line x1="92" y1="150" x2="276" y2="162" stroke="#bd9b52" stroke-width="1.8" marker-end="url(#m5i)"/>
+      <line x1="92" y1="196" x2="276" y2="180" stroke="#bd9b52" stroke-width="1.8" marker-end="url(#m5i)"/>
+      <g font-size="10" fill="#7a6433"><text x="14" y="146">控产保价</text><text x="14" y="200">补贴退坡 54→12亿</text></g>
+      <line x1="404" y1="150" x2="560" y2="138" stroke="#3f8a66" stroke-width="1.8" marker-end="url(#m5o)"/>
+      <line x1="404" y1="170" x2="560" y2="180" stroke="#3f8a66" stroke-width="1.8" marker-end="url(#m5o)"/>
+      <line x1="404" y1="190" x2="560" y2="220" stroke="#3f8a66" stroke-width="1.8" marker-end="url(#m5o)"/>
+      <g font-size="10" fill="#2f6b4f" text-anchor="end"><text x="666" y="136">OLED进苹果·8.6代抢量产</text><text x="666" y="182">第二曲线占24.8%</text><text x="666" y="222">车载显示全球第一</text></g>
+      <text x="200" y="266" fill="#2f6b4f" font-size="11.5" text-anchor="middle">▲ 点火成功 → 稳定主序星</text>
+      <text x="490" y="266" fill="#a8341f" font-size="11.5" text-anchor="middle">▼ 点火失败 → 坍缩褐矮星</text>
+      <text x="340" y="290" fill="#6b5f44" font-size="11" text-anchor="middle">⚠ 折旧深井(B16 2027起计提) · OLED价值链仍落后三星一身位</text>
+    </svg>
+  </div>
+  <div class="rfoot"><div>李继刚『商业结构』· 涡旋体模型</div><div><span class="pg">06</span> / 11</div></div>
+</section>
+
+<!-- ════════ P8 财务 ════════ -->
+<section class="page">
+  <div class="rhead"><div class="l">财务地层<span>FINANCIAL STRATA</span></div><div class="r">京东方 BOE · 000725 · 结构诊断</div></div>
+  <div class="inner">
+    <div class="sec-head"><div class="sec-no">叁</div><div><div class="sec-title">财务地层剖面</div><div class="sec-en">Financial Stratigraphy</div></div></div>
+    <div class="rule"></div>
+    <div class="lede">营收与归母净利的十二年沉积——典型面板强周期曲线，2021 年是清晰可辨的"超级周期耀斑层"。</div>
+    <div style="margin-top:8px;">
+      <div class="bar-row"><span class="lbl">2014</span><div class="bar-track"><div class="bar-fill bar-rev" style="width:18%">368亿</div></div></div>
+      <div class="bar-row"><span class="lbl">2017</span><div class="bar-track"><div class="bar-fill bar-rev" style="width:46%">938亿 · 净利75.7亿</div></div></div>
+      <div class="bar-row"><span class="lbl">2019</span><div class="bar-track"><div class="bar-fill bar-rev" style="width:57%">1161亿</div></div></div>
+      <div class="bar-row"><span class="lbl">2021</span><div class="bar-track"><div class="bar-fill bar-peak" style="width:100%">2210亿 · 净利259.6亿 ★耀斑</div></div></div>
+      <div class="bar-row"><span class="lbl">2023</span><div class="bar-track"><div class="bar-fill bar-rev" style="width:79%">1745亿 · 净利25.5亿</div></div></div>
+      <div class="bar-row"><span class="lbl">2024</span><div class="bar-track"><div class="bar-fill bar-rev" style="width:90%">1984亿 · 扣非+706%</div></div></div>
+      <div class="bar-row"><span class="lbl">2025</span><div class="bar-track"><div class="bar-fill bar-rev" style="width:93%">2046亿 · 净利58.6亿</div></div></div>
+    </div>
+    <div class="lede" style="margin-top:22px;">政府补助退坡——结构性边际反转，是"褐矮星→主序星"相变的最强信号。</div>
+    <div style="margin-top:8px;">
+      <div class="bar-row"><span class="lbl">2016</span><div class="bar-track"><div class="bar-fill bar-prof" style="width:44%">占净利约100%</div></div></div>
+      <div class="bar-row"><span class="lbl">2022</span><div class="bar-track"><div class="bar-fill bar-peak" style="width:100%">54.58亿 ★峰值(扣非亏)</div></div></div>
+      <div class="bar-row"><span class="lbl">2023</span><div class="bar-track"><div class="bar-fill bar-prof" style="width:70%">37.94亿</div></div></div>
+      <div class="bar-row"><span class="lbl">2024</span><div class="bar-track"><div class="bar-fill bar-prof" style="width:23%">12.21亿 ▼骤降</div></div></div>
+    </div>
+    <table class="data" style="margin-top:24px;">
+      <tr><th>关键年份</th><th>营收(亿)</th><th>归母净利(亿)</th><th>毛利率</th><th>加权ROE</th></tr>
+      <tr><td>2021 · 超级周期</td><td>2210</td><td class="hot">259.6</td><td>28.87%</td><td class="hot">23.84%</td></tr>
+      <tr><td>2023 · 周期底</td><td>1745</td><td>25.5</td><td>11.50%</td><td>1.89%</td></tr>
+      <tr><td>2025 · 复苏中段</td><td>2046</td><td>58.6</td><td>15.64%</td><td>3.17%</td></tr>
+    </table>
+    <div class="caption">数据来源：同花顺（按年度合并口径，归母净利）；政府补助为计入当期损益口径。2021 超级周期 ROE 23.84% 是历史唯一一次接近"稳定恒星"亮度，潮汐退去后迅速回落至个位数。</div>
+  </div>
+  <div class="rfoot"><div>李继刚『商业结构』· 涡旋体模型</div><div><span class="pg">07</span> / 11</div></div>
+</section>
+
+<!-- ════════ P9 竞争 ════════ -->
+<section class="page">
+  <div class="rhead"><div class="l">竞争版图<span>CARTOGRAPHY</span></div><div class="r">京东方 BOE · 000725 · 结构诊断</div></div>
+  <div class="inner">
+    <div class="sec-head"><div class="sec-no">肆</div><div><div class="sec-title">全球显示版图 · 京东方坐标</div><div class="sec-en">Competitive Cartography</div></div></div>
+    <div class="rule"></div>
+    <table class="data">
+      <tr><th>战场</th><th>京东方地位</th><th>结构判断</th></tr>
+      <tr><td>大尺寸 LCD（TV/IT）</td><td class="hot">双第一 ~27%</td><td>数量统治，握定价权</td></tr>
+      <tr><td>智能手机 OLED（出货量）</td><td class="hot">全球第一 24.3%</td><td>量的第一</td></tr>
+      <tr><td>柔性 OLED 收入/价值</td><td>第三 ~14%</td><td>价的追赶，落后一身位</td></tr>
+      <tr><td>iPhone OLED 供应</td><td>季度第二 22.7%</td><td>苹果链突破</td></tr>
+      <tr><td>IT OLED（8.6 代）</td><td class="hot">抢先量产</td><td>卡位领先三星</td></tr>
+      <tr><td>车载显示</td><td class="hot">全球第一 ~18%</td><td>LCD 车载领先</td></tr>
+      <tr><td>车载 OLED</td><td>第二 ~13%</td><td>高端落后(三星&gt;70%)</td></tr>
+    </table>
+    <div class="caption">图注：京东方已完成"数量统治"（LCD + 手机 OLED 出货双第一），但在"价值高端"（柔性 OLED 收入、车载 OLED、苹果全年份额）仍落后三星显示一个身位——竞争主轴已从"产能/价格"相变为"高端良率 / 苹果话语权 / IP 合法性"。</div>
+    <div class="note" style="margin-top:22px;">三星显示 2022 年彻底停产 LCD、LG Display 2024 年出售广州厂给 TCL华星——<b>韩系已全面退出大尺寸 LCD</b>，台系（群创/友达）退守利基与车载。大尺寸 LCD 进入"中国大陆独家供给"时代，这是京东方第五阶段获得定价权的外部地质前提。</div>
+    <div class="quote" style="font-size:14.5px;margin-top:20px;">韩台已完全退出大尺寸 LCD，中国大陆掌握全球约 <b>72%</b> 的 LCD 产能、<b>76%</b> 的显示面积产能。京东方 + TCL华星 + 惠科三强合计占全球 LCD TV 面板出货约 <b>66–70%</b>——产能消耗战已分出胜负，定价权从下游品牌转移到上游面板厂。</div>
+  </div>
+  <div class="rfoot"><div>李继刚『商业结构』· 涡旋体模型</div><div><span class="pg">08</span> / 11</div></div>
+</section>
+
+<!-- ════════ P10 AI专题 ════════ -->
+<section class="page">
+  <div class="rhead"><div class="l">勘探专题<span>OPTION, NOT ENGINE</span></div><div class="r">京东方 BOE · 000725 · 结构诊断</div></div>
+  <div class="inner">
+    <div class="sec-head"><div class="sec-no">伍</div><div><div class="sec-title">AI 基建与具身智能</div><div class="sec-en">Option, Not Engine</div></div></div>
+    <div class="rule"></div>
+    <div class="note" style="font-size:14.5px;color:var(--cng-red);font-weight:700;">核心结论：5–10 年内，这两个领域是"看涨期权"，不是"利润主引擎"。</div>
+    <div class="note" style="margin-top:8px;">最有力的证据来自公司自己——2026 年 5 月连拉两涨停后，京东方两次发澄清公告主动降温：「与英伟达暂未开展业务合作」「玻璃基/钙钛矿/光互连尚未实现量产营收」「未来 2–3 年无法对业绩产生重大影响」。</div>
+    <div style="margin-top:16px;">
+      <div class="opt-row head"><div class="c c0">方向</div><div class="c">已落地营收</div><div class="c c2">性质判断</div></div>
+      <div class="opt-row"><div class="c c0">玻璃基先进封装</div><div class="c"><span class="badge b-zero">零·送样中</span></div><div class="c c2">唯一可能触发相变，2027+</div></div>
+      <div class="opt-row"><div class="c c0">CPO 光互连（华灿）</div><div class="c"><span class="badge b-zero">零·送样英伟达</span></div><div class="c c2">主题期权</div></div>
+      <div class="opt-row"><div class="c c0">机器人（2亿子公司）</div><div class="c"><span class="badge b-zero">零</span></div><div class="c c2">做工业机器人非人形</div></div>
+      <div class="opt-row"><div class="c c0">电子皮肤/触觉</div><div class="c"><span class="badge b-zero">无产品</span></div><div class="c c2">不在第一梯队</div></div>
+      <div class="opt-row"><div class="c c0">传感（真高毛利27%）</div><div class="c"><span class="badge b-opt">5.87亿·占0.29%</span></div><div class="c c2">高毛利侏儒</div></div>
+      <div class="opt-row"><div class="c c0">AI 拉动显示主业</div><div class="c"><span class="badge b-eng">部分兑现</span></div><div class="c c2">边际增量，非相变</div></div>
+    </div>
+    <div class="caption">图注：玻璃基封装是六条新赛道里唯一可能让京东方跳出"重资产低毛利引力井"的路径——但 2027 年后才量产，在中国内部量产进度还落后于成都 ECHINT、沃格光电。其余多为"显示制造能力的再包装"。</div>
+    <div class="quote" style="font-size:14.5px;margin-top:22px;">一句话：买京东方的"AI 基建"，本质是买一张 2027–2030 年才行权、行权概率中等的<b>看涨期权</b>，叠加在一个周期性显示主业之上。当前股价里的 AI 溢价，主要由市场情绪与"链主"叙事支撑，期权的内在价值目前接近零，全是时间价值。</div>
+  </div>
+  <div class="rfoot"><div>李继刚『商业结构』· 涡旋体模型</div><div><span class="pg">09</span> / 11</div></div>
+</section>
+
+<!-- ════════ P11 量级测算 ════════ -->
+<section class="page">
+  <div class="rhead"><div class="l">勘探专题<span>SCALE TEST</span></div><div class="r">京东方 BOE · 000725 · 结构诊断</div></div>
+  <div class="inner">
+    <div class="sec-head"><div class="sec-no">陆</div><div><div class="sec-title">量级测算 · 数学上当不了主引擎</div><div class="sec-en">The Arithmetic of Scale</div></div></div>
+    <div class="rule"></div>
+    <div class="note">基数（2025）：营收 2046 亿 · 归母净利 58.57 亿 · 归母净资产约 1330 亿 · ROE 约 4.8%。</div>
+    <div class="calc">
+      <div class="cc"><div class="big">+195<span class="unit">亿营收</span></div><div class="desc">让净利增厚 50% 所需的新业务规模（按 15% 净利率）</div></div>
+      <div class="cc"><div class="big">+670<span class="unit">亿营收</span></div><div class="desc">让 ROE 达到 15% 所需高毛利营收——再造 40% 个显示器件</div></div>
+      <div class="cc"><div class="big">5.87<span class="unit">亿</span></div><div class="desc">而最高毛利的传感业务规模——量级差 2 个数量级</div></div>
+    </div>
+    <div class="quote" style="font-size:14px;">所谓 2026 年"去周期化"利润弹性，真相是<b>折旧达峰下行</b>这个会计变量（增厚净利 35–45 亿），被叙事包装成"第二曲线兑现"。机构仍用 <b>PB（1.1–1.4×）</b>给周期股定价，未给 AI 溢价。</div>
+    <div class="sec-head" style="margin-top:24px;"><div class="sec-no">柒</div><div><div class="sec-title">真正该跟踪的四个矢量</div><div class="sec-en">What to Track</div></div></div>
+    <div class="rule"></div>
+    <table class="data">
+      <tr><th>信号</th><th>含义</th></tr>
+      <tr><td class="hot">① 玻璃基封装量产拐点</td><td>首张规模订单 / 良率突破 85% / 康宁 MOU 转正式协议（期权行权信号）</td></tr>
+      <tr><td>② 2026 折旧下行兑现</td><td>35–45 亿净利增厚是否落地</td></tr>
+      <tr><td>③ LCD 价格与控产纪律</td><td>ROE 弹性的真正来源（供给侧寡头化）</td></tr>
+      <tr><td>④ 资本开支 2027 见顶</td><td>自由现金流释放、重资产松绑的临界点</td></tr>
+    </table>
+  </div>
+  <div class="rfoot"><div>李继刚『商业结构』· 涡旋体模型</div><div><span class="pg">10</span> / 11</div></div>
+</section>
+
+<!-- ════════ P12 终局 ════════ -->
+<section class="page">
+  <div class="rhead"><div class="l">终局判断<span>THE VERDICT</span></div><div class="r">京东方 BOE · 000725 · 结构诊断</div></div>
+  <div class="inner">
+    <div class="seal">结构<br>诊断</div>
+    <div class="sec-head"><div class="sec-no">终</div><div><div class="sec-title">终局判断</div><div class="sec-en">The Verdict</div></div></div>
+    <div class="rule"></div>
+    <div class="verdict">
+      <div class="vbox"><div class="vt">核心密度</div><div class="stars">★★★★☆</div><p>全球最大产能 + 最全技术矩阵，LCD 与手机 OLED 出货双第一，已产生自身引力场。但密度的"温度"（盈利效率）偏低，ROE 长期个位数。</p></div>
+      <div class="vbox"><div class="vt">边界扩张力</div><div class="stars">★★★☆☆</div><p>边界已达全球面板版图极限 + "屏之物联"四大创新 + 第 N 曲线。但显示器件仍占 81–83%，新业务造血未验证，更像"业务拼盘"。</p></div>
+      <div class="vbox"><div class="vt">抗熵增能力</div><div class="stars">★★★☆☆</div><p>韩台退出 + 寡头控产 + 补贴退坡，抗周期能力实质增强，自主造血首次成立。但重资产、高折旧（年约 344 亿）、低净利率枷锁未解。</p></div>
+      <div class="vbox" style="border-color:#d8a99e;background:#f6e7d8;"><div class="vt" style="color:var(--rust);">相变概率 · 中高（向上）</div><div class="stars">⤴</div><p>正处"主序前→主序星"相变临界。2026–2028 验证窗口：控产定价权 + OLED 放量 + 8.6 代良率 + 资本开支见顶→正相变；周期下行 + 折旧吞噬→坍缩褐矮星。</p></div>
+    </div>
+    <div class="quote">🔭 京东方是中国产业政策意义上的<b>史诗级胜利</b>（打破日韩台垄断、终结"少屏"），也是纯财务/股东回报意义上长期未解的<b>低回报命题</b>——两个判断同时为真。AI 是给这台高惯量低能效的重型转子注入的新扭矩，转速提上来了，但转动惯量（重资产折旧）与摩擦阻尼（低毛利、弱定价权）未变。能改写命运的，不是更性感的新故事，而是改变转子本身的材质——在所有探针里，只有"玻璃基封装"有可能在 2030 年前后真正熔进转子。</div>
+  </div>
+  <div class="rfoot"><div>商业地理 · 结构诊断特辑 ｜ 数据截止 2026-06 ｜ 非投资建议</div><div><span class="pg">11</span> / 11</div></div>
+</section>
+
+<script>
+/* 横向翻页：仅屏幕生效，打印时整段不影响（@media print 已重置 transform/布局）。
+   每页包一层 .slide 占位，.page 等比缩放到适配视口高度；← → / 滚轮 / 点击 翻页。 */
+(function(){
+  if(window.matchMedia&&window.matchMedia('print').matches) return;
+  function build(){
+    var pages=[].slice.call(document.querySelectorAll('.page'));
+    if(!pages.length) return;
+    document.body.classList.add('deck');
+    pages.forEach(function(p){
+      var s=document.createElement('div'); s.className='slide';
+      p.parentNode.insertBefore(s,p); s.appendChild(p);
+    });
+    var slides=[].slice.call(document.querySelectorAll('.slide'));
+    function fit(){
+      var pw=pages[0].offsetWidth, ph=pages[0].offsetHeight;
+      var sc=Math.min((window.innerHeight*0.94)/ph,(window.innerWidth*0.86)/pw);
+      slides.forEach(function(sl){
+        sl.querySelector('.page').style.transform='scale('+sc+')';
+        sl.style.width=document.documentElement.clientWidth+'px';
+      });
+    }
+    fit(); window.addEventListener('resize',fit);
+    var SC=document.scrollingElement||document.documentElement;
+    function target(i){var s=slides[i],max=SC.scrollWidth-SC.clientWidth;
+      return Math.max(0,Math.min(max,s.offsetLeft-(SC.clientWidth-s.offsetWidth)/2));}
+    function cur(){var x=SC.scrollLeft,best=0,bd=1/0;
+      for(var i=0;i<slides.length;i++){var d=Math.abs(target(i)-x);if(d<bd){bd=d;best=i;}}
+      return best;}
+    function jump(i){i=Math.max(0,Math.min(slides.length-1,i));
+      SC.scrollTo({left:target(i),behavior:'smooth'});}
+    function go(d){jump(cur()+d);}
+    window.addEventListener('keydown',function(e){
+      if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '){e.preventDefault();go(1);}
+      else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(-1);}
+      else if(e.key==='Home'){e.preventDefault();jump(0);}
+      else if(e.key==='End'){e.preventDefault();jump(slides.length-1);}
+    });
+    document.body.addEventListener('wheel',function(e){
+      if(Math.abs(e.deltaY)>Math.abs(e.deltaX)){SC.scrollLeft+=e.deltaY;}
+    },{passive:true});
+    var prev=document.createElement('div'); prev.className='deck-nav prev'; prev.innerHTML='<span>‹</span>';
+    var next=document.createElement('div'); next.className='deck-nav next'; next.innerHTML='<span>›</span>';
+    prev.addEventListener('click',function(){go(-1);});
+    next.addEventListener('click',function(){go(1);});
+    document.body.appendChild(prev); document.body.appendChild(next);
+    var h=document.createElement('div'); h.className='deck-hint';
+    h.textContent='← → / 点击左右 翻页 ·  滚轮横向 ·  Cmd/Ctrl+P 导出 PDF';
+    document.body.appendChild(h);
+    setTimeout(function(){h.style.transition='opacity .8s';h.style.opacity='0.35';},4000);
+  }
+  if(document.readyState!=='loading') build();
+  else document.addEventListener('DOMContentLoaded',build);
+})();
+</script>
+</body>
+</html>

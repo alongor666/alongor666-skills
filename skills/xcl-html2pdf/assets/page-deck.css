@@ -1,0 +1,57 @@
+/* ===========================================================================
+ * page-deck.css —— 印刷级 A4 卡片骨架（与内容无关，可被任意报告复用）
+ *   · 固定 A4 版面盒，不用浏览器自动流式分页
+ *   · 屏幕：横向一屏一页翻页（deck.js 注入）
+ *   · 打印：一页一张 A4，内容绝不跨页、无半空白页
+ * 用法：<link rel="stylesheet" href="page-deck.css"> + 每页一个 <section class="page">
+ *      内容放进 .inner；封面用 .page.cover-page；页尾引入 deck.js
+ * 颜色/字体等视觉风格由各报告自己的 <style> 覆盖，这里只管版面与分页机制。
+ * ========================================================================= */
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+  background:#cdbf9c;color:#16140f;line-height:1.8;-webkit-font-smoothing:antialiased;padding:24px 0;}
+
+/* —— 固定 A4 版面盒 —— */
+.page{
+  width:210mm;height:297mm;margin:0 auto 9mm;position:relative;overflow:hidden;
+  background:#f5efe0;box-shadow:0 14px 40px rgba(0,0,0,.42);
+}
+/* 内容定位盒：可用高 ≈ 297mm − 17mm − 14mm ≈ 1005px@96dpi。填充率以此为分母。 */
+.inner{position:absolute;left:16mm;right:16mm;top:17mm;bottom:14mm;}
+.inner.flexcol{display:flex;flex-direction:column;}
+/* 让 flexcol 里的主图/主块自动撑满下半页（如 SVG 配 class="grow"） */
+.inner.flexcol .grow{flex:1 1 auto;min-height:0;}
+/* 封面铺满整页 */
+.cover-page .inner{top:0;bottom:0;left:0;right:0;}
+
+/* ====== 屏幕：横向翻页（仅屏幕生效，不影响打印） ====== */
+@media screen{
+  body.deck{margin:0;height:100vh;overflow-x:auto;overflow-y:hidden;padding:0;
+    display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;
+    scroll-snap-type:x mandatory;scroll-behavior:smooth;}
+  body.deck .slide{flex:0 0 auto;height:100vh;display:flex;align-items:center;
+    justify-content:center;scroll-snap-align:center;}
+  body.deck .slide .page{margin:0;transform-origin:center center;}
+  .deck-hint{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:99;
+    background:rgba(158,24,19,.92);color:#fbf3df;font-size:12px;letter-spacing:.1em;
+    padding:7px 18px;border-radius:20px;box-shadow:0 4px 14px rgba(0,0,0,.3);
+    font-family:"Noto Sans SC",sans-serif;user-select:none;}
+  .deck-nav{position:fixed;top:0;height:100vh;width:50vw;z-index:80;display:flex;
+    align-items:center;cursor:pointer;opacity:0;transition:opacity .25s;}
+  .deck-nav span{font-family:"Noto Serif SC",serif;font-size:46px;color:#9e1813;opacity:.55;padding:0 26px;}
+  .deck-nav.prev{left:0;justify-content:flex-start;}
+  .deck-nav.next{right:0;justify-content:flex-end;}
+  .deck-nav.prev:hover{opacity:1;background:linear-gradient(90deg,rgba(158,24,19,.09),transparent 42%);}
+  .deck-nav.next:hover{opacity:1;background:linear-gradient(270deg,rgba(158,24,19,.09),transparent 42%);}
+}
+
+/* ====== 打印：一盒一页 ====== */
+@page{ size:A4; margin:0; }
+@media print{
+  body{background:#fff;padding:0;display:block;}
+  .slide{display:block!important;height:auto!important;width:auto!important;}
+  .page{margin:0;box-shadow:none;transform:none!important;break-after:page;page-break-after:always;}
+  .page:last-child{break-after:auto;page-break-after:auto;}
+  .deck-hint,.deck-nav{display:none!important;}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+}
