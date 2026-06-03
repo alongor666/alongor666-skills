@@ -42,7 +42,7 @@ def drill_slug(dim_value: str) -> str:
 def select_top_dim_values(
     derived: pd.DataFrame, dim_cfg: dict, current_py: int,
 ) -> list[str]:
-    """选取该维度在 current_py 下用于展示的维度值（按保单数排序，应用 top_n）。
+    """选取该维度在 current_py 下用于展示的维度值（按满期保费规模排序，应用 top_n）。
 
     与 render_dim_card 内部逻辑保持一致，便于 cli.py 在生成下钻页时复用同一组维度值。
     """
@@ -58,7 +58,7 @@ def select_top_dim_values(
     if sort_anchor_dw:
         sort_df = (
             cur_sub[cur_sub["dw_days"] == sort_anchor_dw]
-            .set_index("dim_value")["policy_count"]
+            .set_index("dim_value")["earned_premium_sum"]
             .sort_values(ascending=False)
         )
         values = sort_df.index.tolist()
@@ -138,6 +138,9 @@ def _fmt_cell(value: Optional[float], kind: str) -> str:
         return f"{value:.1f}%"
     if kind == "money0":
         return f"{value:,.0f}"
+    if kind == "wan":
+        # 满期保费等大额绝对值：折万元、保 1 位小数，避免 cell 过宽
+        return f"{value / 10000:,.1f}"
     if kind == "coef":
         return f"{value:.3f}"
     return str(value)
@@ -159,16 +162,7 @@ def render_dev_triangle(
     """
     df = overall_df.copy().sort_values(["py", "dw_days"], ascending=[False, True])
 
-    # 5 指标切换器
-    switcher_btns = "".join(
-        f'<button type="button" class="btn-metric{" active" if mid == active_metric else ""}" '
-        f'data-metric="{mid}">{html.escape(name)}</button>'
-        for mid, name, _kind, _th in METRIC_DEFS
-    )
-    switcher_html = (
-        f'<div class="metric-switcher" data-target="{table_id}">{switcher_btns}</div>'
-    )
-
+    # 全局控制栏驱动：年度成行、指标由顶部统一切换；本表不再自带切换器
     # 表头（趋势列放在第 2 位，先看趋势再看具体数字）
     head_cells = (
         '<th class="dim-col">保单年度</th>'
@@ -275,11 +269,12 @@ def render_dev_triangle(
 
     tbody = f'<tbody>{"".join(rows_html)}</tbody>'
     table_html = (
-        f'<table class="data-table dev-triangle" id="{table_id}">'
+        f'<table class="data-table dev-triangle" id="{table_id}" '
+        f'data-triangle-kind="overall">'
         f'{thead}{tbody}</table>'
     )
 
-    return f'<div class="dev-triangle-wrap">{switcher_html}{table_html}</div>'
+    return f'<div class="dev-triangle-wrap">{table_html}</div>'
 
 
 # ---------- Card 2-10：维度卡片（当前 PY 切片） ----------
@@ -386,9 +381,10 @@ def render_dim_card(
         None,
     )
     if sort_anchor_dw:
+        # 按满期保费规模（earned_premium_sum）从大到小排序——整体基准行另行钉在首行（见下方 rows_data）
         sort_df = (
             cur_sub[cur_sub["dw_days"] == sort_anchor_dw]
-            .set_index("dim_value")["policy_count"]
+            .set_index("dim_value")["earned_premium_sum"]
             .sort_values(ascending=False)
         )
         dim_values = sort_df.index.tolist()
@@ -423,29 +419,7 @@ def render_dim_card(
     card_id = table_id_override or f"card-{key}"  # 容器 div id（用于 nav anchor）
     table_id = f"{card_id}-table"  # table 自身 id（避免与 div 冲突）
 
-    # 双切换器：保单年度 + 指标
-    py_btns = "".join(
-        f'<button type="button" class="btn-py{" active" if py == current_py else ""}" '
-        f'data-py="{py}">{py}</button>'
-        for py in py_options
-    )
-    py_switcher_html = (
-        f'<div class="py-switcher" data-target="{table_id}">'
-        f'<span class="switcher-label">保单年度</span>{py_btns}</div>'
-    )
-    metric_btns = "".join(
-        f'<button type="button" class="btn-metric{" active" if mid == active_metric else ""}" '
-        f'data-metric="{mid}">{html.escape(name)}</button>'
-        for mid, name, _kind, _th in METRIC_DEFS
-    )
-    metric_switcher_html = (
-        f'<div class="metric-switcher" data-target="{table_id}">'
-        f'<span class="switcher-label">指标</span>{metric_btns}</div>'
-    )
-    switchers_html = (
-        f'<div class="switchers-row">{py_switcher_html}{metric_switcher_html}</div>'
-    )
-
+    # 全局控制栏驱动：顶部「保单年度 + 指标」统一切换所有卡；本卡不再自带切换器
     # 表头（趋势列放在第 2 位，先看趋势再看具体数字；保单数信息已在 cell tooltip 中）
     head_cells = (
         f'<th class="dim-col">{html.escape(label)}</th>'
@@ -558,15 +532,16 @@ def render_dim_card(
     tbody = f"<tbody>{''.join(rows_html)}</tbody>"
     table_html = (
         f'<table class="data-table dev-triangle" id="{table_id}" '
-        f'data-active-py="{current_py}">'
+        f'data-triangle-kind="dim" data-active-py="{current_py}">'
         f'{thead}{tbody}</table>'
     )
 
-    body = f'<div class="dev-triangle-wrap">{switchers_html}{table_html}</div>'
+    body = f'<div class="dev-triangle-wrap">{table_html}</div>'
     subtitle = (
-        f"<strong>{label} · 默认 {current_py} 年 × 6 个观察期</strong>。"
-        "切换保单年度与指标查看不同维度发展曲线；首行<strong>整体</strong>为同期基准。"
-        + (f" 仅显示前 {top_n} 名（按 {current_py} 年保单数排序）。" if top_n else "")
+        f"<strong>{label} · 跟随顶部全局年度（默认 {current_py}）× 指标</strong>。"
+        "首行<strong>整体</strong>为同期基准，"
+        f"其余各行按 {current_py} 年满期保费从大到小排序。"
+        + (f" 仅显示前 {top_n} 名。" if top_n else "")
     )
     return render_card(
         title=f"{label} · 发展曲线",
@@ -661,6 +636,7 @@ def render_drill_page(
 
     cards_html = (
         back_link + EXTRA_CSS
+        + render_global_controls(py_options, current_py)
         + overall_card
         + "".join(sub_cards_html)
         + METRIC_SWITCHER_JS
@@ -718,7 +694,38 @@ def auto_insight_card1(overall_df: pd.DataFrame) -> str:
     return render_callout(text, cite=cite, level=level)
 
 
-# ---------- 5 指标切换 JS + 配套 CSS ----------
+# ---------- 全局控制栏（年度 + 指标，sticky，驱动所有表）----------
+
+def render_global_controls(
+    py_options: "list[int]",
+    current_py: int,
+    active_metric: str = "mature_loss_ratio",
+) -> str:
+    """页面级 sticky 控制栏：一组「保单年度 + 指标」按钮联动整体三角 + 全部维度卡。
+
+    - 年度按钮：仅作用于"维度卡"（data-triangle-kind=dim）；整体三角按年成行，不受年度切换影响。
+    - 指标按钮：作用于所有表（整体三角 + 维度卡）。
+    数据已全量嵌入各 cell 的 data 属性，切换为纯前端联动、零取数。
+    """
+    py_btns = "".join(
+        f'<button type="button" class="btn-py{" active" if py == current_py else ""}" '
+        f'data-py="{py}">{py}</button>'
+        for py in py_options
+    )
+    metric_btns = "".join(
+        f'<button type="button" class="btn-metric{" active" if mid == active_metric else ""}" '
+        f'data-metric="{mid}">{html.escape(name)}</button>'
+        for mid, name, _kind, _th in METRIC_DEFS
+    )
+    return (
+        '<div class="global-controls" id="dev-global-controls">'
+        f'<div class="gc-group gc-py"><span class="gc-label">保单年度</span>{py_btns}</div>'
+        f'<div class="gc-group gc-metric"><span class="gc-label">指标</span>{metric_btns}</div>'
+        '</div>'
+    )
+
+
+# ---------- 全局联动 JS（驱动整体三角 + 全部维度卡）+ 配套 CSS ----------
 
 METRIC_SWITCHER_JS = """
 <script>
@@ -759,16 +766,11 @@ METRIC_SWITCHER_JS = """
            '<polyline points="' + points + '" fill="none"/>' + circles + '</g></svg>';
   }
 
-  // 切指标：尊重 table 上的 data-active-py（PY 切换器写入），优先取 data-py{PY}-{mid}-* 否则回退 data-{mid}-*
-  function activateMetric(switcher, mid) {
-    var tableId = switcher.getAttribute('data-target');
-    var table = document.getElementById(tableId);
-    if (!table) return;
-    switcher.querySelectorAll('.btn-metric').forEach(function(b) {
-      b.classList.toggle('active', b.getAttribute('data-metric') === mid);
-    });
-    var activePy = table.getAttribute('data-active-py');
-    var prefix = activePy ? ('data-py' + activePy + '-' + mid) : ('data-' + mid);
+  // 刷新单张表到 (py, mid)：
+  //   整体三角(kind=overall，年度成行) 用 data-{mid}-*；维度卡(kind=dim) 用 data-py{py}-{mid}-*
+  function refreshTable(table, py, mid) {
+    var isDim = table.getAttribute('data-triangle-kind') === 'dim';
+    var prefix = isDim ? ('data-py' + py + '-' + mid) : ('data-' + mid);
     table.querySelectorAll('td.dev-cell').forEach(function(td) {
       var text = td.getAttribute(prefix + '-text');
       var cls  = td.getAttribute(prefix + '-cls');
@@ -776,7 +778,6 @@ METRIC_SWITCHER_JS = """
       td.innerHTML = text;
       td.className = 'dev-cell ' + (cls || '');
     });
-    // 重绘 6 期趋势 sparkline
     table.querySelectorAll('td.trend-cell').forEach(function(td) {
       var raw = td.getAttribute(prefix + '-trend') || '';
       var values = raw.split('/').map(function(s){ return s === '' ? NaN : parseFloat(s); });
@@ -786,38 +787,44 @@ METRIC_SWITCHER_JS = """
       var minRange = mrAttr ? parseFloat(mrAttr) : 0;
       td.innerHTML = drawSparkline(values, sparkCls, minRange);
     });
+    if (isDim) table.setAttribute('data-active-py', py);
   }
 
-  // 切 PY：改 table.data-active-py 后重触发指标切换以应用 cell 文本 + 趋势
-  function activatePy(switcher, py) {
-    var tableId = switcher.getAttribute('data-target');
-    var table = document.getElementById(tableId);
-    if (!table) return;
-    switcher.querySelectorAll('.btn-py').forEach(function(b) {
-      b.classList.toggle('active', b.getAttribute('data-py') === py);
+  // 全局联动：一次刷新页面上所有发展三角表
+  function applyAll(py, mid) {
+    document.querySelectorAll('table.dev-triangle').forEach(function(t) {
+      refreshTable(t, py, mid);
     });
-    table.setAttribute('data-active-py', py);
-    var metricSwitcher = document.querySelector('.metric-switcher[data-target="' + tableId + '"]');
-    if (metricSwitcher) {
-      var activeBtn = metricSwitcher.querySelector('.btn-metric.active');
-      if (activeBtn) activateMetric(metricSwitcher, activeBtn.getAttribute('data-metric'));
+  }
+
+  var controls = document.getElementById('dev-global-controls');
+  if (!controls) return;
+  function activeVal(sel, attr) {
+    var b = controls.querySelector(sel + '.active');
+    return b ? b.getAttribute(attr) : null;
+  }
+  var gPy = activeVal('.btn-py', 'data-py');
+  var gMetric = activeVal('.btn-metric', 'data-metric') || 'mature_loss_ratio';
+
+  function setActive(groupSel, btn) {
+    controls.querySelectorAll(groupSel).forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+  }
+
+  controls.addEventListener('click', function(e) {
+    var pyBtn = e.target.closest('.btn-py');
+    var mBtn = e.target.closest('.btn-metric');
+    if (pyBtn) {
+      gPy = pyBtn.getAttribute('data-py'); setActive('.btn-py', pyBtn);
+      applyAll(gPy, gMetric);
+    } else if (mBtn) {
+      gMetric = mBtn.getAttribute('data-metric'); setActive('.btn-metric', mBtn);
+      applyAll(gPy, gMetric);
     }
-  }
+  });
 
-  document.querySelectorAll('.metric-switcher').forEach(function(switcher) {
-    switcher.addEventListener('click', function(e) {
-      var btn = e.target.closest('.btn-metric');
-      if (!btn) return;
-      activateMetric(switcher, btn.getAttribute('data-metric'));
-    });
-  });
-  document.querySelectorAll('.py-switcher').forEach(function(switcher) {
-    switcher.addEventListener('click', function(e) {
-      var btn = e.target.closest('.btn-py');
-      if (!btn) return;
-      activatePy(switcher, btn.getAttribute('data-py'));
-    });
-  });
+  // 初始对齐：把所有表同步到全局默认（年度 = current_py，指标 = 满期赔付率）
+  if (gPy) applyAll(gPy, gMetric);
 })();
 </script>
 """
@@ -896,20 +903,33 @@ EXTRA_CSS = """
   background: rgba(var(--ink-rgb, 17,17,17), 0.04);
 }
 
-/* 切换器：保单年度 + 指标（双切换器并列） */
-.switchers-row {
-  display: flex; gap: 20px; flex-wrap: wrap; align-items: center;
-  margin: 4px 0 8px 0;
+/* 全局控制栏：sticky 常驻，年度 + 指标，一次驱动整体三角 + 全部维度卡。
+   贴在 shell 的 .page-toolbar（sticky top:0, z-index:50, 高≈44px）正下方，
+   形成两级粘性堆叠——滚到任何位置都可切换年度/指标（不再被标题栏遮住）。 */
+.global-controls {
+  position: sticky; top: 44px; z-index: 49;
+  display: flex; gap: 24px; flex-wrap: wrap; align-items: center;
+  padding: 12px 14px; margin: 0 0 18px 0;
+  background: var(--paper);
+  border: 1px solid rgba(var(--ink-rgb), 0.10);
+  border-radius: 10px;
+  box-shadow: 0 4px 14px -8px rgba(0, 0, 0, 0.22);
 }
-.py-switcher, .metric-switcher {
+.gc-group {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 2px; border-radius: 8px;
   background: rgba(var(--ink-rgb), 0.03);
 }
-.switcher-label {
+.gc-label {
   font-size: 12px; color: var(--muted);
-  margin: 0 6px 0 8px; font-weight: 500; user-select: none;
+  margin: 0 6px 0 8px; font-weight: 600; user-select: none;
 }
+@media (max-width: 768px) {
+  .global-controls { gap: 10px; padding: 10px; }  /* top 继承 44px，仍贴标题栏下方 */
+  .gc-group { flex-wrap: wrap; }
+}
+
+/* 按钮样式（全局控制栏 btn-py / btn-metric 复用）*/
 .btn-metric, .btn-py {
   padding: 4px 10px; border: 1px solid transparent; border-radius: 6px;
   background: transparent; color: var(--muted);
@@ -927,10 +947,6 @@ EXTRA_CSS = """
   font-weight: 600;
   box-shadow: 0 0 0 1px rgba(var(--ink-rgb), 0.18),
               0 1px 2px rgba(0, 0, 0, 0.05);
-}
-@media (max-width: 768px) {
-  .switchers-row { flex-direction: column; align-items: flex-start; gap: 8px; }
-  .py-switcher, .metric-switcher { flex-wrap: wrap; }
 }
 </style>
 """

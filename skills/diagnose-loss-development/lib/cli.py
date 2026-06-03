@@ -29,6 +29,7 @@ try:
         DIM_CARDS, EXTRA_CSS, METRIC_SWITCHER_JS,
         auto_insight_card1, render_dev_triangle, render_dim_card,
         render_drill_page, drill_slug, select_top_dim_values,
+        render_global_controls,
     )
 except ImportError:  # pragma: no cover
     from query import (  # type: ignore[no-redef]
@@ -41,6 +42,7 @@ except ImportError:  # pragma: no cover
         DIM_CARDS, EXTRA_CSS, METRIC_SWITCHER_JS,
         auto_insight_card1, render_dev_triangle, render_dim_card,
         render_drill_page, drill_slug, select_top_dim_values,
+        render_global_controls,
     )
 
 # 复用 dhr_lib（2026-05-17 重命名：原 diagnose-html-render → chexian-report-shell）
@@ -182,7 +184,9 @@ def render_html(derived: pd.DataFrame, cutoff: date) -> str:
         "<strong>满期口径</strong>：满期保费 = 保费 × min(观察期, 保单期) / 保单期；"
         "<strong>赔款口径</strong>：已结案取已决金额，未结案取未决金额（项目标准）；"
         "<strong>截尾标记</strong>：✓ 完整观察 / △ 部分完成（&lt; 95%）/ — 未到。"
-        "<br><br><strong>5 指标切换</strong>：满期赔付率 · 满期出险率 · 案均赔款 · 人伤案占比 · 人伤金额占比。"
+        "<br><br><strong>顶部全局切换</strong>：指标（满期赔付率 · 满期出险率 · 案均赔款 · 满期保费 · 人伤案占比 · 人伤金额占比）"
+        "联动整体三角与全部维度卡；保单年度切换作用于各维度卡（整体三角按年成行、全程可见）。"
+        "各维度卡内行按当年满期保费从大到小排序。"
     )
     card1 = render_card(
         title="整体发展三角形",
@@ -210,7 +214,10 @@ def render_html(derived: pd.DataFrame, cutoff: date) -> str:
         f"{py_count} 个保单年度 · 当前 {current_py} 年"
     )
 
-    cards_html = EXTRA_CSS + card1 + "".join(dim_cards_html) + METRIC_SWITCHER_JS
+    controls = render_global_controls(py_options, current_py)
+    cards_html = (
+        EXTRA_CSS + controls + card1 + "".join(dim_cards_html) + METRIC_SWITCHER_JS
+    )
 
     html = render_page(
         title=f"多年车险保单赔付发展对比 · {cutoff.isoformat()}",
