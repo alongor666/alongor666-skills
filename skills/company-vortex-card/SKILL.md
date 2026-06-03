@@ -72,9 +72,9 @@ node driver.mjs "{公司名}_{股票代码}_视觉卡片.html" 12
 
 ## 与 xcl-html2pdf 的关系
 
-- `xcl-html2pdf` = 通用基座：任意 HTML → 印刷级 PDF（版面盒 + 翻页 + 打印 + 验收），不绑定内容。
-- `company-vortex-card` = 专用层：在基座机制之上，给「涡旋结构诊断」一套现成的 12 页国家地理风模板与填充规范。
-- 两者各自自带 `driver.mjs`（同一份验收工具），单独安装均可用。做非诊断类的其它印刷级报告时，直接用 `xcl-html2pdf` 的骨架即可。
+- `xcl-html2pdf` = 通用基座：任意 HTML → 印刷级 PDF（`page-deck.css` 版面 + `report-skin.css` 固化字体/字号/字色 + 翻页 + 验收），不绑定内容。
+- `company-vortex-card` = 专用层：在基座之上，给「涡旋结构诊断」一套现成的 12 页模板。`card-template.html` 内联的视觉规范与基座 `report-skin.css` **同源**（国家地理风、同一套语义色与字号分级），并额外内联涡旋专属组件（stage/triad/shape/vortex）——所以本模板自包含、可独立验收。
+- 两者各自自带 `driver.mjs`（同一份验收工具），单独安装均可用。做**非诊断类**的其它印刷级报告时，直接用 `xcl-html2pdf` 的 skeleton + `report-skin.css` 即可，自动继承同一套视觉。
 
 ## Gotchas / Troubleshooting
 

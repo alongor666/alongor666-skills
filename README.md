@@ -52,3 +52,4 @@ git clone https://github.com/alongor666/alongor666-skills.git ~/.claude/plugins/
 - **2026-05-29**: 全量同步本地最新版本到仓库
 - **2026-05-30**: 新增 `commit-push-pr-core` — 从 chexian 项目 `commit-push-pr` 抽象出的项目无关基座（L1 骨架 + L2 通用护栏 + L3 方法层），「方法复用，非内容复用」
 - **2026-06-04**: 新增 `xcl-html2pdf`（HTML→印刷级 PDF 基座，含零依赖 CDP 验收 driver）+ `company-vortex-card`（在基座之上的涡旋诊断 12 页视觉卡片）。由本地命令 `xcl_html2pdf` 升级、抽象分层而来——基座不限于涡旋诊断，可做任意印刷级报告
+- **2026-06-04**: `xcl-html2pdf` 把字体/字号分级/字色规范上提固化为 `report-skin.css`（标准报告皮肤，单一真相源——改规范只改一处，所有报告同步生效）；skeleton 改用标准 class，`company-vortex-card` 模板与之同源
