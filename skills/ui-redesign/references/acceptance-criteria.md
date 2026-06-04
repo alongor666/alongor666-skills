@@ -27,6 +27,19 @@
 - [ ] 数据驱动页：至少一个真实请求返回 **HTTP 成功 + 非空**（贴出证据）。
 - [ ] 数值/率值/金额/空值格式符合 Phase 0 发现的项目规则。
 - [ ] 字段空值防护到位（不因 null 崩）。
+- [ ] **单位流转审计**（强制）：每个使用格式化函数的位置，确认值的单位与函数期望一致。
+  - 易踩雷：`formatPercent(已是百分比)` vs `formatAchievementRate(0-1 小数)` — 后者会再 ×100
+  - 易踩雷：`formatPremiumWan(input=元)` vs `formatWanAdaptive(input=万元)` — 前者会再 ÷10000
+  - 简单核法：对照 Phase A 简报里"后端字段契约速查表"，每条数据 tile 写一行注释"value unit = X, formatter expects Y"。
+- [ ] **接口断言**（数据驱动页强制）：用 jq/curl 对每个数据信号断言后端真实返回，不能只看 DOM。
+  ```bash
+  TOKEN=$(...)  # 项目登录获取
+  curl -s '<API_URL>' -H "Authorization: Bearer $TOKEN" | jq '{
+    tile1: (...|select(...) | {字段, 单位检查: (.字段 / 已知基准 * 100 | round)}),
+    tile2: ...
+  }'
+  # DOM 看着"320%"和"3.2%"差 100 倍肉眼分不清，jq 数字一目了然。
+  ```
 
 ## 5. 视觉对齐
 - [ ] 落地页与已批准的 Claude Design 导出稿，在**结构 / 信息层级 / 关键区块**上一致（逐块比对，可截图对照存 assets/）。
@@ -35,3 +48,15 @@
 ## 6. 提交前
 - [ ] 走项目偏好提交流程；通过项目治理/校验命令（若有）。
 - [ ] 专项文件夹内 `acceptance.md` 已全勾、`retro.md` 已填（见 evolution.md）。
+
+## 7. PR 后的 codex/对抗 review 处置（强制 — Phase D 同步）
+> review 后第一轮发现的问题往往是冰山一角，**单次修复后必须按 5 步 SOP 加防回归措施**，否则下次还会犯（实战 4 轮才 0 残留的案例已证明）。
+
+每条 review 意见走：
+1. **抽 pattern** — 这条意见背后的"假设错了"是什么？记一句话。
+2. **全仓 grep** — 同类 pattern 还有几处？
+3. **修** — 修当前 + 同类全修
+4. **加静态闸**（关键） — 项目 governance 加 grep 检查 / 加单元测试 / 加类型约束三选一。无静态闸=下次还会犯。
+5. **复盘评论** — 在 PR 写明：根因 / 修复路径 / 全仓 grep 结果 / 静态闸位置 / 验收证据。然后**显式 @codex review**（codex 不会自动复审）。
+
+`acceptance.md` 落地完成 ≠ 流程结束。要等 review 也清零，才进 Phase D 复盘。

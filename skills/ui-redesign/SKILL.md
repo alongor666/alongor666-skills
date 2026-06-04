@@ -59,8 +59,20 @@ user_invocable: true
 
 ## 5. Phase D · 复盘进化（AI，自迭代核心）
 
-每次落地后填 `retro.md`(模板见 `references/evolution.md`),至少记:
+> **前置**：Phase C 落地 + acceptance.md 全过 ≠ 流程结束。先经 Phase D-pre（对抗 review 闭环），再进复盘。
+
+### 5.0 Phase D-pre · 对抗 review 闭环（codex / 第二意见 / 自查）
+
+PR 提交后，对每一条 review 意见走 5 步 SOP（详见 `references/acceptance-criteria.md` §7）：
+1. 抽 pattern → 2. 全仓 grep 同类 → 3. 修 → 4. **加静态闸**（governance grep / 单测 / 类型，三选一）→ 5. 复盘评论 + 显式 `@codex review`
+
+**关键**：单次修复 ≠ 修了一类。无静态闸 → 下次还会犯。实战 4-5 轮 codex review 才 0 残留是常态，预留时间。
+
+### 5.1 retro.md
+
+review 清零后，填 `retro.md`(模板见 `references/evolution.md`)。至少记:
 - 哪些简报段落 Claude Design **没理解/理解偏**;它的产出**哪里偏离了设计系统/交互/数据规范**。
+- 哪些 review 意见暴露了**简报缺失**（如未列字段契约 → P2-1 整体达成永远 fallback）。
 - 归因:**问题来自给 Claude Design 的信息/prompt** → 写清"下次该补什么 context、改哪句措辞";来自落地或发现阶段 → 记对应改进。
 - **分流回写**:
   - 通用经验(任何项目都适用,如"简报必须显式写死率值小数位""Claude Design 默认爱加渐变,需提前禁") → **打开本 skill 仓库 clone 编辑对应 reference,push,重装**(改在仓库·装到本地·本地只读,见 §7),完成自进化。
