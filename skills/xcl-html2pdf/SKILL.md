@@ -1,22 +1,36 @@
 ---
 name: xcl-html2pdf
 description: >
-  把任意 HTML 报告做成印刷级 PDF——屏幕上一屏一页横向翻页，打印为一页一张 A4、无半空白页、内容不跨页。
-  提供 A4 版面盒 CSS（page-deck.css）+ 固化字体/字号分级/字色的标准报告皮肤（report-skin.css）+ 横向翻页脚本，
-  和一个零依赖的验收 driver（实测每页填充率/溢出/真实 PDF 页数）。套标准 class 即得统一的国家地理风视觉，无需自调样式。
-  触发词：html2pdf、xcl_html2pdf、做成 PDF、印刷级报告、一页一张、横向翻页卡片、A4 卡片、打印成 PDF、标准报告、report to pdf、build report、verify card。
+  把任意 HTML 报告做成两种版式：印刷级 PDF（A4 纵向、密排打印）或演示级 PPT（16:9 大字号、屏幕/投影）。
+  两者都屏幕一屏一页横向翻页、导出一页一张、无半空白页、内容不跨页。
+  提供版面盒 CSS（page-deck.css=A4 / deck-16x9.css=16:9）+ 固化字体/字号分级/字色的标准皮肤（report-skin.css）
+  + PPT 演示字号叠加（skin-16x9.css）+ 横向翻页脚本，和一个零依赖的验收 driver（实测每页填充率/溢出/真实页数，画幅无关）。
+  套标准 class 即得统一的国家地理风视觉，无需自调样式。两套共用 report-skin.css，PDF 与 PPT 视觉天然一致。
+  触发词：html2pdf、xcl_html2pdf、做成 PDF、做成 PPT、印刷级报告、演示版、16:9、大屏卡片、投影、keynote、一页一张、横向翻页卡片、A4 卡片、打印成 PDF、标准报告、report to pdf、build report、verify card。
   内容专属的模板（如涡旋诊断卡片）见 company-vortex-card，它在本基座之上。
-version: 1.1.0
+version: 1.3.0
 user_invocable: true
 ---
 
-# xcl-html2pdf：HTML → 印刷级 PDF 基座
+# xcl-html2pdf：HTML → 印刷级 PDF / 演示级 PPT 基座
 
-把任意 HTML 报告做成**屏幕横向一屏一页、打印一页一张 A4** 的印刷级文档。三层分离：
+> ## ⚑ 启用时必做：先问用户要 PDF 还是 PPT（默认 PPT）
+> A4 PDF 是为打印密排设计的，字号小，放屏幕/投影上太小太挤；PPT（16:9 大字号）才适合屏幕演示。
+> **每次启用本技能、动手前先问一句版式选择**，用户没明说就按 **PPT** 走：
+>
+> | 版式 | 何时用 | 用哪套（四/五件套） | 画幅 |
+> |---|---|---|---|
+> | **PPT（默认）** | 屏幕 / 投影 / 大屏 / 演讲 | `deck-16x9.css` + `report-skin.css` + `skin-16x9.css` + `deck.js` + `skeleton-16x9.html` | 16:9（1280×720px） |
+> | **PDF** | 打印 / 密排长报告 / 归档 | `page-deck.css` + `report-skin.css` + `deck.js` + `skeleton.html` | A4 纵向（210×297mm） |
+>
+> 两套**共用 report-skin.css**（配色/字体/组件单一真相源），视觉天然一致；**同一个 `driver.mjs` 验收**（填充率比例法 + `preferCSSPageSize`，画幅无关）。
 
-- **page-deck.css** — 版面机制：A4 盒、横向翻页、打印一页一张（勿改）
-- **report-skin.css** — 标准视觉：字体、字号分级、语义字色、通用组件，全部**固化**（勿改；改规范只改这一处，所有报告同步生效）
-- **你的 .html** — 只管内容；套标准 class 即得统一的中国国家地理风视觉
+把任意 HTML 报告做成**屏幕横向一屏一页、导出一页一张**的印刷/演示级文档。分离式架构：
+
+- **版面机制（二选一，勿改）** — `page-deck.css`（A4 纵向盒）或 `deck-16x9.css`（16:9 演示盒）；都含横向翻页 + 导出一页一张。
+- **report-skin.css** — 标准视觉：字体、字号分级、语义字色、通用组件，全部**固化**（勿改；改规范只改这一处，PDF/PPT 同步生效）。
+- **skin-16x9.css** — 仅 PPT 用的演示字号叠加层：把字号/留白放大到屏幕可读尺度（**叠加在 report-skin 之上，勿改**）。
+- **你的 .html** — 只管内容；套标准 class 即得统一的中国国家地理风视觉。
 
 涡旋诊断专属组件（stage/triad/shape/vortex）不在本基座，见 company-vortex-card。
 
@@ -32,21 +46,24 @@ node --version   # 需 ≥ 21（内置全局 WebSocket / fetch；实测 v22.16.0
 
 ## 起一个新报告（agent 主路径）
 
-1. 复制四件套到工作目录：`assets/skeleton.html`、`assets/page-deck.css`、`assets/report-skin.css`、`assets/deck.js`（后三个**勿改**——版面、视觉规范、翻页机制都在里面）。
-2. 把 `skeleton.html` 里每个 `<section class="page">` 换成你的内容，按需增删页。**直接套标准 class**（`sec-head` / `lede` / `table.data` / `note` / `quote` / `verdict` / `dossier` / `calc` / `bar-row` …）即得统一字体/字号/字色——不要在自己的 `<style>` 里重定义这些；只有本页特有的图形样式才另写。
+0. **先确认版式**（见顶部 ⚑）：用户没明说默认 **PPT**。下面按版式复制对应骨架与样式表。
+1. 复制对应套件到工作目录（`*-deck.css` / `report-skin.css` / `deck.js` 等都**勿改**——版面、视觉规范、翻页机制都在里面）：
+   - **PPT（默认）**：`assets/skeleton-16x9.html`、`assets/deck-16x9.css`、`assets/report-skin.css`、`assets/skin-16x9.css`、`assets/deck.js`。
+   - **PDF**：`assets/skeleton.html`、`assets/page-deck.css`、`assets/report-skin.css`、`assets/deck.js`。
+2. 把骨架里每个 `<section class="page">` 换成你的内容，按需增删页。**直接套标准 class**（`sec-head` / `lede` / `table.data` / `note` / `quote` / `verdict` / `dossier` / `calc` / `bar-row` …）即得统一字体/字号/字色——不要在自己的 `<style>` 里重定义这些；只有本页特有的图形样式才另写。
 3. 版面规则（铁律）：
-   - 每页 = 一个 `.page`（固定 210×297mm、`overflow:hidden`），内容放进 `.inner`（可用高 ≈ **1005px@96dpi**，即填充率分母）。
-   - 封面用 `.page.cover-page`；要让一张图撑满下半页，用 `.inner.flexcol` + 给图加 `class="grow"`。
-   - **每页填充率 80–100%、零溢出、内容不跨页。** 不足就补实质内容（小表/说明/引言），不靠拉间距充数。
-   - **内容里的 ASCII / 文本框图（拓扑图、矩阵、光谱、流程），一律重绘成矢量 SVG**，不要直接塞 `<pre>` 等宽块。理由见下节《ASCII → 矢量 SVG》。
-4. 反复跑 driver 验收到全 PASS。
-5. **默认产物只是 HTML，不落 PDF 文件**（PDF 由用户在浏览器 `Cmd/Ctrl+P` 自行导出；driver 仍生成瞬态 PDF 数页，从不落盘）。验收 PASS 后**立即打开 HTML 供眼检**：`open your.html`（macOS）。失败就别打开，先修。
+   - 每页 = 一个 `.page`，内容放进 `.inner`（`overflow:hidden`）。**可用高（填充率分母）：PDF ≈ 1005px@96dpi（A4 210×297mm）；PPT ≈ 604px（16:9 1280×720px）。**
+   - 封面用 `.page.cover-page`；要让一张图撑满下半页/下半屏，用 `.inner.flexcol` + 给图加 `class="grow"`。
+   - **每页填充率 80–100%、零溢出、内容不跨页。** PPT 可用高更矮、字更大，每页内容量约为 PDF 的六成——每页只讲一件事；不足就补实质内容（小表/说明/引言），不靠拉间距充数。
+4. 反复跑 driver 验收到全 PASS（同一个 driver，画幅无关）。**全 PASS 后即开**：agent 跑最终验收时带 `--open`，driver 会在全 PASS 时自动用系统默认浏览器打开成品给用户预览（FAIL 不开）。
 
 ## 验收 driver（核心 harness）
 
 ```bash
-# 用法: node driver.mjs <html> [期望页数] [--min 80] [--max 100] [--pdf out.pdf]
-node driver.mjs assets/skeleton.html 4
+# 用法: node driver.mjs <html> [期望页数] [--min 80] [--max 100] [--pdf out.pdf] [--open]
+node driver.mjs assets/skeleton.html 4              # PDF（A4）骨架
+node driver.mjs assets/skeleton-16x9.html 4        # PPT（16:9）骨架——同一 driver，画幅无关
+node driver.mjs your.html 10 --open                # 全 PASS 后自动在浏览器打开（完成即开）
 ```
 
 实测输出（本 skill 自带的 skeleton，本机已跑通）：
@@ -64,9 +81,25 @@ node driver.mjs assets/skeleton.html 4
   PASS ✅
 ```
 
+PPT（16:9）骨架同样本机跑通：
+
+```
+  视觉卡片验收 · skeleton-16x9.html
+  ──────────────────────────────────────────────
+  P 1  填充  93%  无溢出  ✓
+  P 2  填充  90%  无溢出  ✓
+  P 3  填充 100%  无溢出  ✓
+  P 4  填充  91%  无溢出  ✓
+  ──────────────────────────────────────────────
+  PDF 页数 = 4 / 期望 4  ✓
+  4 页中 4 页达标
+  PASS ✅
+```
+
 - driver 自启静态 http server + 系统 Chrome（CDP），导航后测每页 `.inner` 子元素底部 / 可用高 = 填充率，再用 `Page.printToPDF`（`preferCSSPageSize`）数真实页数。
 - **退出码**：`0`=全部达标、`1`=有页不达标/页数不符、`2`=运行错误。可直接接脚本或 CI。
-- **默认不落 PDF**（HTML 即交付物）；driver 内部那次 `printToPDF` 只为数页、不写盘。确需留存 PDF 时再显式 `--pdf out.pdf`。
+- 想留存 PDF：`node driver.mjs your.html N --pdf out.pdf`。
+- **完成即开**：`--open` 让验收**全 PASS 后**自动用系统默认浏览器打开该 html（FAIL 不开）；跨平台（macOS `open` / Linux `xdg-open` / Windows `start`）。这就是 v1.1.0 约定的"通过后即开"，现已落到 driver。
 - 想看真实渲染（截图自查）：
 
 ```bash
@@ -86,49 +119,27 @@ node driver.mjs assets/skeleton.html 4
 
 > 套这些 class 即得统一视觉；**不要**在报告自己的 `<style>` 里重定义字体/字号/字色。涡旋诊断的额外组件（stage/triad/shape/vortex）由 company-vortex-card 提供。
 
-## ASCII / 文本图 → 矢量 SVG（印刷级铁律）
+**PPT 模式的字号在哪改**：`report-skin.css` 是 PDF/PPT 共用的配色/字体/组件单一真相源；PPT 只额外叠加 `skin-16x9.css`，它**只覆盖字号/留白**到演示尺度（正文 19px / 章标 36px / 封面 62px / 表格 18px …，分母 604px），不碰配色与组件结构。要调 PPT 字号只改 `skin-16x9.css` 一处；要调配色/字体仍只改 `report-skin.css`（两版同步生效）。
 
-报告里要出"框图"（拓扑图、2×2 矩阵、光谱轴、因果环、层级树、流程）时，**不要直接把 ASCII 字符画塞进 `<pre>`/等宽块**——那不是印刷级。原因：
+## 导出 PDF（人工路径）
 
-- 等宽 + CJK 混排，制表符（`─ │ ┼ ◄ ► ◆ ▲ ⚔ …`）跨系统/缺字体时**对齐错位**；
-- 装在 `overflow:hidden` 的 `.page` 里，过宽会被**静默横向裁切**，driver 只测纵向填充、**测不出横向被切**（要确认得另写 CDP 探针量 `scrollWidth>clientWidth`，得不偿失）；
-- 字符画无法用皮肤语义色，观感像"终端 dump"。
-
-**做法：把 ASCII 的结构重绘成 SVG**，用皮肤已有的语义色与字体，配 `.inner.flexcol` + 给 SVG 加 `class="grow"` 自适应高度：
-
-```html
-<div class="inner flexcol">
-  <div class="sec-head">…</div><div class="rule"></div>
-  <svg class="fig grow" viewBox="0 0 680 420" role="img">
-    <!-- 轴线/节点用皮肤色：朱红=压力 #9e1813、金=向心 #bd9b52、玉绿=利好 #2f6b4f、铁锈 #a8431f -->
-    <text class="serif" …>枢纽节点</text>   <!-- .serif=思源宋，标题感 -->
-  </svg>
-  <div class="caption">图义一句话。</div>
-</div>
-```
-
-要点：① viewBox 宽高比贴近渲染比（≈ 680×420），否则 flex 纵向拉伸变形（见 Gotchas）；② 文本用 `class="serif"` 取衬线、坐标手摆；③ 颜色只取皮肤四色，别另起调色板。
-
-**双表示原则（关键）**：SVG 只是 **HTML 渲染层**。若该图还要进**纯文本归档**（如圆桌 `.org`、Markdown 笔记、对话原文），**ASCII 仍是文本侧的唯一事实源**——纯文本塞不进 SVG。即"ASCII 存文本、SVG 渲 HTML"，是**叠加**，不是替换。
-
-## 导出 PDF（人工路径，按需）
-
-**默认不落 PDF**——HTML 即交付物。需要 PDF 时由用户自行导出：屏幕上 `← →` / 点击页面左右 / 滚轮 翻页。导出：浏览器打开 → `Cmd/Ctrl+P` → 另存为 PDF → **取消「页眉和页脚」**、边距默认 → 即得一页一张。无头等价命令：
+屏幕上：`← →` / 点击页面左右 / 滚轮 翻页。导出：浏览器打开 → `Cmd/Ctrl+P` → 另存为 PDF → **取消「页眉和页脚」**、边距默认 → 即得一页一张。无头等价命令：
 
 ```bash
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new \
   --no-pdf-header-footer --print-to-pdf=out.pdf "file://$PWD/assets/skeleton.html"
 ```
 
+PPT（16:9）把上面命令里的 `skeleton.html` 换成 `skeleton-16x9.html` 即可——画幅（A4 / 16:9）由各骨架引入的 `@page{size}` 决定，命令不变。
+
 ## Gotchas（实战坑）
 
-- **`.inner` 可用高 ≈ 1005px@96dpi**，是填充率分母；driver 用 `getBoundingClientRect` 比例法测，deck 把页面 transform 缩放也不影响比例。
+- **`.inner` 可用高（填充率分母）：PDF ≈ 1005px@96dpi（A4），PPT ≈ 604px（16:9 1280×720px）**；driver 用 `getBoundingClientRect` 比例法测，deck 把页面 transform 缩放也不影响比例。PPT 分母矮一半，每页内容量约为 PDF 的六成，别照搬 A4 的信息密度。
 - **flexcol 页的 SVG 会被 `flex` 纵向拉伸**：内容少的页 SVG 拉伸可达 2–3 倍（圆变椭圆、空旷）。修法——把 SVG 的 `viewBox` 高度设到 ≈ 渲染比（≈ 680×宽度对应的实际高），stretch 即回到 1.0。这是做这类卡片最容易翻车、也最不显眼的坑。
 - **SVG 元素没有 `offsetHeight`**（返回 NaN）：用 `getBoundingClientRect` 量，别用 offset 系列遍历子元素求底部（会漏掉 SVG）。
-- **等宽 ASCII 字符画会被 `overflow:hidden` 静默横向裁切**：driver 只测纵向填充率，**测不出横向溢出**。所以框图一律重绘成 SVG（见《ASCII → 矢量 SVG》）；万不得已要留等宽块，必须另量 `scrollWidth>clientWidth` 才能确认没被切。
-- **`file://` 会被部分浏览器自动化（如 Playwright）拦截**：所以 driver 内置 http server。人工用 `file://` 截图/打印、`open` 看渲染都没问题。
+- **`file://` 会被部分浏览器自动化（如 Playwright）拦截**：所以 driver 内置 http server。人工用 `file://` 截图/打印没问题。
 - **打印必须取消页眉页脚**，否则每页顶部多出 URL/日期；无头用 `--no-pdf-header-footer`，CDP 用 `displayHeaderFooter:false`。
-- **`preferCSSPageSize:true`** 是让 `@page{size:A4}` 生效、保证一页一张的关键；漏了会按默认 Letter 重新分页。
+- **`preferCSSPageSize:true`** 是让 `@page{size:A4}`（PDF）/ `@page{size:1280px 720px}`（PPT 16:9）生效、保证一页一张的关键；漏了会按默认 Letter 重新分页。同一个 driver 因此对两种画幅都成立，无需改 driver。
 
 ## Troubleshooting
 
