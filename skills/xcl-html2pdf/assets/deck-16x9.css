@@ -1,11 +1,11 @@
 /* ===========================================================================
  * deck-16x9.css —— PPT 16:9 演示版面机制（与 page-deck.css 平行，二选一）
  *   · 固定 16:9 画幅盒 1280×720px（=13.33×7.5in@96dpi，正好 PowerPoint 16:9 标准）
- *   · 屏幕：横向一屏一页翻页（deck.js 注入，与 A4 版完全共用）
+ *   · 屏幕：横向一屏一页翻页（deck-16x9.js 注入；A4 版用 deck.js，互不影响）
  *   · 打印/导出：一页一张 16:9，内容绝不跨页、无半空白页
  * 用法（引入顺序务必如下）：
  *   <link deck-16x9.css>（机制）→ <link report-skin.css>（视觉规范）→ <link skin-16x9.css>（演示字号）
- *   每页一个 <section class="page">，内容放进 .inner；封面用 .page.cover-page；页尾引 deck.js
+ *   每页一个 <section class="page">，内容放进 .inner；封面用 .page.cover-page；页尾引 deck-16x9.js
  * 与 A4 版（page-deck.css）的唯一差别是画幅与可用高；配色/字体/组件全继承 report-skin.css。
  * ========================================================================= */
 *{margin:0;padding:0;box-sizing:border-box;}
