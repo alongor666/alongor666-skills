@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<!-- skeleton-16x9.html —— xcl-html2pdf PPT 演示骨架（16:9 大字号 · 国家地理风）
+     复制本文件 + deck-16x9.css + report-skin.css + skin-16x9.css + deck.js，
+     把每个 .page 的内容换成你的演示页，按需增删页。
+     · 画幅 1280×720px（PowerPoint 16:9 标准），屏幕横向翻页、导出一页一张 16:9 PDF。
+     · 字号/留白由 skin-16x9.css 放大到演示尺度；配色/字体/组件继承 report-skin.css，勿在此重定义。
+     · 演示风铁律：每页少内容、大字、留白；填充率 80–100%、零溢出、内容不跨页（用 driver.mjs 验收）。
+     引入顺序务必：deck-16x9.css（机制）→ report-skin.css（视觉）→ skin-16x9.css（演示字号）。 -->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>演示骨架 · xcl-html2pdf · 16:9</title>
+<link rel="stylesheet" href="deck-16x9.css">
+<link rel="stylesheet" href="report-skin.css">
+<link rel="stylesheet" href="skin-16x9.css">
+<style>
+  /* 本演示专属补充样式可写这里（可选）。通用规范已在 report-skin.css / skin-16x9.css，勿重定义字体/字号/字色。 */
+  svg.fig{width:100%;height:auto;display:block;background:#efe6d0;border:1px solid #cbbd9b;border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- P1 封面 -->
+<section class="page cover-page">
+  <div class="inner">
+    <div class="top"><div class="logo"><b>报告</b>REPORT</div><div class="iss">xcl-html2pdf · 演示骨架 16:9</div></div>
+    <div class="kicker">演示版 · 横向翻页 · 一页一张 16:9</div>
+    <h1>把任意 HTML<br><span class="red">做成演示级大屏卡片</span></h1>
+    <div class="sub">屏幕横向翻页，导出一页一张 16:9——大字号、留白大气，专为投影 / 大屏阅读。配色字体与 A4 报告同源。</div>
+    <div><span class="code">DECK-16×9 + REPORT-SKIN + SKIN-16×9 ｜ 演示基座</span></div>
+    <div class="defn">复制本骨架与 <b>deck-16x9.css</b>、<b>report-skin.css</b>、<b>skin-16x9.css</b>，替换每个 <b>.page</b> 的内容；套标准 class 即得统一视觉。每页把内容填到可用高（≈604px）的 80–100%，再用 driver.mjs 验收。</div>
+  </div>
+</section>
+
+<!-- P2 数据页 -->
+<section class="page">
+  <div class="rhead"><div class="l">演示骨架<span>REPORT</span></div><div class="r">xcl-html2pdf · 通用组件</div></div>
+  <div class="inner">
+    <div class="sec-head"><div class="sec-no">壹</div><div><div class="sec-title">数据层</div><div class="sec-en">Data</div></div></div>
+    <div class="rule"></div>
+    <div class="lede">演示页铁律：每页只讲一件事，用大字号和留白说清楚。下面是标准组件在 16:9 尺度下的样子。</div>
+    <table class="data">
+      <tr><th>维度</th><th>说明</th><th>取值</th></tr>
+      <tr><td>画幅</td><td>固定 16:9 盒，不流式分页</td><td>1280×720px</td></tr>
+      <tr><td>可用高</td><td>.inner 内容区（填充率分母）</td><td class="hot">≈604px</td></tr>
+      <tr><td>填充率铁律</td><td>每页内容底部 / 可用高</td><td class="ok">80–100%</td></tr>
+      <tr><td>导出</td><td>Cmd/Ctrl+P 取消页眉页脚</td><td>一页一张 16:9</td></tr>
+    </table>
+    <div class="quote">三分离：<b>deck-16x9.css</b> 管 16:9 版面与翻页，<b>report-skin.css</b> 固化字体/字色，<b>skin-16x9.css</b> 放大字号到演示尺度。</div>
+  </div>
+  <div class="rfoot"><div>xcl-html2pdf · 演示骨架</div><div><span class="pg">02</span></div></div>
+</section>
+
+<!-- P3 图页（flexcol + 主图撑满下半页） -->
+<section class="page">
+  <div class="rhead"><div class="l">演示骨架<span>REPORT</span></div><div class="r">xcl-html2pdf · 图形层</div></div>
+  <div class="inner flexcol">
+    <div class="sec-head"><div class="sec-no">贰</div><div><div class="sec-title">图形层</div><div class="sec-en">Figure</div></div></div>
+    <div class="rule"></div>
+    <div class="lede">需要一张图占据下半屏时，用 <b>.inner.flexcol</b> + 给图加 <b>class="grow"</b>，它会自动撑满剩余空间。viewBox 比例设到接近渲染比（16:9 下半屏 ≈ 宽:高 3:1）即不被拉伸变形。</div>
+    <svg class="fig grow" viewBox="0 0 1152 380" role="img" preserveAspectRatio="xMidYMid meet">
+      <defs><radialGradient id="g" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff4cf"/><stop offset="60%" stop-color="#e6b24f"/><stop offset="100%" stop-color="#8a5a16"/></radialGradient></defs>
+      <ellipse cx="576" cy="190" rx="96" ry="96" fill="url(#g)" opacity="0.65" stroke="#c47a2a" stroke-width="2.5"/>
+      <text class="serif" x="576" y="198" fill="#5a3a10" font-size="24" text-anchor="middle" font-weight="700">主图区</text>
+      <text x="150" y="110" fill="#2f6b4f" font-size="22">利好 / 向心</text>
+      <text x="900" y="110" fill="#a8431f" font-size="22">压力 / 离心</text>
+      <line x1="230" y1="128" x2="470" y2="172" stroke="#3f8a66" stroke-width="3"/>
+      <line x1="922" y1="128" x2="682" y2="172" stroke="#a8431f" stroke-width="3"/>
+      <text x="576" y="350" fill="#6b5f44" font-size="19" text-anchor="middle">★ grow 让 SVG 自动撑满下半屏；viewBox 比例≈宽:高 即不变形</text>
+    </svg>
+  </div>
+  <div class="rfoot"><div>xcl-html2pdf · 演示骨架</div><div><span class="pg">03</span></div></div>
+</section>
+
+<!-- P4 收尾（评分框 + 流程） -->
+<section class="page">
+  <div class="rhead"><div class="l">演示骨架<span>REPORT</span></div><div class="r">xcl-html2pdf · 收尾</div></div>
+  <div class="inner">
+    <div class="sec-head"><div class="sec-no">叁</div><div><div class="sec-title">收尾层</div><div class="sec-en">Finish</div></div></div>
+    <div class="rule"></div>
+    <div class="verdict">
+      <div class="vbox"><div class="vt">起一份新演示</div><div class="stars">①②③</div><p>① 复制骨架 + deck-16x9.css + report-skin.css + skin-16x9.css + deck.js。② 把每个 .page 换成你的内容，套标准 class。③ 跑 driver.mjs 验收到全 PASS。</p></div>
+      <div class="vbox"><div class="vt">PDF 还是 PPT</div><div class="stars">▲▲</div><p>A4 纵向（page-deck.css）适合打印密排报告；16:9 演示（deck-16x9.css）适合屏幕 / 投影。两套共用 report-skin.css，视觉天然一致。</p></div>
+    </div>
+    <div class="note" style="margin-top:18px;"><b>验收</b>：node driver.mjs your.html N（填充率 / 溢出 / 页数）；加 <b>--pdf out.pdf</b> 留存 16:9 PDF。</div>
+    <div class="quote">屏幕上：← → / 点击左右 / 滚轮 翻页。导出：Cmd/Ctrl+P → 另存为 PDF → <b>取消「页眉和页脚」</b> → 即得一页一张 16:9。</div>
+  </div>
+  <div class="rfoot"><div>xcl-html2pdf · 演示骨架 · 数据截止 —</div><div><span class="pg">04</span></div></div>
+</section>
+
+<script src="deck.js"></script>
+</body>
+</html>

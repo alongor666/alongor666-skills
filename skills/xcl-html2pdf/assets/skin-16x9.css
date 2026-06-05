@@ -1,0 +1,68 @@
+/* ===========================================================================
+ * skin-16x9.css —— PPT 演示字号叠加层（覆盖 report-skin.css 的字号/留白到演示尺度）
+ *   只改“尺寸”：字号分级、行距、留白、组件高度，放大到屏幕 / 投影可读。
+ *   配色 / 字体 / 语义字色 / 组件结构全部继承 report-skin.css —— 单一真相源不变。
+ *   引入顺序（务必）：deck-16x9.css → report-skin.css → skin-16x9.css
+ *   分母：.inner 可用高 ≈ 604px（720 − 上 64 − 下 52），每页填充率 80–100%。
+ *   演示风铁律：每页少内容、大字、留白；字号比 A4 报告大，但内容量约为其六成。
+ * ========================================================================= */
+body{line-height:1.62;}
+
+/* —— 页眉 / 页脚（定位沿用 report-skin 的 mm≈px，仅放大字号） —— */
+.rhead .l{font-size:14px;}
+.rhead .l span{font-size:12px;}
+.rhead .r{font-size:12.5px;}
+.rfoot{font-size:12.5px;}
+
+/* —— 章节标题系统 —— */
+.sec-head{gap:16px;margin-bottom:6px;}
+.sec-no{font-size:19px;width:46px;height:46px;}
+.sec-title{font-size:36px;}
+.sec-en{font-size:13px;letter-spacing:.3em;margin-top:4px;}
+.rule{height:3px;margin:14px 0 18px;}
+
+/* —— 封面 —— */
+.cover-page .inner{padding:50px 72px;}
+.cover-page .top .logo{font-size:16px;}
+.cover-page .top .logo b{padding:3px 10px;margin-right:10px;}
+.cover-page .top .iss{font-size:13px;}
+.kicker{font-size:16px;letter-spacing:.38em;margin:30px 0 18px;padding-left:16px;}
+.cover-page h1{font-size:62px;line-height:1.1;}
+.cover-page .sub{font-size:20px;margin-top:16px;line-height:1.5;}
+.cover-page .code{font-size:14px;margin-top:20px;padding:8px 18px;letter-spacing:.22em;}
+.defn{padding:18px 26px;font-size:18px;line-height:1.55;}
+
+/* —— 档案表 —— */
+.dossier .row{font-size:19px;padding:11px 6px;}
+.dossier .row .k{width:118px;}
+
+/* —— 正文 / 引言 / 数据条 / 数据表 / 图注 —— */
+.lede{font-size:19px;margin-bottom:6px;line-height:1.55;}
+.bar-row{font-size:19px;gap:14px;margin:11px 0;}
+.bar-row .lbl{width:86px;}
+.bar-track{height:32px;}
+.bar-fill{font-size:15px;padding-right:12px;}
+table.data{font-size:18px;margin-top:12px;}
+table.data th{padding:10px 12px;}
+table.data td{padding:9px 12px;}
+.caption{font-size:16px;margin-top:12px;line-height:1.55;}
+
+/* —— 评分框 / 对比行 / 徽标 / 量级块 —— */
+.verdict{gap:18px;margin-top:8px;}
+.vbox{padding:18px 24px;}
+.vbox .vt{font-size:19px;margin-bottom:6px;}
+.vbox .stars{font-size:20px;margin-bottom:8px;}
+.vbox p{font-size:17px;line-height:1.55;}
+.opt-row .c{font-size:19px;padding:12px 12px;}
+.opt-row .c2{font-size:17px;}
+.badge{font-size:15px;padding:5px 11px;}
+.calc{gap:18px;margin:18px 0;}
+.calc .cc{padding:22px 16px;}
+.calc .cc .big{font-size:44px;}
+.calc .cc .unit{font-size:16px;}
+.calc .cc .desc{font-size:17px;margin-top:10px;line-height:1.5;}
+
+/* —— 引文 / 说明 / 印章 —— */
+.quote{font-size:19px;line-height:1.58;padding:18px 26px;margin-top:16px;}
+.note{font-size:17px;line-height:1.55;}
+.seal{width:72px;height:72px;font-size:15px;}
