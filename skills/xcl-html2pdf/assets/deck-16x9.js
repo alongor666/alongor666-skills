@@ -2,9 +2,10 @@
  *   交互（演示导向，区别于 PDF 的 deck.js）：
  *   · 左右翻页【只认 ← → 方向键】——不再有「点击页面左右」「滚轮翻页」，避免误触。
  *   · 底部【序号条】：一排页码，点任意号一键直达；当前页高亮，滚动自动跟随。
- *   · 【缩略图总览】：按 Esc（或点序号条右端 ▦）一键切换，全部页缩成小图铺一屏；
- *     点任一缩略图进入该页；Esc 随时退出。总览为懒构建，绝不在初始 DOM 出现，
- *     不污染 .page 计数 / PDF 导出 / driver 验收。
+ *   · 【缩略图总览】：点序号条右端 ▦ 打开，全部页缩成小图铺一屏（无序号、纯缩略图）；
+ *     点任一缩略图进入该页；【Esc = 只退出】——总览开着按 Esc 关总览；总览没开时 Esc
+ *     不拦截，交还浏览器退出全屏（避免吞掉原生 Esc）。总览为懒构建，绝不在初始 DOM
+ *     出现，不污染 .page 计数 / PDF 导出 / driver 验收。
  *   打印/导出时整段不参与（@media print 已复位 .slide/.page 并隐藏导航 chrome）。
  *   配合 deck-16x9.css + report-skin.css + skin-16x9.css 使用，置于页尾：<script src="deck-16x9.js"></script>
  *   PDF（A4）版请改用 deck.js——两套脚本互不影响。 */
@@ -50,7 +51,7 @@
       bar.appendChild(b); nums.push(b);
     });
     var gbtn=document.createElement('button'); gbtn.className='deck-num deck-grid-btn';
-    gbtn.innerHTML='&#9638;'; gbtn.title='全部页总览（Esc）';
+    gbtn.innerHTML='&#9638;'; gbtn.title='全部页总览（Esc 退出）';
     gbtn.addEventListener('click',function(){toggleOverview();});
     bar.appendChild(gbtn);
     document.body.appendChild(bar);
@@ -77,8 +78,6 @@
         clone.style.transform='scale('+scale+')';
         clone.style.transformOrigin='top left'; clone.style.margin='0';
         cell.appendChild(clone);
-        var tag=document.createElement('span'); tag.className='deck-thumb-no'; tag.textContent=(i+1);
-        cell.appendChild(tag);
         cell.addEventListener('click',function(){closeOverview();jump(i);});
         wrap.appendChild(cell);
       });
@@ -99,7 +98,11 @@
 
     // —— 键盘：左右翻页只认方向键；Esc 切换总览 ——
     window.addEventListener('keydown',function(e){
-      if(e.key==='Escape'){e.preventDefault();toggleOverview();return;}
+      if(e.key==='Escape'){
+        // Esc 只负责「退出」：总览开着就关；没开则不拦截，交还浏览器退出全屏
+        if(document.body.classList.contains('ov-open')){e.preventDefault();closeOverview();}
+        return;
+      }
       if(document.body.classList.contains('ov-open')) return; // 总览态不翻页
       if(e.key==='ArrowRight'){e.preventDefault();go(1);}
       else if(e.key==='ArrowLeft'){e.preventDefault();go(-1);}

@@ -65,9 +65,6 @@ body{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
   .deck-thumb:hover{transform:translateY(-3px);outline-color:#bd9b52;}
   .deck-thumb.on{outline-color:#9e1813;}
   .deck-thumb .page{box-shadow:none;}
-  .deck-thumb-no{position:absolute;left:8px;top:6px;z-index:2;
-    font-family:"Noto Serif SC",serif;font-weight:900;font-size:13px;color:#fff;
-    background:rgba(158,24,19,.92);padding:1px 9px;border-radius:11px;letter-spacing:.04em;}
 }
 
 /* ====== 打印/导出：一盒一页 16:9 ====== */
