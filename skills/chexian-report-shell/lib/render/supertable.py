@@ -56,9 +56,11 @@ SUPERTABLE_CSS = """
 .date-pill{padding:4px 10px;border:1px solid var(--line);background:var(--surface);border-radius:6px;font-size:12px;color:var(--ink-soft);display:inline-flex;align-items:center;gap:5px;}
 .meta{color:var(--ink-mute);font-size:12px;}
 .meta b{color:var(--ink-soft);font-weight:500;}
-.nav-tabs{display:flex;align-items:center;gap:2px;padding:2px;background:var(--surface);border:1px solid var(--line);border-radius:7px;margin-left:auto;}
-.nav-tabs a,.nav-tabs span{padding:4px 10px;font-size:12px;color:var(--ink-soft);text-decoration:none;border-radius:5px;white-space:nowrap;}
-.nav-tabs .active{background:var(--ink);color:var(--paper);font-weight:500;}
+.nav-tabs{display:flex;align-items:center;gap:4px;padding:3px;background:var(--surface);border:1px solid var(--line);border-radius:8px;margin-left:auto;}
+.nav-tabs a,.nav-tabs span{padding:5px 12px;font-size:12px;color:var(--ink);font-weight:500;text-decoration:none;border-radius:6px;white-space:nowrap;border:1px solid transparent;transition:background .15s, border-color .15s;}
+.nav-tabs a{cursor:pointer;}
+.nav-tabs a:hover{background:var(--paper);border-color:var(--line);}
+.nav-tabs .active{background:var(--ink);color:var(--paper);border-color:var(--ink);cursor:default;}
 .icon-btn{height:29px;padding:0 10px;border-radius:6px;border:1px solid var(--line);background:var(--surface);display:inline-flex;align-items:center;gap:5px;color:var(--ink-soft);cursor:pointer;font-size:12px;font-family:inherit;}
 .icon-btn:hover{background:var(--surface-soft);border-color:var(--line-strong);color:var(--ink);}
 

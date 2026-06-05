@@ -132,16 +132,23 @@ def render_topbar(
         ]
 
     view_tabs = (
-        f'<span style="padding:4px 10px; font-size:12px; background:var(--ink); color:var(--paper); border-radius:5px; font-weight:500;">驾驶舱</span>'
+        f'<span class="cx-vtab cx-vtab-active" title="当前视图">驾驶舱</span>'
     )
     for href, label in view_links:
         view_tabs += (
-            f'<a href="{href}" style="padding:4px 10px; font-size:12px; color:var(--ink-soft); text-decoration:none; border-radius:5px;">{label}</a>'
+            f'<a class="cx-vtab" href="{href}" title="切到{label}视图">{label}</a>'
         )
 
     toggle_html = theme_toggle_btn or ""
 
     return f"""
+<style>
+.cx-vtabs{{display:flex;align-items:center;gap:4px;padding:3px;background:var(--surface);border:1px solid var(--line);border-radius:8px;}}
+.cx-vtab{{padding:5px 12px;font-size:12px;line-height:1.2;border-radius:6px;text-decoration:none;color:var(--ink);font-weight:500;border:1px solid transparent;transition:background .15s,border-color .15s;cursor:pointer;white-space:nowrap;}}
+.cx-vtab:hover{{background:var(--paper);border-color:var(--line);}}
+.cx-vtab-active,.cx-vtab.cx-vtab-active{{background:var(--ink);color:var(--paper);border-color:var(--ink);cursor:default;}}
+.cx-vtab-active:hover{{background:var(--ink);border-color:var(--ink);}}
+</style>
 <div class="topbar">
   <div class="brand">
     <span class="brand-mark">{brand_mark}</span>
@@ -156,7 +163,7 @@ def render_topbar(
   <span class="meta"><b class="num">{_e(meta.get('policies', ''))}</b> 万单 · <b class="num">{_e(meta.get('premium', ''))}</b> 万元 · <b class="num">{_e(meta.get('categories', ''))}</b> 类客户</span>
   <div style="margin-left:auto; display:flex; align-items:center; gap:6px;">
     {toggle_html}
-    <div style="display:flex; align-items:center; gap:6px; padding:2px; background:var(--surface); border:1px solid var(--line); border-radius:7px;">
+    <div class="cx-vtabs">
       {view_tabs}
     </div>
   </div>
