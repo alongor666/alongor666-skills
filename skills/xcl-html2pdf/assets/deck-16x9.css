@@ -33,17 +33,41 @@ body{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
   body.deck .slide{flex:0 0 auto;height:100vh;display:flex;align-items:center;
     justify-content:center;scroll-snap-align:center;}
   body.deck .slide .page{margin:0;transform-origin:center center;}
-  .deck-hint{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:99;
-    background:rgba(158,24,19,.92);color:#fbf3df;font-size:12px;letter-spacing:.1em;
-    padding:7px 18px;border-radius:20px;box-shadow:0 4px 14px rgba(0,0,0,.3);
-    font-family:"Noto Sans SC",sans-serif;user-select:none;}
-  .deck-nav{position:fixed;top:0;height:100vh;width:50vw;z-index:80;display:flex;
-    align-items:center;cursor:pointer;opacity:0;transition:opacity .25s;}
-  .deck-nav span{font-family:"Noto Serif SC",serif;font-size:46px;color:#9e1813;opacity:.55;padding:0 26px;}
-  .deck-nav.prev{left:0;justify-content:flex-start;}
-  .deck-nav.next{right:0;justify-content:flex-end;}
-  .deck-nav.prev:hover{opacity:1;background:linear-gradient(90deg,rgba(158,24,19,.09),transparent 42%);}
-  .deck-nav.next:hover{opacity:1;background:linear-gradient(270deg,rgba(158,24,19,.09),transparent 42%);}
+  /* —— 底部序号条：一排页码，点击一键直达，当前页高亮（取代旧的文字提示+点击左右） —— */
+  .deck-bar{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:99;
+    display:flex;gap:5px;max-width:92vw;overflow-x:auto;padding:7px 10px;
+    background:rgba(20,18,12,.62);border-radius:23px;backdrop-filter:blur(7px);
+    box-shadow:0 5px 18px rgba(0,0,0,.34);opacity:.5;transition:opacity .25s;
+    scrollbar-width:none;user-select:none;}
+  .deck-bar::-webkit-scrollbar{display:none;}
+  .deck-bar:hover{opacity:1;}
+  .deck-num{flex:0 0 auto;min-width:27px;height:27px;padding:0 7px;border:0;cursor:pointer;
+    border-radius:14px;font-family:"Noto Serif SC",serif;font-size:13px;font-weight:700;
+    color:#f1e7cf;background:transparent;letter-spacing:.02em;line-height:27px;
+    transition:background .15s,color .15s;}
+  .deck-num:hover{background:rgba(241,231,207,.16);}
+  .deck-num.on{background:#9e1813;color:#fff;}
+  .deck-grid-btn{font-size:15px;margin-left:5px;padding:0 9px;
+    border-left:1px solid rgba(241,231,207,.26);border-radius:0 14px 14px 0;}
+
+  /* —— 缩略图总览：Esc / ▦ 一键切换，全部页铺一屏，点击进入 —— */
+  .deck-overview{display:none;position:fixed;inset:0;z-index:200;overflow:auto;
+    background:linear-gradient(160deg,#2b261c,#16140f);padding:42px 40px 60px;}
+  body.ov-open{overflow:hidden;}
+  body.ov-open .deck-overview{display:block;}
+  .deck-ov-hd{color:#cbb98a;text-align:center;font-size:13px;letter-spacing:.24em;
+    margin-bottom:26px;font-family:"Noto Sans SC",sans-serif;cursor:pointer;}
+  .deck-overview-grid{display:grid;grid-template-columns:repeat(auto-fill,300px);
+    gap:24px;justify-content:center;align-content:start;}
+  .deck-thumb{position:relative;overflow:hidden;border-radius:4px;cursor:pointer;
+    background:#f5efe0;box-shadow:0 6px 18px rgba(0,0,0,.45);
+    outline:2px solid transparent;transition:outline-color .15s,transform .15s;}
+  .deck-thumb:hover{transform:translateY(-3px);outline-color:#bd9b52;}
+  .deck-thumb.on{outline-color:#9e1813;}
+  .deck-thumb .page{box-shadow:none;}
+  .deck-thumb-no{position:absolute;left:8px;top:6px;z-index:2;
+    font-family:"Noto Serif SC",serif;font-weight:900;font-size:13px;color:#fff;
+    background:rgba(158,24,19,.92);padding:1px 9px;border-radius:11px;letter-spacing:.04em;}
 }
 
 /* ====== 打印/导出：一盒一页 16:9 ====== */
@@ -53,6 +77,6 @@ body{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
   .slide{display:block!important;height:auto!important;width:auto!important;}
   .page{margin:0;box-shadow:none;transform:none!important;break-after:page;page-break-after:always;}
   .page:last-child{break-after:auto;page-break-after:auto;}
-  .deck-hint,.deck-nav{display:none!important;}
+  .deck-bar,.deck-overview{display:none!important;}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
 }
