@@ -1,11 +1,10 @@
 /* deck-16x9.js —— PPT 16:9 演示翻页（仅屏幕生效）
+ *   丝滑演示引擎：一屏一页、GPU transform 横向「推入」过渡（类 PowerPoint Push），无滚动条、无惯性回弹。
  *   交互（演示导向，区别于 PDF 的 deck.js）：
- *   · 左右翻页【只认 ← → 方向键】——不再有「点击页面左右」「滚轮翻页」，避免误触。
- *   · 底部【序号条】：一排页码，点任意号一键直达；当前页高亮，滚动自动跟随。
- *   · 【缩略图总览】：点序号条右端 ▦ 打开，全部页缩成小图铺一屏（无序号、纯缩略图）；
- *     点任一缩略图进入该页；【Esc = 只退出】——总览开着按 Esc 关总览；总览没开时 Esc
- *     不拦截，交还浏览器退出全屏（避免吞掉原生 Esc）。总览为懒构建，绝不在初始 DOM
- *     出现，不污染 .page 计数 / PDF 导出 / driver 验收。
+ *   · 左右翻页【只认 ← → 方向键】（Home/End 跳首末）——不再有「点击页面左右」「滚轮翻页」。
+ *   · 底部【序号条】：点页码一键直达；远跳也只做一次单步推入（不论距离），当前页高亮。
+ *   · 【缩略图总览】：点序号条右端 ▦ 打开（无序号、纯缩略图，淡入上浮），点缩略图进入该页；
+ *     【Esc = 只退出】总览开着→关；总览没开→不拦截，交还浏览器退出全屏。
  *   打印/导出时整段不参与（@media print 已复位 .slide/.page 并隐藏导航 chrome）。
  *   配合 deck-16x9.css + report-skin.css + skin-16x9.css 使用，置于页尾：<script src="deck-16x9.js"></script>
  *   PDF（A4）版请改用 deck.js——两套脚本互不影响。 */
@@ -14,35 +13,22 @@
   function build(){
     var pages=[].slice.call(document.querySelectorAll('.page'));
     if(!pages.length) return;
-    document.body.classList.add('deck');
+    document.body.classList.add('deck','deck-no-anim');
     pages.forEach(function(p){
       var s=document.createElement('div'); s.className='slide';
       p.parentNode.insertBefore(s,p); s.appendChild(p);
     });
     var slides=[].slice.call(document.querySelectorAll('.slide'));
 
-    // —— 屏幕缩放适配（与 A4 版同一套；transform 缩放不影响填充率比例）——
+    // —— 屏幕缩放适配：把 1280×720 的 .page 等比缩到视口（transform 不影响填充率比例）——
     function fit(){
       var pw=pages[0].offsetWidth, ph=pages[0].offsetHeight;
       var sc=Math.min((window.innerHeight*0.94)/ph,(window.innerWidth*0.86)/pw);
-      slides.forEach(function(sl){
-        sl.querySelector('.page').style.transform='scale('+sc+')';
-        sl.style.width=document.documentElement.clientWidth+'px';
-      });
+      pages.forEach(function(p){ p.style.transform='scale('+sc+')'; });
     }
     fit(); window.addEventListener('resize',fit);
 
-    var SC=document.scrollingElement||document.documentElement;
-    function target(i){var s=slides[i],max=SC.scrollWidth-SC.clientWidth;
-      return Math.max(0,Math.min(max,s.offsetLeft-(SC.clientWidth-s.offsetWidth)/2));}
-    function cur(){var x=SC.scrollLeft,best=0,bd=1/0;
-      for(var i=0;i<slides.length;i++){var d=Math.abs(target(i)-x);if(d<bd){bd=d;best=i;}}
-      return best;}
-    function jump(i){i=Math.max(0,Math.min(slides.length-1,i));
-      SC.scrollTo({left:target(i),behavior:'smooth'}); setActive(i);}
-    function go(d){jump(cur()+d);}
-
-    // —— 底部序号条：一键直达任意页 ——
+    // —— 序号条（先建，jump 要用 setActive）——
     var bar=document.createElement('div'); bar.className='deck-bar';
     var nums=[];
     pages.forEach(function(p,i){
@@ -57,13 +43,32 @@
     document.body.appendChild(bar);
     function setActive(i){nums.forEach(function(b,k){b.classList.toggle('on',k===i);});}
 
-    var raf=0;
-    SC.addEventListener('scroll',function(){
-      if(raf) return; raf=requestAnimationFrame(function(){raf=0;setActive(cur());});
-    },{passive:true});
-    setActive(0);
+    // —— 单步推入引擎：每次翻页都只做一次相邻推进，远跳也不例外 ——
+    var idx=0;
+    function place(active){ // 按 active 把每页摆到 左(-100%)/中(0)/右(100%)
+      slides.forEach(function(sl,k){
+        sl.style.transform='translateX('+(k<active?-100:k>active?100:0)+'%)';
+        sl.classList.toggle('active',k===active);
+      });
+    }
+    function jump(i){
+      i=Math.max(0,Math.min(slides.length-1,i));
+      if(i===idx) return;
+      var dir=i>idx?1:-1;
+      // 1) 无动画：目标贴到相邻一侧、当前留中，其余按最终侧远置（都在视口外、不可见）
+      document.body.classList.add('deck-no-anim');
+      slides.forEach(function(sl,k){
+        var pos = k===idx?0 : k===i?dir*100 : (k<i?-100:100);
+        sl.style.transform='translateX('+pos+'%)';
+      });
+      void document.body.offsetWidth;                 // 强制 reflow，让预置位置即时落定
+      document.body.classList.remove('deck-no-anim');
+      // 2) 带动画：单步推进——目标入场到 0，当前推出到另一侧
+      idx=i; place(idx); setActive(idx);
+    }
+    function go(d){ jump(idx+d); }
 
-    // —— 缩略图总览（懒构建，仅用户首次触发时才进 DOM）——
+    // —— 缩略图总览（懒构建，仅用户首次触发时才进 DOM，避免污染 .page 计数/导出）——
     var ov=null;
     function buildOverview(){
       ov=document.createElement('div'); ov.className='deck-overview';
@@ -87,19 +92,18 @@
     }
     function openOverview(){
       if(!ov) buildOverview();
-      var c=cur();
-      [].forEach.call(ov.querySelectorAll('.deck-thumb'),function(t,k){t.classList.toggle('on',k===c);});
-      document.body.classList.add('ov-open');
+      [].forEach.call(ov.querySelectorAll('.deck-thumb'),function(t,k){t.classList.toggle('on',k===idx);});
+      requestAnimationFrame(function(){document.body.classList.add('ov-open');}); // 下一帧加类 → 淡入动画
     }
     function closeOverview(){document.body.classList.remove('ov-open');}
     function toggleOverview(){
       document.body.classList.contains('ov-open')?closeOverview():openOverview();
     }
 
-    // —— 键盘：左右翻页只认方向键；Esc 切换总览 ——
+    // —— 键盘：左右翻页只认方向键；Esc 只负责退出 ——
     window.addEventListener('keydown',function(e){
       if(e.key==='Escape'){
-        // Esc 只负责「退出」：总览开着就关；没开则不拦截，交还浏览器退出全屏
+        // Esc 只「退出」：总览开着→关；没开则不拦截，交还浏览器退出全屏
         if(document.body.classList.contains('ov-open')){e.preventDefault();closeOverview();}
         return;
       }
@@ -109,6 +113,12 @@
       else if(e.key==='Home'){e.preventDefault();jump(0);}
       else if(e.key==='End'){e.preventDefault();jump(slides.length-1);}
     });
+
+    // —— 初始：无动画摆位，下一帧再开过渡，避免加载时整排滑动 ——
+    place(0); setActive(0);
+    requestAnimationFrame(function(){requestAnimationFrame(function(){
+      document.body.classList.remove('deck-no-anim');
+    });});
   }
   if(document.readyState!=='loading') build();
   else document.addEventListener('DOMContentLoaded',build);

@@ -25,13 +25,15 @@ body{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
 /* 封面铺满整页 */
 .cover-page .inner{top:0;bottom:0;left:0;right:0;}
 
-/* ====== 屏幕：横向翻页（仅屏幕生效，画幅无关，与 page-deck.css 同一套） ====== */
+/* ====== 屏幕：GPU transform 单步推入（丝滑演示引擎，仅屏幕生效；deck-16x9.js 驱动） ====== */
 @media screen{
-  body.deck{margin:0;height:100vh;overflow-x:auto;overflow-y:hidden;padding:0;
-    display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;
-    scroll-snap-type:x mandatory;scroll-behavior:smooth;}
-  body.deck .slide{flex:0 0 auto;height:100vh;display:flex;align-items:center;
-    justify-content:center;scroll-snap-align:center;}
+  /* 视口即舞台：一屏一页，无滚动条、无惯性回弹 */
+  body.deck{margin:0;width:100vw;height:100vh;overflow:hidden;padding:0;position:relative;background:#cdbf9c;}
+  /* 每页绝对铺满视口；只对 transform 做过渡 → GPU 合成、丝滑。左/右页停在 ±100%（移出视口） */
+  body.deck .slide{position:absolute;top:0;left:0;width:100vw;height:100vh;
+    display:flex;align-items:center;justify-content:center;backface-visibility:hidden;
+    transition:transform .52s cubic-bezier(.22,.61,.36,1);will-change:transform;}
+  body.deck-no-anim .slide{transition:none!important;} /* 初始摆位 / 远跳预置：临时关过渡 */
   body.deck .slide .page{margin:0;transform-origin:center center;}
   /* —— 底部序号条：一排页码，点击一键直达，当前页高亮（取代旧的文字提示+点击左右） —— */
   .deck-bar{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:99;
@@ -50,15 +52,18 @@ body{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
   .deck-grid-btn{font-size:15px;margin-left:5px;padding:0 9px;
     border-left:1px solid rgba(241,231,207,.26);border-radius:0 14px 14px 0;}
 
-  /* —— 缩略图总览：Esc / ▦ 一键切换，全部页铺一屏，点击进入 —— */
-  .deck-overview{display:none;position:fixed;inset:0;z-index:200;overflow:auto;
-    background:linear-gradient(160deg,#2b261c,#16140f);padding:42px 40px 60px;}
+  /* —— 缩略图总览：▦ 打开 / Esc 退出，全部页铺一屏，点击进入（淡入 + 上浮） —— */
+  .deck-overview{position:fixed;inset:0;z-index:200;overflow:auto;
+    background:linear-gradient(160deg,#2b261c,#16140f);padding:42px 40px 60px;
+    opacity:0;visibility:hidden;transition:opacity .3s ease,visibility .3s;}
   body.ov-open{overflow:hidden;}
-  body.ov-open .deck-overview{display:block;}
+  body.ov-open .deck-overview{opacity:1;visibility:visible;}
   .deck-ov-hd{color:#cbb98a;text-align:center;font-size:13px;letter-spacing:.24em;
     margin-bottom:26px;font-family:"Noto Sans SC",sans-serif;cursor:pointer;}
   .deck-overview-grid{display:grid;grid-template-columns:repeat(auto-fill,300px);
-    gap:24px;justify-content:center;align-content:start;}
+    gap:24px;justify-content:center;align-content:start;
+    transform:translateY(12px);transition:transform .34s cubic-bezier(.22,.61,.36,1);}
+  body.ov-open .deck-overview-grid{transform:translateY(0);}
   .deck-thumb{position:relative;overflow:hidden;border-radius:4px;cursor:pointer;
     background:#f5efe0;box-shadow:0 6px 18px rgba(0,0,0,.45);
     outline:2px solid transparent;transition:outline-color .15s,transform .15s;}
@@ -67,11 +72,16 @@ body{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
   .deck-thumb .page{box-shadow:none;}
 }
 
+/* 尊重「减少动态效果」系统偏好：关闭推入过渡 */
+@media (prefers-reduced-motion:reduce){ body.deck .slide{transition:none!important;} }
+
 /* ====== 打印/导出：一盒一页 16:9 ====== */
 @page{ size:1280px 720px; margin:0; }
 @media print{
   body{background:#fff;padding:0;display:block;}
-  .slide{display:block!important;height:auto!important;width:auto!important;}
+  /* 复位屏幕态的绝对定位/位移/过渡，让每页回到正常流、一页一张 */
+  .slide{position:static!important;display:block!important;width:auto!important;height:auto!important;
+    transform:none!important;opacity:1!important;visibility:visible!important;transition:none!important;}
   .page{margin:0;box-shadow:none;transform:none!important;break-after:page;page-break-after:always;}
   .page:last-child{break-after:auto;page-break-after:auto;}
   .deck-bar,.deck-overview{display:none!important;}
