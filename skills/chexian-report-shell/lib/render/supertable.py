@@ -231,11 +231,13 @@ function fd(d, kind) {
 function sevColor(sev) {
   return {red:'var(--red)', yellow:'var(--orange)', blue:'var(--navy)', green:'var(--green)'}[sev] || 'var(--ink-mute)';
 }
-function deltaClass(d, kind) {
+function deltaClass(d, kind, lowerWorse) {
   if (d == null) return '';
-  if (['pct'].includes(kind)) return d > 5 ? 'd-up' : d < -3 ? 'd-dn' : d > 0 ? 'd-mid' : '';
-  if (kind === 'money') return d > 500 ? 'd-up' : d < -300 ? 'd-dn' : '';
-  if (kind === 'coef')  return d > 0.05 ? 'd-up' : d < -0.05 ? 'd-dn' : '';
+  // lowerWorse 指标方向相反(上升=变好):用 eff 统一为"变差量",eff>0 即变差(d-up红/d-mid橙)
+  const eff = lowerWorse ? -d : d;
+  if (kind === 'pct')   return eff > 5 ? 'd-up' : eff < -3 ? 'd-dn' : eff > 0 ? 'd-mid' : '';
+  if (kind === 'money') return eff > 500 ? 'd-up' : eff < -300 ? 'd-dn' : '';
+  if (kind === 'coef')  return eff > 0.05 ? 'd-up' : eff < -0.05 ? 'd-dn' : '';
   return '';
 }
 
@@ -448,7 +450,7 @@ function buildTable(visible) {
           cells += `<td class="m-${mid} num${isCur?' cur':''}">${fv(v, m.kind)}${isCur&&(r.sev==='red'||r.sev==='yellow')?`<span class="sev-dot ${r.sev}"></span>`:''}</td>`;
         });
         const d = r.deltas[mid][compareKey];
-        const dc = deltaClass(d, m.kind);
+        const dc = deltaClass(d, m.kind, m.lowerWorse);
         cells += `<td class="m-${mid} num${dc?' '+dc:''}">${fd(d, m.kind)}</td>`;
       });
 
@@ -470,13 +472,16 @@ function buildTable(visible) {
         const ytdV = sv[YTD_IDX];
         const yoyV = sv[YOY_IDX];
         const dv = (ytdV!=null&&yoyV!=null) ? (ytdV-yoyV) : null;
+        // Δ 颜色尊重 lowerWorse:变差→红,变好→绿(lowerWorse 指标上升即变好)
+        const dvWorse = dv != null && (m.lowerWorse ? dv < 0 : dv > 0);
+        const dvColor = dv == null ? 'var(--ink-mute)' : (dvWorse ? 'var(--red)' : 'var(--green)');
         const spark2 = sparkSvg(sv, {vcr:'var(--navy)',lr:'var(--red)',freq:'var(--green)',avg:'var(--orange)',coef:'var(--ink-soft)'}[m.id]||'var(--ink-mute)', 160, 28);
         const valSev = m.id==='vcr'&&(r.sev==='red'||r.sev==='yellow') ? r.sev :
                        (m.id==='lr'&&ytdV>70)?'red':(m.id==='freq'&&ytdV>10)?'yellow':'';
         exCards += `<div class="ex-card">
   <div class="lbl">${m.label}</div>
   <div class="val${valSev?' '+valSev:''}">${fv(ytdV, m.kind)}${m.kind==='pct'?'':m.kind==='money'?'':''}</div>
-  <div class="sub">Δ 同期 <b style="color:${dv!=null?(dv>0?'var(--red)':'var(--green)'):'var(--ink-mute)'}">${fd(dv,m.kind)}</b></div>
+  <div class="sub">Δ 同期 <b style="color:${dvColor}">${fd(dv,m.kind)}</b></div>
   <div style="margin-top:7px">${spark2}</div>
 </div>`;
       });
