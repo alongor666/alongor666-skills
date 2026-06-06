@@ -30,6 +30,17 @@ DEFAULT_METRIC_DEFS = [
     ("coef", "自主系数", "weighted_pricing_factor", "coef",  "g-pre", None),
 ]
 
+# JS 端 METRIC_DEFS 默认值（由 DEFAULT_METRIC_DEFS 派生，单一事实源）。
+# 注入到 SUPERTABLE_JS 的 __METRIC_DEFS_JSON__，决定列渲染/格式化/排序方向。
+# lowerWorse: 该指标"数值越低越差"（对齐壳库 alerts.LOWER_WORSE），
+#   用于"从差到好"排序——True → ASC，False → DESC。默认 5 指标均越高越差。
+# caller（如 org-weekly：coef 复用为费用率、新增 plan/grow/rnw/hh）经
+# render_table_shell(metric_defs_js=...) 整体覆盖，不污染本默认。
+DEFAULT_JS_METRIC_DEFS = [
+    {"id": mid, "label": label, "kind": kind, "thCls": thcls, "lowerWorse": False}
+    for mid, label, _col, kind, thcls, _lk in DEFAULT_METRIC_DEFS
+]
+
 # 默认 6 期顺序
 DEFAULT_PERIOD_HEADERS = [
     ("滚动36个月", "36月"),
@@ -153,6 +164,10 @@ table.t.hide-lr   .m-lr   { display:none; }
 table.t.hide-freq .m-freq { display:none; }
 table.t.hide-avg  .m-avg  { display:none; }
 table.t.hide-coef .m-coef { display:none; }
+table.t.hide-plan .m-plan { display:none; }
+table.t.hide-grow .m-grow { display:none; }
+table.t.hide-rnw  .m-rnw  { display:none; }
+table.t.hide-hh   .m-hh   { display:none; }
 /* ── 跨维度下钻（expand row 内部）─────────────────── */
 .exp-cross{margin-top:14px;border:1px solid var(--line);border-radius:6px;overflow:hidden;}
 .exp-cross-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 12px;background:rgba(28,72,120,0.05);border-bottom:1px solid var(--line);}
@@ -176,19 +191,11 @@ SUPERTABLE_JS = r"""
 const ROWS = __ROWS_JSON__;
 const WARN = __WARN_JSON__;
 const DD   = __DD_JSON__;
+// METRIC_DEFS 由 Python render_table_shell 注入（默认 DEFAULT_JS_METRIC_DEFS=5 指标，
+//   caller 可整体覆盖）。每项 {id,label,kind,thCls,lowerWorse}。
 // lowerWorse: 该指标"数值越低越差"(对齐壳库 alerts.LOWER_WORSE),
 //   用于"从差到好"排序——lowerWorse=true → ASC,false → DESC。
-const METRIC_DEFS = [
-  {id:'vcr',  label:'变率',    kind:'pct',   thCls:'g-var',  lowerWorse:false},
-  {id:'lr',   label:'赔付率',  kind:'pct',   thCls:'g-pay',  lowerWorse:false},
-  {id:'freq', label:'出险率',  kind:'pct',   thCls:'g-clm',  lowerWorse:false},
-  {id:'avg',  label:'案均',    kind:'money', thCls:'g-amt',  lowerWorse:false},
-  {id:'coef', label:'费用率',  kind:'pct',   thCls:'g-pre',  lowerWorse:false},
-  {id:'plan', label:'达成率',  kind:'pct',   thCls:'g-plan', lowerWorse:true},
-  {id:'grow', label:'增长率',  kind:'pct',   thCls:'g-grow', lowerWorse:true},
-  {id:'rnw',  label:'续保率',  kind:'pct',   thCls:'g-rnw',  lowerWorse:true},
-  {id:'hh',   label:'家车占比',kind:'pct',   thCls:'g-hh',   lowerWorse:true},
-];
+const METRIC_DEFS = __METRIC_DEFS_JSON__;
 const PERIOD_LABELS = __PERIOD_LABELS__;
 const YTD_IDX = __YTD_IDX__, YOY_IDX = __YOY_IDX__, M12_IDX = __M12_IDX__;
 
@@ -459,6 +466,7 @@ function buildTable(visible) {
       let exCards = '';
       METRIC_DEFS.forEach(m => {
         const sv = r.metrics[m.id];
+        if (!sv) return;  // guard:该行无此指标 series(caller 指标集与行数据不一致时不崩)
         const ytdV = sv[YTD_IDX];
         const yoyV = sv[YOY_IDX];
         const dv = (ytdV!=null&&yoyV!=null) ? (ytdV-yoyV) : null;
@@ -507,8 +515,8 @@ function render() {
   const tbl = document.getElementById('main-table');
   tbl.innerHTML = buildTable(visible);
 
-  ['vcr','lr','freq','avg','coef'].forEach(mid => {
-    tbl.classList.toggle('hide-'+mid, !state.activeMetrics.has(mid));
+  METRIC_DEFS.forEach(m => {
+    tbl.classList.toggle('hide-'+m.id, !state.activeMetrics.has(m.id));
   });
 
   const c = getCounts(visible);
@@ -720,6 +728,7 @@ def render_table_shell(
     yoy_idx: Optional[int] = None,
     m12_idx: Optional[int] = None,
     compare_labels: Optional[dict] = None,
+    metric_defs_js: Optional[list[dict]] = None,
 ) -> str:
     """表格外壳（含 JS 模板替换）。
 
@@ -738,6 +747,10 @@ def render_table_shell(
         compare_labels: Δ 列表头按对比口径 key 显示的中文，默认
                         {yoy:'上年同期', m12:'滚动12月', warn:'警戒线'}。
                         org 复用 yoy 表示"上周"时传 {'yoy':'上周','warn':'警戒线'}。
+        metric_defs_js: JS 端指标定义 [{id,label,kind,thCls,lowerWorse}, ...]，
+                        默认 DEFAULT_JS_METRIC_DEFS（5 指标）。org-weekly 等需扩展
+                        指标列（如 coef→费用率、新增 plan/grow/rnw/hh）的 caller
+                        整体覆盖此项，不污染壳库默认。注入行 metrics 须含这些 id。
 
     Returns:
         HTML table 元素字符串
@@ -748,11 +761,13 @@ def render_table_shell(
     _yoy = YOY_IDX if yoy_idx is None else yoy_idx
     _m12 = M12_IDX if m12_idx is None else m12_idx
     _cmp_labels = compare_labels or {"yoy": "上年同期", "m12": "滚动12月", "warn": "警戒线"}
+    _metric_defs = metric_defs_js if metric_defs_js is not None else DEFAULT_JS_METRIC_DEFS
 
     js_code = SUPERTABLE_JS \
         .replace("__ROWS_JSON__", rows_json) \
         .replace("__WARN_JSON__", warn_json) \
         .replace("__DD_JSON__", dd_json) \
+        .replace("__METRIC_DEFS_JSON__", json.dumps(_metric_defs, ensure_ascii=False)) \
         .replace("__PERIOD_LABELS__", str(period_labels)) \
         .replace("__YTD_IDX__", str(_ytd)) \
         .replace("__YOY_IDX__", str(_yoy)) \

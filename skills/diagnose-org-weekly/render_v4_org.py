@@ -3,8 +3,9 @@
 从 SectionContext + drill_long_df 构造行数据，调用壳库 supertable.* 组件渲染。
 org 特征适配：
   - 5 YTD 窗口（上季度/上月/上上周/上周/当周），ytd_idx=4、对比基准=上周(idx=3)
-  - 指标列复用壳库 JS 硬编码的 vcr/lr/freq/avg（无 coef：org 标准指标不含自主系数，
-    coef 列以 null 占位并默认隐藏，避免 SUPERTABLE_JS 的 expand-row 遍历 5 指标时崩溃）
+  - 9 指标列经 render_table_shell(metric_defs_js=ORG_V4_JS_METRIC_DEFS) 注入，整体覆盖
+    壳库 5 指标默认（不污染其它 caller）：vcr/lr/freq/avg + coef 槽位复用为费用率
+    + org 专属 plan/grow/rnw/hh；每行 metrics 含全部 9 个等长 series（缺值填 None）
   - 对比口径：vs 上周 / vs 警戒线（壳库默认的 yoy/m12/warn 中 yoy 复用为"上周"）
   - 交叉下钻暂关闭（group_to_sec_id / drill_dims_v4 传空 → buildCrossDimSection 返回空）
 """
@@ -39,18 +40,24 @@ V4_METRIC_MAP = [
     ("hh",   "household_share_pct",     "household_share_pct"),
 ]
 
-# 控制条指标 pill(9 个;coef 槽位展示为"费用率")
-ORG_V4_METRIC_DEFS = [
-    ("vcr",  "变率"),
-    ("lr",   "赔付率"),
-    ("freq", "出险率"),
-    ("avg",  "案均"),
-    ("coef", "费用率"),
-    ("plan", "达成率"),
-    ("grow", "增长率"),
-    ("rnw",  "续保率"),
-    ("hh",   "家车占比"),
+# JS 端指标定义（传给壳库 render_table_shell(metric_defs_js=)，整体覆盖壳库 5 指标默认）。
+# org-weekly 指标列的单一事实源：coef 槽位复用为费用率（kind=pct，非自主系数）；
+# plan/grow/rnw/hh 为 org 专属，lowerWorse=True 对齐 lib/alerts.LOWER_WORSE
+# （达成/增长/续保/家车占比 越低越差，"从差到好"排序时升序）。
+ORG_V4_JS_METRIC_DEFS = [
+    {"id": "vcr",  "label": "变率",     "kind": "pct",   "thCls": "g-var",  "lowerWorse": False},
+    {"id": "lr",   "label": "赔付率",   "kind": "pct",   "thCls": "g-pay",  "lowerWorse": False},
+    {"id": "freq", "label": "出险率",   "kind": "pct",   "thCls": "g-clm",  "lowerWorse": False},
+    {"id": "avg",  "label": "案均",     "kind": "money", "thCls": "g-amt",  "lowerWorse": False},
+    {"id": "coef", "label": "费用率",   "kind": "pct",   "thCls": "g-pre",  "lowerWorse": False},
+    {"id": "plan", "label": "达成率",   "kind": "pct",   "thCls": "g-plan", "lowerWorse": True},
+    {"id": "grow", "label": "增长率",   "kind": "pct",   "thCls": "g-grow", "lowerWorse": True},
+    {"id": "rnw",  "label": "续保率",   "kind": "pct",   "thCls": "g-rnw",  "lowerWorse": True},
+    {"id": "hh",   "label": "家车占比", "kind": "pct",   "thCls": "g-hh",   "lowerWorse": True},
 ]
+
+# 控制条指标 pill (id, label)，从 JS 定义派生（单一事实源，label 不重复）
+ORG_V4_METRIC_DEFS = [(m["id"], m["label"]) for m in ORG_V4_JS_METRIC_DEFS]
 
 # 组名 → 段 ID（供 V4 交叉下钻 buildCrossDimSection）
 ORG_V4_GROUP_TO_SEC_ID = {
@@ -98,10 +105,6 @@ def build_v4_drill(level: str = "org"):
     return group_to_sec, drill
 
 ORG_V4_COMPARE_OPTS = [("yoy", "vs 上周"), ("warn", "vs 警戒线")]
-ORG_V4_SORT_OPTS = [
-    ("default", "默认"), ("ytd-desc", "本年值↓"), ("delta-desc", "周Δ↓"),
-    ("prem-desc", "保费↓"), ("name", "名称"),
-]
 # 期标签简称（与 PERIOD_ORDER_ORG 一一对应）
 ORG_V4_PERIOD_LABELS = ["上季", "上月", "上上周", "上周", "当周"]
 
@@ -281,6 +284,7 @@ def render_v4(ctx, drill_long_df, args):
         yoy_idx=PREV_IDX,  # 对比基准 = 上周 idx 3
         m12_idx=PREV_IDX,  # org 无滚动12月，占位为有效索引
         compare_labels={"yoy": "上周", "warn": "警戒线"},
+        metric_defs_js=ORG_V4_JS_METRIC_DEFS,  # 9 指标(coef→费用率+plan/grow/rnw/hh)，覆盖壳库默认
     )
     footer = render_footer(dash_href=dash_href, week_href=week_href)
 
