@@ -36,17 +36,17 @@ SECTION_DEFS_ORG = [
 # salesman 基数大：明细段只展示按 YTD 保费排序的前 N 名
 SALESMAN_TOP_N = 15
 
-# V1 首屏 9 KPI（指标列名, 中文标签, 亮灯 key）
+# V1 首屏 8 KPI(指标列名, 中文标签, 亮灯 key)
+# 顺序:综合(VCR) → 运营管理(达成/增长/续保) → 结构(家车) → 拆分指标(费用/赔付/出险)
 ORG_KPI_DEFS = [
     ("variable_cost_ratio_pct",  "变动成本率", "variable_cost_ratio_pct"),
+    ("plan_completion_pct",      "计划达成率", "plan_completion_pct"),
+    ("premium_growth_pct",       "增长率",     "premium_growth_pct"),
+    ("renewal_rate_pct",         "续保率",     "renewal_rate_pct"),
+    ("household_share_pct",      "家车占比",   "household_share_pct"),
     ("expense_ratio_pct",        "费用率",     "expense_ratio_pct"),
     ("earned_loss_ratio_pct",    "满期赔付率", "earned_loss_ratio_pct"),
     ("earned_loss_freq_pct",     "满期出险率", "earned_loss_freq_pct"),
-    ("plan_completion_pct",      "计划达成率", "plan_completion_pct"),
-    ("premium_growth_pct",       "增长率",     "premium_growth_pct"),
-    ("household_share_pct",      "家自占比",   "household_share_pct"),
-    ("renewal_rate_pct",         "续保率",     "renewal_rate_pct"),
-    ("cross_sell_completion_pct","交叉销售",   "cross_sell_completion_pct"),
 ]
 
 # 折叠明细中可切换的 9 个指标 tab

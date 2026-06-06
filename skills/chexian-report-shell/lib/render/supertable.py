@@ -93,6 +93,10 @@ table.t thead .g-pay{background:rgba(184,57,43,0.07);color:var(--red);}
 table.t thead .g-clm{background:rgba(58,122,75,0.09);color:var(--green);}
 table.t thead .g-amt{background:rgba(201,120,38,0.07);color:var(--orange);}
 table.t thead .g-pre{background:var(--paper-soft);color:var(--ink-soft);}
+table.t thead .g-plan{background:rgba(102,51,153,0.07);color:#6633a3;}
+table.t thead .g-grow{background:rgba(38,144,84,0.08);color:#1f7a47;}
+table.t thead .g-rnw{background:rgba(20,108,168,0.07);color:#0f6fa8;}
+table.t thead .g-hh{background:rgba(180,130,40,0.07);color:#8a5e1c;}
 table.t thead .cur{background:var(--navy);color:#fff;font-weight:600;}
 /* frozen left cols */
 table.t .frz{position:sticky;z-index:20;background:var(--surface);}
@@ -172,12 +176,18 @@ SUPERTABLE_JS = r"""
 const ROWS = __ROWS_JSON__;
 const WARN = __WARN_JSON__;
 const DD   = __DD_JSON__;
+// lowerWorse: 该指标"数值越低越差"(对齐壳库 alerts.LOWER_WORSE),
+//   用于"从差到好"排序——lowerWorse=true → ASC,false → DESC。
 const METRIC_DEFS = [
-  {id:'vcr',  label:'变率',    kind:'pct',   thCls:'g-var'},
-  {id:'lr',   label:'赔付率',  kind:'pct',   thCls:'g-pay'},
-  {id:'freq', label:'出险率',  kind:'pct',   thCls:'g-clm'},
-  {id:'avg',  label:'案均',    kind:'money', thCls:'g-amt'},
-  {id:'coef', label:'自主系数',kind:'coef',  thCls:'g-pre'},
+  {id:'vcr',  label:'变率',    kind:'pct',   thCls:'g-var',  lowerWorse:false},
+  {id:'lr',   label:'赔付率',  kind:'pct',   thCls:'g-pay',  lowerWorse:false},
+  {id:'freq', label:'出险率',  kind:'pct',   thCls:'g-clm',  lowerWorse:false},
+  {id:'avg',  label:'案均',    kind:'money', thCls:'g-amt',  lowerWorse:false},
+  {id:'coef', label:'费用率',  kind:'pct',   thCls:'g-pre',  lowerWorse:false},
+  {id:'plan', label:'达成率',  kind:'pct',   thCls:'g-plan', lowerWorse:true},
+  {id:'grow', label:'增长率',  kind:'pct',   thCls:'g-grow', lowerWorse:true},
+  {id:'rnw',  label:'续保率',  kind:'pct',   thCls:'g-rnw',  lowerWorse:true},
+  {id:'hh',   label:'家车占比',kind:'pct',   thCls:'g-hh',   lowerWorse:true},
 ];
 const PERIOD_LABELS = __PERIOD_LABELS__;
 const YTD_IDX = __YTD_IDX__, YOY_IDX = __YOY_IDX__, M12_IDX = __M12_IDX__;
@@ -189,7 +199,7 @@ let state = {
   onlyAlert: false,
   search: '',
   expanded: new Set(),
-  sortBy: 'default',         // default / ytd-desc / delta-desc / prem-desc / name
+  // sortBy 已废弃,固定按"主指标组内从差到好",见 sortByPrimaryMetric()
 };
 
 // ── utils ─────────────────────────────────────────────────────────
@@ -324,6 +334,43 @@ function cdimSel(tabEl, evt) {
 }
 
 // ── filter + sort rows ────────────────────────────────────────────
+// 排序策略:维度组别(group)顺序保持注册顺序,组别内按"主指标(activeMetrics 第一个)"
+// 从差到好排序(lowerWorse → ASC,否则 → DESC)。整体行 group='整体' 始终排第一。
+function sortByPrimaryMetric(rows) {
+  const am = [...state.activeMetrics];
+  const primaryId = am[0] || 'vcr';
+  const def = METRIC_DEFS.find(d => d.id === primaryId) || METRIC_DEFS[0];
+  const lowerWorse = !!def.lowerWorse;
+
+  // 1) 按 group 切片(保留首次出现顺序)
+  const groupOrder = [];
+  const byGroup = {};
+  rows.forEach(r => {
+    if (!(r.group in byGroup)) { byGroup[r.group] = []; groupOrder.push(r.group); }
+    byGroup[r.group].push(r);
+  });
+
+  // 2) 组内按 primary metric YTD 从差到好排
+  groupOrder.forEach(g => {
+    byGroup[g].sort((a, b) => {
+      const av = a.metrics[primaryId] ? a.metrics[primaryId][YTD_IDX] : null;
+      const bv = b.metrics[primaryId] ? b.metrics[primaryId][YTD_IDX] : null;
+      if (av == null && bv == null) return 0;
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      return lowerWorse ? (av - bv) : (bv - av);
+    });
+  });
+
+  // 3) 拼回(整体组优先)
+  const ordered = [];
+  if (byGroup['整体']) ordered.push(...byGroup['整体']);
+  groupOrder.forEach(g => {
+    if (g !== '整体') ordered.push(...byGroup[g]);
+  });
+  return ordered;
+}
+
 function getVisibleRows() {
   let rows = ROWS.slice();
   if (state.onlyAlert) rows = rows.filter(r => r.sev === 'red' || r.sev === 'yellow');
@@ -331,23 +378,8 @@ function getVisibleRows() {
     const q = state.search.trim();
     rows = rows.filter(r => r.name.includes(q) || r.group.includes(q));
   }
-  if (state.sortBy === 'ytd-desc') {
-    rows.sort((a,b) => {
-      const av = a.metrics.vcr[YTD_IDX], bv = b.metrics.vcr[YTD_IDX];
-      if (av == null) return 1; if (bv == null) return -1; return bv - av;
-    });
-  } else if (state.sortBy === 'delta-desc') {
-    rows.sort((a,b) => {
-      const ak = state.compare, ad = a.deltas.vcr[ak], bd = b.deltas.vcr[ak];
-      if (ad == null) return 1; if (bd == null) return -1; return bd - ad;
-    });
-  } else if (state.sortBy === 'prem-desc') {
-    rows.sort((a,b) => {
-      if (a.prem == null) return 1; if (b.prem == null) return -1; return b.prem - a.prem;
-    });
-  } else if (state.sortBy === 'name') {
-    rows.sort((a,b) => a.name.localeCompare(b.name, 'zh'));
-  }
+  // 唯一排序:组内主指标从差到好
+  rows = sortByPrimaryMetric(rows);
   return rows;
 }
 
@@ -530,13 +562,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  document.querySelectorAll('[data-sort]').forEach(el => {
-    el.addEventListener('click', () => {
-      state.sortBy = el.dataset.sort;
-      document.querySelectorAll('[data-sort]').forEach(e => e.classList.toggle('on', e.dataset.sort===state.sortBy));
-      render();
-    });
-  });
+  // sort pills 已废弃,不再监听(组内主指标从差到好为唯一排序);
+  // 但指标 pill 切换会改 activeMetrics 第一项,排序自然跟着变。
 
   document.getElementById('toggle-alert').addEventListener('click', function() {
     state.onlyAlert = !state.onlyAlert;
@@ -614,26 +641,25 @@ def render_topbar(
 def render_controls(
     compare_opts: Optional[list[tuple[str, str]]] = None,
     metric_defs: Optional[list[tuple]] = None,
-    sort_opts: Optional[list[tuple[str, str]]] = None,
+    sort_opts: Optional[list[tuple[str, str]]] = None,  # 已废弃,保留参数防破坏旧 caller
     default_metrics: Optional[list[str]] = None,
 ) -> str:
-    """控制条（对比口径/指标列/排序/搜索）。
+    """控制条(对比口径/指标列/搜索)。
 
     Args:
-        compare_opts: 对比选项 [(key, label), ...]，默认 yoy/m12/warn
-        metric_defs: 指标定义，默认 DEFAULT_METRIC_DEFS
-        sort_opts: 排序选项 [(key, label), ...]
-        default_metrics: 默认选中的指标 id 列表，默认 ['vcr','lr']
+        compare_opts: 对比选项 [(key, label), ...],默认 yoy/m12/warn
+        metric_defs: 指标定义,默认 DEFAULT_METRIC_DEFS
+        sort_opts: **已废弃**——超表统一按"主指标(activeMetrics 第一个)从差到好"
+                   组别内排序,不再渲染 sort UI。保留入参防破坏旧 caller。
+        default_metrics: 默认选中的指标 id 列表,默认 ['vcr','lr']
     """
     if compare_opts is None:
         compare_opts = [("yoy", "vs 上年同期"), ("m12", "vs 滚动12月"), ("warn", "vs 警戒线")]
     if metric_defs is None:
         metric_defs = DEFAULT_METRIC_DEFS
-    if sort_opts is None:
-        sort_opts = [("default", "默认"), ("ytd-desc", "本年值↓"), ("delta-desc", "同期Δ↓"),
-                     ("prem-desc", "保费↓"), ("name", "名称")]
     if default_metrics is None:
         default_metrics = ["vcr", "lr"]
+    _ = sort_opts  # 显式吃掉,留 UI 简洁:组内主指标从差到好,无可调
 
     cmp_pills = "".join(
         f'<span class="pill{" on" if k=="yoy" else ""}" data-compare="{k}">{lbl}</span>'
@@ -643,16 +669,10 @@ def render_controls(
         f'<span class="pill dim{" on" if mid in default_metrics else ""}" data-metric="{mid}">{lbl}</span>'
         for mid, lbl, *_ in metric_defs
     )
-    sort_pills = "".join(
-        f'<span class="pill{" on" if k=="default" else ""}" data-sort="{k}">{lbl}</span>'
-        for k, lbl in sort_opts
-    )
     return f"""<div class="controls">
   <div class="ctl-grp"><span class="ctl-lbl">对比口径</span>{cmp_pills}</div>
   <div class="divider"></div>
   <div class="ctl-grp"><span class="ctl-lbl">指标列</span>{metric_pills}</div>
-  <div class="divider"></div>
-  <div class="ctl-grp"><span class="ctl-lbl">排序</span>{sort_pills}</div>
   <div class="divider"></div>
   <div class="ctl-grp">
     <span class="toggle-btn" id="toggle-alert">

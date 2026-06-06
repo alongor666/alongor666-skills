@@ -23,23 +23,33 @@ from render_v1_org import (
     SECTION_DEFS_ORG, build_section_defs,
 )
 
-# 行 metrics 键（与壳库 SUPERTABLE_JS METRIC_DEFS 的 id 严格对齐）→ standard/drill 列名 + 打灯 key。
-# coef 槽位复用为 expense_ratio_pct（org 无自主系数，JS/CSS 已有 coef 槽位）。
+# 行 metrics 键(与壳库 SUPERTABLE_JS METRIC_DEFS 的 id 严格对齐)→ standard/drill 列名 + 打灯 key。
+# coef 槽位复用为 expense_ratio_pct(org 无自主系数,JS 显示标签"费用率")。
+# plan/grow/rnw/hh 4 个新槽位的列名对齐 standard_query / drill_long_df 输出(由
+# ctx.standard_rows / drill_long_df 提供;无对应列时 series 自动为 None)。
 V4_METRIC_MAP = [
     ("vcr",  "variable_cost_ratio_pct", "variable_cost_ratio_pct"),
     ("lr",   "earned_loss_ratio_pct",   "earned_loss_ratio_pct"),
     ("freq", "earned_loss_freq_pct",    "earned_loss_freq_pct"),
     ("avg",  "avg_claim",               None),
     ("coef", "expense_ratio_pct",       "expense_ratio_pct"),
+    ("plan", "plan_completion_pct",     "plan_completion_pct"),
+    ("grow", "premium_growth_pct",      "premium_growth_pct"),
+    ("rnw",  "renewal_rate_pct",        "renewal_rate_pct"),
+    ("hh",   "household_share_pct",     "household_share_pct"),
 ]
 
-# 控制条指标 pill（5 个；coef 槽位展示为"费用率"）
+# 控制条指标 pill(9 个;coef 槽位展示为"费用率")
 ORG_V4_METRIC_DEFS = [
     ("vcr",  "变率"),
     ("lr",   "赔付率"),
     ("freq", "出险率"),
     ("avg",  "案均"),
     ("coef", "费用率"),
+    ("plan", "达成率"),
+    ("grow", "增长率"),
+    ("rnw",  "续保率"),
+    ("hh",   "家车占比"),
 ]
 
 # 组名 → 段 ID（供 V4 交叉下钻 buildCrossDimSection）
@@ -254,10 +264,10 @@ def render_v4(ctx, drill_long_df, args):
         brand_mark=org[0], brand_text=f"{org} · 经营诊断周报",
         theme_toggle_btn=theme_toggle_btn(),
     )
+    # sort_opts 不传:超表统一按"主指标(activeMetrics 第一个)组内从差到好"
     controls = render_controls(
         compare_opts=ORG_V4_COMPARE_OPTS,
         metric_defs=ORG_V4_METRIC_DEFS,
-        sort_opts=ORG_V4_SORT_OPTS,
         default_metrics=["vcr", "lr"],
     )
     table_shell = render_table_shell(
