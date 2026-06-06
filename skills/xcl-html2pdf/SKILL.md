@@ -8,7 +8,7 @@ description: >
   套标准 class 即得统一的国家地理风视觉，无需自调样式。两套共用 report-skin.css，PDF 与 PPT 视觉天然一致。
   触发词：html2pdf、xcl_html2pdf、做成 PDF、做成 PPT、印刷级报告、演示版、16:9、大屏卡片、投影、keynote、一页一张、横向翻页卡片、A4 卡片、打印成 PDF、标准报告、report to pdf、build report、verify card。
   内容专属的模板（如涡旋诊断卡片）见 company-vortex-card，它在本基座之上。
-version: 1.3.0
+version: 1.4.0
 user_invocable: true
 ---
 
@@ -20,8 +20,10 @@ user_invocable: true
 >
 > | 版式 | 何时用 | 用哪套（四/五件套） | 画幅 |
 > |---|---|---|---|
-> | **PPT（默认）** | 屏幕 / 投影 / 大屏 / 演讲 | `deck-16x9.css` + `report-skin.css` + `skin-16x9.css` + `deck.js` + `skeleton-16x9.html` | 16:9（1280×720px） |
+> | **PPT（默认）** | 屏幕 / 投影 / 大屏 / 演讲 | `deck-16x9.css` + `report-skin.css` + `skin-16x9.css` + `deck-16x9.js` + `skeleton-16x9.html` | 16:9（1280×720px） |
 > | **PDF** | 打印 / 密排长报告 / 归档 | `page-deck.css` + `report-skin.css` + `deck.js` + `skeleton.html` | A4 纵向（210×297mm） |
+>
+> 翻页脚本两套不同：**PPT 用 `deck-16x9.js`**（演示导向：GPU transform 推入过渡 + ← → 翻页 + 序号条直达 + Esc/▦ 缩略图总览 + ⛶ 全屏演示），**PDF 用 `deck.js`**（← → / 点击左右 / 滚轮），互不影响。
 >
 > 两套**共用 report-skin.css**（配色/字体/组件单一真相源），视觉天然一致；**同一个 `driver.mjs` 验收**（填充率比例法 + `preferCSSPageSize`，画幅无关）。
 
@@ -48,7 +50,7 @@ node --version   # 需 ≥ 21（内置全局 WebSocket / fetch；实测 v22.16.0
 
 0. **先确认版式**（见顶部 ⚑）：用户没明说默认 **PPT**。下面按版式复制对应骨架与样式表。
 1. 复制对应套件到工作目录（`*-deck.css` / `report-skin.css` / `deck.js` 等都**勿改**——版面、视觉规范、翻页机制都在里面）：
-   - **PPT（默认）**：`assets/skeleton-16x9.html`、`assets/deck-16x9.css`、`assets/report-skin.css`、`assets/skin-16x9.css`、`assets/deck.js`。
+   - **PPT（默认）**：`assets/skeleton-16x9.html`、`assets/deck-16x9.css`、`assets/report-skin.css`、`assets/skin-16x9.css`、`assets/deck-16x9.js`。
    - **PDF**：`assets/skeleton.html`、`assets/page-deck.css`、`assets/report-skin.css`、`assets/deck.js`。
 2. 把骨架里每个 `<section class="page">` 换成你的内容，按需增删页。**直接套标准 class**（`sec-head` / `lede` / `table.data` / `note` / `quote` / `verdict` / `dossier` / `calc` / `bar-row` …）即得统一字体/字号/字色——不要在自己的 `<style>` 里重定义这些；只有本页特有的图形样式才另写。
 3. 版面规则（铁律）：
@@ -123,7 +125,12 @@ PPT（16:9）骨架同样本机跑通：
 
 ## 导出 PDF（人工路径）
 
-屏幕上：`← →` / 点击页面左右 / 滚轮 翻页。导出：浏览器打开 → `Cmd/Ctrl+P` → 另存为 PDF → **取消「页眉和页脚」**、边距默认 → 即得一页一张。无头等价命令：
+屏幕翻页（两套脚本不同）：
+
+- **PDF（`deck.js`）**：`← →` / 点击页面左右 / 滚轮 翻页。
+- **PPT（`deck-16x9.js`）**：`← →` 翻页（**只认方向键**，去掉了点击左右/滚轮以免误触）；底部**序号条**点任意页码一键直达；**Esc 两级退出**——在页面上按 `Esc` 进**缩略图总览**（无序号、纯缩略图），在总览里按 `Esc` 退出全屏；也可点序号条的 **`▦`** 开总览、**`⛶`** 进入/退出全屏演示。⚠️ 真·浏览器全屏态下，首个 `Esc` 由浏览器强制退出全屏（JS 拦不住），此时总览改用 `▦` 打开。
+
+导出：浏览器打开 → `Cmd/Ctrl+P` → 另存为 PDF → **取消「页眉和页脚」**、边距默认 → 即得一页一张（导航 chrome 仅屏幕显示，打印态已隐藏，不进 PDF）。无头等价命令：
 
 ```bash
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new \

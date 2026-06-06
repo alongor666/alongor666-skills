@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!-- skeleton-16x9.html —— xcl-html2pdf PPT 演示骨架（16:9 大字号 · 国家地理风）
-     复制本文件 + deck-16x9.css + report-skin.css + skin-16x9.css + deck.js，
+     复制本文件 + deck-16x9.css + report-skin.css + skin-16x9.css + deck-16x9.js，
      把每个 .page 的内容换成你的演示页，按需增删页。
      · 画幅 1280×720px（PowerPoint 16:9 标准），屏幕横向翻页、导出一页一张 16:9 PDF。
      · 字号/留白由 skin-16x9.css 放大到演示尺度；配色/字体/组件继承 report-skin.css，勿在此重定义。
@@ -80,15 +80,15 @@
     <div class="sec-head"><div class="sec-no">叁</div><div><div class="sec-title">收尾层</div><div class="sec-en">Finish</div></div></div>
     <div class="rule"></div>
     <div class="verdict">
-      <div class="vbox"><div class="vt">起一份新演示</div><div class="stars">①②③</div><p>① 复制骨架 + deck-16x9.css + report-skin.css + skin-16x9.css + deck.js。② 把每个 .page 换成你的内容，套标准 class。③ 跑 driver.mjs 验收到全 PASS。</p></div>
+      <div class="vbox"><div class="vt">起一份新演示</div><div class="stars">①②③</div><p>① 复制骨架 + deck-16x9.css + report-skin.css + skin-16x9.css + deck-16x9.js。② 把每个 .page 换成你的内容，套标准 class。③ 跑 driver.mjs 验收到全 PASS。</p></div>
       <div class="vbox"><div class="vt">PDF 还是 PPT</div><div class="stars">▲▲</div><p>A4 纵向（page-deck.css）适合打印密排报告；16:9 演示（deck-16x9.css）适合屏幕 / 投影。两套共用 report-skin.css，视觉天然一致。</p></div>
     </div>
     <div class="note" style="margin-top:18px;"><b>验收</b>：node driver.mjs your.html N（填充率 / 溢出 / 页数）；加 <b>--pdf out.pdf</b> 留存 16:9 PDF。</div>
-    <div class="quote">屏幕上：← → / 点击左右 / 滚轮 翻页。导出：Cmd/Ctrl+P → 另存为 PDF → <b>取消「页眉和页脚」</b> → 即得一页一张 16:9。</div>
+    <div class="quote">屏幕上：<b>← →</b> 翻页 · <b>序号</b>直达 · <b>Esc</b> 进缩略图、再按退全屏 · <b>⛶</b> 全屏演示。导出：Cmd/Ctrl+P → 取消「页眉和页脚」→ 一页一张。</div>
   </div>
   <div class="rfoot"><div>xcl-html2pdf · 演示骨架 · 数据截止 —</div><div><span class="pg">04</span></div></div>
 </section>
 
-<script src="deck.js"></script>
+<script src="deck-16x9.js"></script>
 </body>
 </html>
