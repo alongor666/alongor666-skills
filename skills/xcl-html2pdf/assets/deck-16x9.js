@@ -3,8 +3,9 @@
  *   交互（演示导向，区别于 PDF 的 deck.js）：
  *   · 左右翻页【只认 ← → 方向键】（Home/End 跳首末）——不再有「点击页面左右」「滚轮翻页」。
  *   · 底部【序号条】：点页码一键直达；远跳也只做一次单步推入（不论距离），当前页高亮。
- *   · 【缩略图总览】：点序号条右端 ▦ 打开（无序号、纯缩略图，淡入上浮），点缩略图进入该页；
- *     【Esc = 只退出】总览开着→关；总览没开→不拦截，交还浏览器退出全屏。
+ *   · 【缩略图总览】：点 ▦ 或在页面上按 Esc 打开（无序号、纯缩略图，淡入上浮），点缩略图进入该页。
+ *   · 【Esc 两级退出】页面 → 缩略图总览；缩略图 → 退出全屏（关总览 + 退浏览器全屏）。⛶ 进入/退出全屏演示。
+ *     注：真·浏览器全屏态下，首个 Esc 由浏览器强制退出全屏（JS 拦不住）——此时总览改用 ▦ 打开。
  *   打印/导出时整段不参与（@media print 已复位 .slide/.page 并隐藏导航 chrome）。
  *   配合 deck-16x9.css + report-skin.css + skin-16x9.css 使用，置于页尾：<script src="deck-16x9.js"></script>
  *   PDF（A4）版请改用 deck.js——两套脚本互不影响。 */
@@ -36,8 +37,12 @@
       b.addEventListener('click',function(){jump(i);});
       bar.appendChild(b); nums.push(b);
     });
+    var fbtn=document.createElement('button'); fbtn.className='deck-num deck-fs-btn';
+    fbtn.innerHTML='&#9974;'; fbtn.title='全屏演示 / 退出（Esc）';
+    fbtn.addEventListener('click',function(){toggleFs();});
+    bar.appendChild(fbtn);
     var gbtn=document.createElement('button'); gbtn.className='deck-num deck-grid-btn';
-    gbtn.innerHTML='&#9638;'; gbtn.title='全部页总览（Esc 退出）';
+    gbtn.innerHTML='&#9638;'; gbtn.title='全部页总览（页面里按 Esc 也可）';
     gbtn.addEventListener('click',function(){toggleOverview();});
     bar.appendChild(gbtn);
     document.body.appendChild(bar);
@@ -67,6 +72,14 @@
       idx=i; place(idx); setActive(idx);
     }
     function go(d){ jump(idx+d); }
+
+    // —— 全屏（演示态）——
+    function isFs(){ return document.fullscreenElement||document.webkitFullscreenElement; }
+    function enterFs(){ var el=document.documentElement;
+      (el.requestFullscreen||el.webkitRequestFullscreen||function(){}).call(el); }
+    function exitFs(){ if(document.fullscreenElement&&document.exitFullscreen) document.exitFullscreen();
+      else if(document.webkitFullscreenElement&&document.webkitExitFullscreen) document.webkitExitFullscreen(); }
+    function toggleFs(){ isFs()?exitFs():enterFs(); }
 
     // —— 缩略图总览（懒构建，仅用户首次触发时才进 DOM，避免污染 .page 计数/导出）——
     var ov=null;
@@ -103,8 +116,12 @@
     // —— 键盘：左右翻页只认方向键；Esc 只负责退出 ——
     window.addEventListener('keydown',function(e){
       if(e.key==='Escape'){
-        // Esc 只「退出」：总览开着→关；没开则不拦截，交还浏览器退出全屏
-        if(document.body.classList.contains('ov-open')){e.preventDefault();closeOverview();}
+        // Esc 两级退出：① 页面 → 缩略图总览 ② 缩略图 → 退出全屏（关总览 + 退浏览器全屏）
+        if(document.body.classList.contains('ov-open')){
+          e.preventDefault(); closeOverview(); exitFs();
+        } else if(!isFs()){
+          e.preventDefault(); openOverview();            // 窗口态：页面 → 缩略图
+        } // else 真全屏 + 未开总览：不拦截，让浏览器原生退出全屏（总览改用 ▦）
         return;
       }
       if(document.body.classList.contains('ov-open')) return; // 总览态不翻页

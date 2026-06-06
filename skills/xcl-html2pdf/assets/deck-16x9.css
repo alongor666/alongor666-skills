@@ -49,7 +49,8 @@ body{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
     transition:background .15s,color .15s;}
   .deck-num:hover{background:rgba(241,231,207,.16);}
   .deck-num.on{background:#9e1813;color:#fff;}
-  .deck-grid-btn{font-size:15px;margin-left:5px;padding:0 9px;
+  .deck-fs-btn{font-size:14px;padding:0 9px;border-left:1px solid rgba(241,231,207,.26);}
+  .deck-grid-btn{font-size:15px;padding:0 9px;
     border-left:1px solid rgba(241,231,207,.26);border-radius:0 14px 14px 0;}
 
   /* —— 缩略图总览：▦ 打开 / Esc 退出，全部页铺一屏，点击进入（淡入 + 上浮） —— */
