@@ -19,7 +19,13 @@ from lib import (
     render_card, render_table, short_label,
     get_dimension, DrillDimension,
 )
+from lib.alerts import LOWER_WORSE
 from lib.page_ids import drill_page_id
+
+
+# 分维度卡默认排序指标:与 render_v1_org.py default_metric 对齐(变动成本率)
+# VCR 不在 LOWER_WORSE 中 → 数值越高越差 → DESC 排序从差到好
+DEFAULT_SORT_METRIC = "variable_cost_ratio_pct"
 
 
 HEADERS_DIM = [
@@ -43,20 +49,24 @@ def _slice_last_window(df_long: pd.DataFrame, dim: DrillDimension,
     if sub.empty:
         return sub
 
-    # 把 sql_value → display 映射
+    # 把 sql_value → display 映射(枚举维度需保留 dim 显示名)
     if dim.values:
-        value_order = {v.sql_value: i for i, v in enumerate(dim.values)}
         display_map = {v.sql_value: v.display for v in dim.values}
-        sub["__order"] = sub["dim_value"].map(
-            lambda x: value_order.get(str(x), 999)
-        )
         sub["dim"] = sub["dim_value"].map(
             lambda x: display_map.get(str(x), str(x))
         )
-        sub = sub.sort_values("__order").drop(columns="__order").reset_index(drop=True)
     else:
-        # 动态维度（team/salesman）：按保费倒序
         sub["dim"] = sub["dim_value"].astype(str)
+
+    # 统一按"所选指标 = 变动成本率"从差到好排序;
+    # VCR 不在 LOWER_WORSE → DESC(数值越高越差);
+    # 若 default_metric 改为 LOWER_WORSE 指标(如续保率) → ASC(数值越低越差)。
+    asc = DEFAULT_SORT_METRIC in LOWER_WORSE
+    if DEFAULT_SORT_METRIC in sub.columns:
+        sub = sub.sort_values(DEFAULT_SORT_METRIC, ascending=asc,
+                              na_position="last").reset_index(drop=True)
+    else:
+        # 兜底:列缺失则按保费倒序(避免抛异常,极少触发)
         sub = sub.sort_values("premium", ascending=False,
                               na_position="last").reset_index(drop=True)
 

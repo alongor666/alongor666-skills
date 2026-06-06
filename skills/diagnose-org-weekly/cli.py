@@ -195,6 +195,12 @@ def main() -> int:
     mask_non_ts = ~drill_long_df["dim_key"].isin(["team", "salesman"])
     drill_long_df.loc[mask_non_ts, "plan_completion_pct"] = None
 
+    # household_share_pct 维度行暂不展示(需 customer_category × dim_key 二维交叉,
+    # 目前仅整体行有数据,维度行先填 None 让 V4 超表 "—" 显示;后续可扩 fetch_household_share_by_dim)
+    if "household_share_pct" not in drill_long_df.columns:
+        drill_long_df = drill_long_df.copy()
+        drill_long_df["household_share_pct"] = None
+
     # 派生占比列：各 dim_value 当窗口保费 / 整体当窗口保费 * 100
     overall_prem_map = {w[0]: (r["premium"] if r is not None else None) for w, r in zip(windows, standard_rows)}
     def _prem_share(row):
