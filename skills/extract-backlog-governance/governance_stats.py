@@ -103,7 +103,7 @@ def extract_rules(rules_file: Path) -> list[dict]:
     if not rules_file.exists():
         return []
     rules = []
-    pat = re.compile(r"^\s*(\d+)\.\s+(?:\*\*(.+?)\*\*|(.+?))(?:[:：]|$)")
+    pat = re.compile(r"^\s*(\d+)\.\s+(?:\*\*(.+?)\*\*[^:：]*|(.+?))(?:[:：]|$)")
     for line in rules_file.read_text(encoding="utf-8", errors="ignore").splitlines():
         m = pat.match(line)
         if m:
@@ -119,6 +119,23 @@ def extract_rules(rules_file: Path) -> list[dict]:
     return sorted(uniq, key=lambda r: r["num"])
 
 
+def resolve_and_extract_rules(rules_arg: str, repo: Path) -> tuple[list[dict], str | None]:
+    """解析 --rules-file 并抽规则。绝对路径直接用;相对路径先按 cwd 再按 --repo 找。
+    给了路径却找不到、或找到却没编号规则 → 返回显式警告(与 gh 降级一样不静默)。"""
+    if not rules_arg:
+        return [], None
+    p = Path(rules_arg)
+    candidates = [p] if p.is_absolute() else [p, repo / p]
+    for c in candidates:
+        if c.exists():
+            rules = extract_rules(c)
+            if not rules:
+                return [], f"治理文档已找到({c})但未解析出编号规则,规则命中率为空"
+            return rules, None
+    tried = " / ".join(dict.fromkeys(str(c) for c in candidates))
+    return [], f"指定的 --rules-file 未找到(试过:{tried}),规则命中率分析已跳过"
+
+
 def count_rule_hits(rules: list[dict], corpus: list[str]) -> list[dict]:
     blob = "\n".join(corpus).lower()
     total = max(len(corpus), 1)
@@ -126,8 +143,10 @@ def count_rule_hits(rules: list[dict], corpus: list[str]) -> list[dict]:
     results = []
     for r in rules:
         n = r["num"]
-        # 引用形式:规则5 / 规则 5 / rule 5 / r5 / #5(规则)+ 标题关键词
-        ref_pats = [rf"规则\s*{n}\b", rf"rule\s*{n}\b", rf"\br{n}\b"]
+        # 引用形式:规则5 / 规则 5 / rule 5 / r5。用否定前瞻 (?!\d) 代替 \b——
+        # \b 在「规则5规定」这类中文紧跟数字处会失效(漏统计→死规则假阳性);
+        # (?!\d) 既容中文又能避免把「规则5」误命中进「规则50」。
+        ref_pats = [rf"规则\s*{n}(?!\d)", rf"rule\s*{n}(?!\d)", rf"(?<![A-Za-z0-9])r{n}(?!\d)"]
         ref_hits = sum(len(re.findall(p, blob)) for p in ref_pats)
         title_tokens = [t for t in re.split(r"[\s/、,，]+", r["title"].lower()) if len(t) >= 2]
         title_hits = sum(blob.count(t) for t in title_tokens[:3]) if title_tokens else 0
@@ -145,13 +164,30 @@ def count_rule_hits(rules: list[dict], corpus: list[str]) -> list[dict]:
     return results
 
 
+def _kw_occurrences(blob: str, k: str) -> int:
+    """ASCII 关键词加左词边界(防 'ci' 命中 decision/social/precise 等词中子串、
+    'test' 命中 latest/contest);中文无词边界仍用子串;不收右边界以保留
+    'deprecat'→deprecated/deprecation 这类有意的前缀匹配。"""
+    k = k.lower()
+    if k.isascii():
+        return len(re.findall(rf"\b{re.escape(k)}", blob))
+    return blob.count(k)
+
+
+def _kw_present(text: str, k: str) -> bool:
+    k = k.lower()
+    if k.isascii():
+        return re.search(rf"\b{re.escape(k)}", text) is not None
+    return k in text
+
+
 def principle_signals(corpus: list[str]) -> dict:
     blob = "\n".join(corpus).lower()
     total = max(len(corpus), 1)
     out = {}
     for key, kws in PRINCIPLE_KEYWORDS.items():
-        occ = sum(blob.count(k.lower()) for k in kws)
-        items = sum(1 for c in corpus if any(k.lower() in c.lower() for k in kws))
+        occ = sum(_kw_occurrences(blob, k) for k in kws)
+        items = sum(1 for c in corpus if any(_kw_present(c.lower(), k) for k in kws))
         out[key] = {"keyword_occurrences": occ, "items_with_signal": items, "coverage_rate": round(items / total, 3)}
     return out
 
@@ -213,6 +249,9 @@ def to_markdown(data: dict) -> str:
     if m.get("source_note"):
         lines.append(f"- ⚠️ 降级说明:{m['source_note']}")
         lines.append("")
+    if m.get("rules_note"):
+        lines.append(f"- ⚠️ 规则说明:{m['rules_note']}")
+        lines.append("")
     s = data.get("structural") or {}
     if s:
         lines.append("## 结构化指标")
@@ -273,11 +312,13 @@ def main() -> int:
         prs = collect_commits_git(repo, args.limit)
         corpus = [c["text"] for c in prs]
 
-    rules = extract_rules(Path(args.rules_file)) if args.rules_file else []
+    rules, rules_note = resolve_and_extract_rules(args.rules_file, repo)
 
     meta = {"repo": str(repo), "source": source, "sample_size": len(prs)}
     if note:
         meta["source_note"] = note
+    if rules_note:
+        meta["rules_note"] = rules_note
     data = {
         "meta": meta,
         "structural": structural_metrics(prs, source),
