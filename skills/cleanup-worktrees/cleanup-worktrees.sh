@@ -124,7 +124,7 @@ done < <(git worktree list --porcelain; echo)
 
 # —— 收尾：prune 死引用 + 结构化报告 ——
 [ "$MODE" != "--dry-run" ] && git worktree prune -v
-echo ""; echo "================ 清理报告（MODE=${MODE:-默认安全}, BASE=$BASE）================"
+echo ""; echo "================ 清理报告（MODE=${MODE:-默认安全}, BASE=${BASE}）================"
 echo "清理 ${#REMOVED[@]} 个:"; printf '  ✓ %s\n' "${REMOVED[@]:-（无）}"
 echo "待定 ${#LISTED[@]} 个（建议加 --archive）:"; printf '  • %s\n' "${LISTED[@]:-（无）}"
 echo "跳过 ${#SKIPPED[@]} 个:"; printf '  - %s\n' "${SKIPPED[@]:-（无）}"
