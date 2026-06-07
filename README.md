@@ -45,6 +45,7 @@ git clone https://github.com/alongor666/alongor666-skills.git ~/.claude/plugins/
 | **company-vortex-card** | 涡旋诊断视觉卡片 — 在 `xcl-html2pdf` 基座之上，把 `company-vortex` 的 `结构诊断.md` 做成中国国家地理风格 12 页视觉卡片（涡旋三才结构 + 物理隐喻 SVG），打印为一页一张 PDF |
 | **rewrite-conclusion** | 诊断结论重写 — 将 L1 脚本产出的规则化数据提炼为管理层可直接阅读的结构化判断 |
 | **ui-redesign** | 页面/模块视觉重做编排 — 配合 Claude Design，项目无关（现场发现技术栈/设计系统），含确定性验收与自进化 |
+| **extract-backlog-governance** | backlog 治理提取 — 对照 6 条普适原则（唯一队列/意图先于执行/原子可逆/顺序有据/完成即证明/同步现实）审计任意仓库的待办与流程治理；内置零依赖脚本自动拉 PR 历史、算"规则命中率"找出死规则（过度设计）与缺口。证据优先、判原则不判机制 |
 
 ## 变更记录
 
@@ -53,3 +54,4 @@ git clone https://github.com/alongor666/alongor666-skills.git ~/.claude/plugins/
 - **2026-05-30**: 新增 `commit-push-pr-core` — 从 chexian 项目 `commit-push-pr` 抽象出的项目无关基座（L1 骨架 + L2 通用护栏 + L3 方法层），「方法复用，非内容复用」
 - **2026-06-04**: 新增 `xcl-html2pdf`（HTML→印刷级 PDF 基座，含零依赖 CDP 验收 driver）+ `company-vortex-card`（在基座之上的涡旋诊断 12 页视觉卡片）。由本地命令 `xcl_html2pdf` 升级、抽象分层而来——基座不限于涡旋诊断，可做任意印刷级报告
 - **2026-06-04**: `xcl-html2pdf` 把字体/字号分级/字色规范上提固化为 `report-skin.css`（标准报告皮肤，单一真相源——改规范只改一处，所有报告同步生效）；skeleton 改用标准 class，`company-vortex-card` 模板与之同源
+- **2026-06-07**: 新增 `extract-backlog-governance` — 项目无关的 backlog 治理审计技能。固定 6 条普适原则（由 backlog 的 6 种固有失败模式反推，非照搬大厂机制）+ 零依赖 `governance_stats.py`（有 `gh` 拉 PR 历史算结构化指标与规则命中率，无则回退 `git log`，降级显式注明不静默）。「方法复用，非内容复用」
