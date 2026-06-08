@@ -7,7 +7,7 @@
  *   · 【Esc 两级退出】页面 → 缩略图总览；缩略图 → 退出全屏（关总览 + 退浏览器全屏）。⛶ 进入/退出全屏演示。
  *     注：真·浏览器全屏态下，首个 Esc 由浏览器强制退出全屏（JS 拦不住）——此时总览改用 ▦ 打开。
  *   打印/导出时整段不参与（@media print 已复位 .slide/.page 并隐藏导航 chrome）。
- *   配合 deck-16x9.css + report-skin.css + skin-16x9.css 使用，置于页尾：<script src="deck-16x9.js"></script>
+ *   配合 deck-16x9.css + report-skin.css + skin-16x9.css 使用，以 script[src=deck-16x9.js] 置于页尾引入。
  *   PDF（A4）版请改用 deck.js——两套脚本互不影响。 */
 (function(){
   if(window.matchMedia&&window.matchMedia('print').matches) return;
@@ -46,7 +46,19 @@
     gbtn.addEventListener('click',function(){toggleOverview();});
     bar.appendChild(gbtn);
     document.body.appendChild(bar);
-    function setActive(i){nums.forEach(function(b,k){b.classList.toggle('on',k===i);});}
+    function setActive(i){
+      nums.forEach(function(b,k){b.classList.toggle('on',k===i);});
+      prevA.disabled=(i<=0); nextA.disabled=(i>=slides.length-1); // 首/末页隐藏对应箭头
+    }
+
+    // —— 浮动翻页箭头：桌面鼠标 + 手机触摸都可见可点（不依赖键盘） ——
+    var prevA=document.createElement('button'); prevA.className='deck-arrow prev';
+    prevA.innerHTML='&#8249;'; prevA.title='上一页'; prevA.setAttribute('aria-label','上一页');
+    prevA.addEventListener('click',function(){go(-1);});
+    var nextA=document.createElement('button'); nextA.className='deck-arrow next';
+    nextA.innerHTML='&#8250;'; nextA.title='下一页'; nextA.setAttribute('aria-label','下一页');
+    nextA.addEventListener('click',function(){go(1);});
+    document.body.appendChild(prevA); document.body.appendChild(nextA);
 
     // —— 单步推入引擎：每次翻页都只做一次相邻推进，远跳也不例外 ——
     var idx=0;
@@ -130,6 +142,19 @@
       else if(e.key==='Home'){e.preventDefault();jump(0);}
       else if(e.key==='End'){e.preventDefault();jump(slides.length-1);}
     });
+
+    // —— 触摸滑动翻页（手机 / 平板）：横向滑动 > 45px 且横向位移占主导（避免与纵向手势冲突）——
+    var tx=0,ty=0,tracking=false;
+    window.addEventListener('touchstart',function(e){
+      if(document.body.classList.contains('ov-open')) return;
+      var t=e.changedTouches[0]; tx=t.clientX; ty=t.clientY; tracking=true;
+    },{passive:true});
+    window.addEventListener('touchend',function(e){
+      if(!tracking||document.body.classList.contains('ov-open')) return;
+      tracking=false;
+      var t=e.changedTouches[0], dx=t.clientX-tx, dy=t.clientY-ty;
+      if(Math.abs(dx)>45 && Math.abs(dx)>Math.abs(dy)*1.4){ go(dx<0?1:-1); }
+    },{passive:true});
 
     // —— 初始：无动画摆位，下一帧再开过渡，避免加载时整排滑动 ——
     place(0); setActive(0);

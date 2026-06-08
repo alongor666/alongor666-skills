@@ -8,7 +8,8 @@
  * 颜色/字体等视觉风格由各报告自己的 <style> 覆盖，这里只管版面与分页机制。
  * ========================================================================= */
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+/* 跨平台 CJK 字体栈：保持原有打头次序（度量不变），尾部追加 Android/Linux 兜底，避免缺字体导致错位。 */
+body{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei","Source Han Sans SC","Noto Sans CJK SC","WenQuanYi Micro Hei",sans-serif;
   background:#cdbf9c;color:#16140f;line-height:1.8;-webkit-font-smoothing:antialiased;padding:24px 0;}
 
 /* —— 固定 A4 版面盒 —— */
@@ -35,10 +36,10 @@ body{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
   .deck-hint{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:99;
     background:rgba(158,24,19,.92);color:#fbf3df;font-size:12px;letter-spacing:.1em;
     padding:7px 18px;border-radius:20px;box-shadow:0 4px 14px rgba(0,0,0,.3);
-    font-family:"Noto Sans SC",sans-serif;user-select:none;}
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;user-select:none;}
   .deck-nav{position:fixed;top:0;height:100vh;width:50vw;z-index:80;display:flex;
     align-items:center;cursor:pointer;opacity:0;transition:opacity .25s;}
-  .deck-nav span{font-family:"Noto Serif SC",serif;font-size:46px;color:#9e1813;opacity:.55;padding:0 26px;}
+  .deck-nav span{font-family:"Noto Serif SC","Songti SC","SimSun",serif;font-size:46px;color:#9e1813;opacity:.55;padding:0 26px;}
   .deck-nav.prev{left:0;justify-content:flex-start;}
   .deck-nav.next{right:0;justify-content:flex-end;}
   .deck-nav.prev:hover{opacity:1;background:linear-gradient(90deg,rgba(158,24,19,.09),transparent 42%);}

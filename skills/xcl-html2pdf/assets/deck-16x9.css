@@ -9,7 +9,10 @@
  * 与 A4 版（page-deck.css）的唯一差别是画幅与可用高；配色/字体/组件全继承 report-skin.css。
  * ========================================================================= */
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+/* 跨平台 CJK 字体栈：保持原有打头次序（mac/iOS→PingFang SC、Windows→微软雅黑，度量与既有报告一致），
+   仅在尾部追加 Android/Linux 兜底（思源黑/文泉驿），避免这些平台无中文字体时落到豆腐块/错位。
+   注：Windows 崩坏主因是分发漏传外链 css/js（见 bundle.mjs），非字体——故打头字体不动，以免破坏既调好的填充率。 */
+body{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei","Source Han Sans SC","Noto Sans CJK SC","WenQuanYi Micro Hei",sans-serif;
   background:#cdbf9c;color:#16140f;line-height:1.7;-webkit-font-smoothing:antialiased;padding:24px 0;}
 
 /* —— 固定 16:9 画幅盒 —— */
@@ -44,7 +47,7 @@ body{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
   .deck-bar::-webkit-scrollbar{display:none;}
   .deck-bar:hover{opacity:1;}
   .deck-num{flex:0 0 auto;min-width:27px;height:27px;padding:0 7px;border:0;cursor:pointer;
-    border-radius:14px;font-family:"Noto Serif SC",serif;font-size:13px;font-weight:700;
+    border-radius:14px;font-family:"Noto Serif SC","Songti SC","STSong","SimSun",serif;font-size:13px;font-weight:700;
     color:#f1e7cf;background:transparent;letter-spacing:.02em;line-height:27px;
     transition:background .15s,color .15s;}
   .deck-num:hover{background:rgba(241,231,207,.16);}
@@ -53,6 +56,23 @@ body{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
   .deck-grid-btn{font-size:15px;padding:0 9px;
     border-left:1px solid rgba(241,231,207,.26);border-radius:0 14px 14px 0;}
 
+  /* —— 浮动翻页箭头：桌面鼠标 + 手机触摸都可见可点（补足「只认方向键」对不熟练用户/无键盘设备的盲区） —— */
+  .deck-arrow{position:fixed;top:50%;transform:translateY(-50%);z-index:98;
+    width:48px;height:48px;border:0;border-radius:50%;cursor:pointer;
+    background:rgba(20,18,12,.40);color:#f1e7cf;font-size:24px;line-height:1;
+    display:flex;align-items:center;justify-content:center;
+    opacity:.34;transition:opacity .2s,background .2s;-webkit-tap-highlight-color:transparent;
+    box-shadow:0 4px 14px rgba(0,0,0,.3);}
+  .deck-arrow:hover{opacity:1;background:rgba(20,18,12,.72);}
+  .deck-arrow.prev{left:16px;} .deck-arrow.next{right:16px;}
+  .deck-arrow[disabled]{opacity:0;pointer-events:none;}
+  /* 窄屏（手机/平板竖屏）：箭头更明显、序号条更易点 */
+  @media (max-width:860px){
+    .deck-arrow{opacity:.62;width:44px;height:44px;font-size:22px;}
+    .deck-bar{opacity:.85;bottom:10px;}
+    .deck-num{min-width:30px;height:30px;line-height:30px;font-size:14px;}
+  }
+
   /* —— 缩略图总览：▦ 打开 / Esc 退出，全部页铺一屏，点击进入（淡入 + 上浮） —— */
   .deck-overview{position:fixed;inset:0;z-index:200;overflow:auto;
     background:linear-gradient(160deg,#2b261c,#16140f);padding:42px 40px 60px;
@@ -60,7 +80,7 @@ body{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
   body.ov-open{overflow:hidden;}
   body.ov-open .deck-overview{opacity:1;visibility:visible;}
   .deck-ov-hd{color:#cbb98a;text-align:center;font-size:13px;letter-spacing:.24em;
-    margin-bottom:26px;font-family:"Noto Sans SC",sans-serif;cursor:pointer;}
+    margin-bottom:26px;font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;cursor:pointer;}
   .deck-overview-grid{display:grid;grid-template-columns:repeat(auto-fill,300px);
     gap:24px;justify-content:center;align-content:start;
     transform:translateY(12px);transition:transform .34s cubic-bezier(.22,.61,.36,1);}
@@ -85,6 +105,6 @@ body{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
     transform:none!important;opacity:1!important;visibility:visible!important;transition:none!important;}
   .page{margin:0;box-shadow:none;transform:none!important;break-after:page;page-break-after:always;}
   .page:last-child{break-after:auto;page-break-after:auto;}
-  .deck-bar,.deck-overview{display:none!important;}
+  .deck-bar,.deck-overview,.deck-arrow{display:none!important;}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
 }

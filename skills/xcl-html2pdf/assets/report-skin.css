@@ -27,11 +27,11 @@ body{color:var(--ink);}
   justify-content:space-between;align-items:center;
   border-top:1px solid var(--hair);padding-top:1.8mm;
   font-size:9px;letter-spacing:.14em;color:var(--dim);}
-.rfoot .pg{font-family:"Noto Serif SC",serif;font-weight:900;color:var(--cng-red);letter-spacing:.05em;}
+.rfoot .pg{font-family:"Noto Serif SC","Songti SC","STSong","SimSun",serif;font-weight:900;color:var(--cng-red);letter-spacing:.05em;}
 
 /* —— 章节标题系统 —— */
 .sec-head{display:flex;align-items:baseline;gap:13px;margin-bottom:6px;}
-.sec-no{font-family:"Noto Serif SC",serif;font-size:14px;font-weight:900;color:#fff;
+.sec-no{font-family:"Noto Serif SC","Songti SC","STSong","SimSun",serif;font-size:14px;font-weight:900;color:#fff;
   background:var(--cng-red);width:38px;height:38px;flex:none;display:flex;
   align-items:center;justify-content:center;border-radius:2px;}
 .sec-title{font-size:28px;font-weight:900;letter-spacing:.04em;color:var(--ink);}
@@ -102,12 +102,12 @@ table.data .ok{color:#2f6b4f;font-weight:700;}
 .b-eng{background:#dbe8d8;color:#2f6b4f;border:1px solid #a7c4ad;}
 .calc{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:20px 0;}
 .calc .cc{background:#f1e8d4;border:1px solid #d4c6a2;border-radius:3px;padding:26px 16px;text-align:center;}
-.calc .cc .big{font-family:"Noto Serif SC",serif;font-size:34px;font-weight:900;color:#bb301a;line-height:1.1;}
+.calc .cc .big{font-family:"Noto Serif SC","Songti SC","STSong","SimSun",serif;font-size:34px;font-weight:900;color:#bb301a;line-height:1.1;}
 .calc .cc .unit{font-size:13px;color:var(--gold-d);}
 .calc .cc .desc{font-size:14px;color:var(--dim);margin-top:10px;line-height:1.62;}
 
 /* —— 引文 / 说明 / 印章 —— */
-.quote{font-family:"Noto Serif SC",serif;font-size:15.5px;line-height:2.0;color:var(--ink2);
+.quote{font-family:"Noto Serif SC","Songti SC","STSong","SimSun",serif;font-size:15.5px;line-height:2.0;color:var(--ink2);
   border:1px solid #d4c6a2;border-left:4px solid var(--cng-red);
   padding:24px 28px;margin-top:20px;border-radius:3px;background:#f1e8d4;}
 .quote b{color:var(--rust);}
@@ -115,5 +115,5 @@ table.data .ok{color:#2f6b4f;font-weight:700;}
 .note b{color:var(--cng-red);}
 .seal{position:absolute;top:0;right:0;width:62px;height:62px;border:2px solid var(--cng-red);
   border-radius:4px;color:var(--cng-red);display:flex;align-items:center;justify-content:center;
-  font-family:"Noto Serif SC",serif;font-weight:900;font-size:12px;text-align:center;line-height:1.3;
+  font-family:"Noto Serif SC","Songti SC","STSong","SimSun",serif;font-weight:900;font-size:12px;text-align:center;line-height:1.3;
   transform:rotate(-7deg);opacity:.85;}
