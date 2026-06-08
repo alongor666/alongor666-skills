@@ -237,19 +237,11 @@ def render_v4(ctx, drill_long_df, args):
     cs = cutoff.isoformat()
     out_dir = Path(args.output)
 
-    # 主题资源
-    try:
-        from themes_v2 import (FONT_LINKS, BASE_CSS, DARK_CSS, THEME_TOGGLE_CSS,
-                               THEME_INIT_SCRIPT, THEME_TOGGLE_JS, theme_toggle_btn)
-    except ImportError:
-        import importlib, sys
-        from lib.skill_path import skill_lib  # report-shell 根已由 cli.py 注入 sys.path（ADR-001 真实调用解析器）
-        sys.path.insert(0, str(skill_lib("diagnose-period-trend")))
-        _tv2 = importlib.import_module("themes_v2")
-        FONT_LINKS, BASE_CSS = _tv2.FONT_LINKS, _tv2.BASE_CSS
-        DARK_CSS, THEME_TOGGLE_CSS = _tv2.DARK_CSS, _tv2.THEME_TOGGLE_CSS
-        THEME_INIT_SCRIPT, THEME_TOGGLE_JS = _tv2.THEME_INIT_SCRIPT, _tv2.THEME_TOGGLE_JS
-        theme_toggle_btn = _tv2.theme_toggle_btn
+    # 主题资源从基座取（ADR-002：themes_v2 已下沉 chexian-report-shell，不再借道 DPT）
+    from lib.themes_v2 import (  # report-shell 根已由 cli.py 注入 sys.path
+        FONT_LINKS, BASE_CSS, DARK_CSS, THEME_TOGGLE_CSS,
+        THEME_INIT_SCRIPT, THEME_TOGGLE_JS, theme_toggle_btn,
+    )
 
     level = getattr(args, "level", "org")
     section_defs = build_section_defs(level)

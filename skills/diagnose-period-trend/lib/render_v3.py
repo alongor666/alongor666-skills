@@ -34,10 +34,6 @@ try:
         AUX_DIM_LABELS, AUX_VALUE_LABELS, PERIOD_ORDER,
         YTD_LABEL, YOY_LABEL, Anomaly,
     )
-    from .themes_v2 import (
-        FONT_LINKS, BASE_CSS, DARK_CSS, THEME_TOGGLE_CSS,
-        THEME_INIT_SCRIPT, THEME_TOGGLE_JS, theme_toggle_btn,
-    )
     from .render_v4 import (
         _safe_f, _all_aux_mask, AUX_FIELDS,
         _slice_overall, _slice_by_cat, _slice_by_org,
@@ -49,16 +45,18 @@ except ImportError:
         AUX_DIM_LABELS, AUX_VALUE_LABELS, PERIOD_ORDER,
         YTD_LABEL, YOY_LABEL, Anomaly,
     )
-    from themes_v2 import (  # type: ignore[no-redef]
-        FONT_LINKS, BASE_CSS, DARK_CSS, THEME_TOGGLE_CSS,
-        THEME_INIT_SCRIPT, THEME_TOGGLE_JS, theme_toggle_btn,
-    )
     from render_v4 import (  # type: ignore[no-redef]
         _safe_f, _all_aux_mask, AUX_FIELDS,
         _slice_overall, _slice_by_cat, _slice_by_org,
         _pv, _get_th, METRIC_DEFS, PERIOD_HEADERS,
         YTD_IDX, YOY_IDX, M12_IDX,
     )
+
+# 主题资源下沉到基座（ADR-002）
+from dhr_lib.themes_v2 import (
+    FONT_LINKS, BASE_CSS, DARK_CSS, THEME_TOGGLE_CSS,
+    THEME_INIT_SCRIPT, THEME_TOGGLE_JS, theme_toggle_btn,
+)
 
 _TH = _get_th()
 

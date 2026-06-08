@@ -42,22 +42,19 @@ try:
         YTD_LABEL, YOY_LABEL, RANKED_METRICS, compute_top_anomalies,
         build_drilldown_data, DRILL_SEC_LIST, _SEC_FIELD,
     )
-    from .themes_v2 import (
-        style_block, BASE_CSS, FONT_LINKS,
-        THEME_INIT_SCRIPT, THEME_TOGGLE_JS, theme_toggle_btn,
-        DARK_CSS, THEME_TOGGLE_CSS,
-    )
 except ImportError:  # pragma: no cover — 脚本式调用 fallback
     from anomalies import (  # type: ignore[no-redef]
         Anomaly, AUX_DIM_LABELS, AUX_VALUE_LABELS, PERIOD_ORDER,
         YTD_LABEL, YOY_LABEL, RANKED_METRICS, compute_top_anomalies,
         build_drilldown_data, DRILL_SEC_LIST, _SEC_FIELD,
     )
-    from themes_v2 import (  # type: ignore[no-redef]
-        style_block, BASE_CSS, FONT_LINKS,
-        THEME_INIT_SCRIPT, THEME_TOGGLE_JS, theme_toggle_btn,
-        DARK_CSS, THEME_TOGGLE_CSS,
-    )
+
+# 主题资源下沉到基座（ADR-002：themes_v2 移入 chexian-report-shell，断 DPT↔org-weekly 横向依赖）
+from dhr_lib.themes_v2 import (
+    style_block, BASE_CSS, FONT_LINKS,
+    THEME_INIT_SCRIPT, THEME_TOGGLE_JS, theme_toggle_btn,
+    DARK_CSS, THEME_TOGGLE_CSS,
+)
 
 
 # ============== KPI 指标定义（首屏 5 卡） ==============
