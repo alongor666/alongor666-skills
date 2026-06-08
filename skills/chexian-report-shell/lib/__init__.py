@@ -72,6 +72,11 @@ from .anomaly_cross import (
 )
 from .report_queries import fetch_org_cross_data, fetch_org_team_cross_data  # noqa: E402 (後補導出)
 from .loader import load_shell
+# 主题资源子模块显式导出（ADR-002）：themes_v2 已下沉本基座，作为 V1/V3/V4 三视图
+# 共享 CSS token 的单一声明出口。消费者据各自 bootstrap 取 `dhr_lib.themes_v2`
+# （period-trend）或 `lib.themes_v2`（org-weekly，cli.py 注入 SHELL_ROOT），均指向此处。
+# themes_v2 零依赖（纯字符串常量 + 函数），eager 导入成本可忽略。
+from . import themes_v2  # noqa: F401
 
 
 def get_threshold(metric_key: str, index: int) -> float:
@@ -144,4 +149,6 @@ __all__ = [
     # v1.21 新增（P6 超表）
     "SUPERTABLE_CSS", "SUPERTABLE_JS",
     "render_controls", "render_footer", "render_table_shell",
+    # P1（ADR-002）：主题资源子模块下沉基座，显式导出
+    "themes_v2",
 ]
