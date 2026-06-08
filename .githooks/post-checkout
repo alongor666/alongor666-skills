@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# 由 sync-skills install-hooks 生成。仅分支切换（第三参=1）时补齐技能直连软链。
+[ "${3:-0}" = "1" ] || exit 0
+"/Users/alongor666/alongor666-skills/skills/sync-skills/sync-skills.sh" link --repo "$(git rev-parse --show-toplevel)" --dest "/Users/alongor666/.claude/skills" --subdir "skills" --quiet || true
