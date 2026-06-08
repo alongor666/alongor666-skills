@@ -46,7 +46,10 @@ except ImportError:  # pragma: no cover
     )
 
 # 复用 dhr_lib（2026-05-17 重命名：原 diagnose-html-render → chexian-report-shell）
-_DHR_PATH = Path.home() / ".claude/skills/chexian-report-shell"
+try:
+    from ._shell import SHELL_ROOT as _DHR_PATH  # 路径解析集中本技能一处（ADR-001）
+except ImportError:
+    from _shell import SHELL_ROOT as _DHR_PATH  # type: ignore[no-redef]
 if str(_DHR_PATH) not in sys.path:
     sys.path.insert(0, str(_DHR_PATH))
 from lib import render_card, render_page  # type: ignore[no-redef]

@@ -201,7 +201,8 @@ def render_v3(ctx, drill_long_df, args):
                                THEME_INIT_SCRIPT, THEME_TOGGLE_JS, theme_toggle_btn)
     except ImportError:
         import importlib, sys
-        sys.path.insert(0, str(Path.home() / ".claude/skills/diagnose-period-trend/lib"))
+        from lib.skill_path import skill_lib  # report-shell 根已由 cli.py 注入 sys.path（ADR-001 真实调用解析器）
+        sys.path.insert(0, str(skill_lib("diagnose-period-trend")))
         _tv2 = importlib.import_module("themes_v2")
         FONT_LINKS, BASE_CSS = _tv2.FONT_LINKS, _tv2.BASE_CSS
         DARK_CSS, THEME_TOGGLE_CSS = _tv2.DARK_CSS, _tv2.THEME_TOGGLE_CSS
