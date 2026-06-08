@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<!-- skeleton-dashboard-16x9.html —— xcl-html2pdf「诊断报告 / 经营仪表盘」演示骨架（16:9 · 现代浅色）
+     复制本文件 + deck-16x9.css + report-skin-dashboard.css + deck-16x9.js，把每个 .page 换成你的诊断页。
+     · 画幅 1280×720px；屏幕横向翻页、导出一页一张 16:9。可用高 ≈604px，填充率 80–100%、零溢出（用 driver.mjs 验收）。
+     · 组件语汇与「进度≠最终留存」编码铁律见 references/dashboard-deck.md。
+     · 状态四级 --ok/--watch/--warn/--bad 必须四档可辨；进度口径用中性 a-prog，禁用亮灯色（防误读为最终留存）。
+     引入顺序：deck-16x9.css（机制）→ report-skin-dashboard.css（皮肤）→ 页尾 deck-16x9.js。 -->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>诊断报告 · 经营仪表盘骨架 · 16:9</title>
+<link rel="stylesheet" href="deck-16x9.css">
+<link rel="stylesheet" href="report-skin-dashboard.css">
+<style>
+  /* 本演示专属补充样式可写这里（可选）。通用组件已在 report-skin-dashboard.css，勿重定义字体/字号/字色。 */
+</style>
+</head>
+<body>
+
+<!-- P1 封面 -->
+<section class="page cover">
+  <div class="inner">
+    <div class="kick">诊断主题 · 主体范围 · 期间</div>
+    <div class="h1">核心结论一句话，<span class="hot">把最关键的数字与缺口放这里</span><br>第二行点明根因或抓手</div>
+    <div class="sub">背景与盘子规模：覆盖范围 / 样本量 / 关键口径一行说清，给听众建立坐标。再补一句最值得记住的对比。</div>
+    <div class="chips"><span class="chip">维度一</span><span class="chip">维度二</span><span class="chip">维度三</span><span class="chip">维度四</span></div>
+    <div class="vbox"><b>一句话判断</b>：用业务白话给出"该往哪使劲"的判断——是止血、是压杠杆、还是练内功；点名标杆与可复制的抓手。</div>
+  </div>
+  <div class="ft"><div>诊断报告 · 主体</div><div>数据截止 YYYY-MM-DD</div></div>
+</section>
+
+<!-- P2 KPI 核心摘要（卡片网格）-->
+<section class="page">
+  <div class="hd"><div><b>诊断报告</b> · 主体</div><div>期间</div></div>
+  <div class="inner">
+    <div class="title"><div class="t-no">01</div><div><div class="t-main">核心摘要</div><div class="t-en">Executive Summary</div></div></div>
+    <div class="rule"></div>
+    <div class="kpis">
+      <div class="kpi is-bad"><div><span class="k-num">00.0</span><span class="k-unit">% 关键指标一</span></div><div class="k-lbl">状态标签 · 危险</div><div class="k-desc">一句话说明这个数字的来源与含义</div></div>
+      <div class="kpi is-warn"><div><span class="k-num">00.0</span><span class="k-unit">% 关键指标二</span></div><div class="k-lbl">状态标签 · 预警</div><div class="k-desc">前三 / 集中度 / 占比类指标放这里</div></div>
+      <div class="kpi is-watch"><div><span class="k-num">0,000</span><span class="k-unit">户 关键指标三</span></div><div class="k-lbl">状态标签 · 关注</div><div class="k-desc">规模 / 待办类指标，附进度说明</div></div>
+      <div class="kpi is-ac"><div><span class="k-num">00.0</span><span class="k-unit">% 关键指标四</span></div><div class="k-lbl">中性 · 强调色</div><div class="k-desc">底色 / 对照类指标用强调色（is-ac）</div></div>
+    </div>
+    <div class="insight"><b>缺口拆解</b>：用一句洞察把四个数字串起来，指向行动——"问题不在 X，而在 Y"。再补一句把"表象数字"翻译成"经营动作"的判断，让管理层一眼知道该做什么。</div>
+  </div>
+  <div class="ft"><div>诊断报告 · 数据截止 YYYY-MM-DD</div><div><span class="pg">02</span></div></div>
+</section>
+
+<!-- P3 机构排名条形（最终留存·亮灯）-->
+<section class="page">
+  <div class="hd"><div><b>诊断报告</b> · 排名</div><div>已成熟 · 最终值</div></div>
+  <div class="inner">
+    <div class="title"><div class="t-no">02</div><div><div class="t-main">维度排名 · 横向条形（亮灯）</div><div class="t-en">Ranking · Matured</div></div></div>
+    <div class="rule"></div>
+    <div class="legend"><span><i style="background:var(--ok)"></i>达标</span><span><i style="background:var(--watch)"></i>关注</span><span><i style="background:var(--warn)"></i>预警</span><span><i style="background:var(--bad)"></i>危险</span><span style="margin-left:auto">已成熟 · 亮灯</span></div>
+    <div class="bars">
+      <div class="bar"><div class="b-name">甲</div><div class="b-track"><div class="b-fill a-watch" style="width:90%"></div></div><div class="b-val">00.0</div></div>
+      <div class="bar"><div class="b-name">乙</div><div class="b-track"><div class="b-fill a-warn" style="width:79%"></div></div><div class="b-val">00.0</div></div>
+      <div class="bar"><div class="b-name">丙</div><div class="b-track"><div class="b-fill a-bad" style="width:64%"></div></div><div class="b-val">00.0</div></div>
+      <div class="bar"><div class="b-name">丁</div><div class="b-track"><div class="b-fill a-bad" style="width:62%"></div></div><div class="b-val">00.0</div></div>
+      <div class="bar"><div class="b-name">戊</div><div class="b-track"><div class="b-fill a-bad" style="width:58%"></div></div><div class="b-val">00.0</div></div>
+      <div class="bar"><div class="b-name">己</div><div class="b-track"><div class="b-fill a-bad" style="width:55%"></div></div><div class="b-val">00.0</div></div>
+      <div class="bar"><div class="b-name">庚</div><div class="b-track"><div class="b-fill a-bad" style="width:54%"></div></div><div class="b-val">00.0</div></div>
+      <div class="bar"><div class="b-name">辛</div><div class="b-track"><div class="b-fill a-bad" style="width:46%"></div></div><div class="b-val">00.0</div></div>
+      <div class="bar"><div class="b-name">壬</div><div class="b-track"><div class="b-fill a-bad" style="width:41%"></div></div><div class="b-val">00.0</div></div>
+      <div class="bar"><div class="b-name">癸</div><div class="b-track"><div class="b-fill a-bad" style="width:31%"></div></div><div class="b-val">00.0</div></div>
+      <div class="bar"><div class="b-name">子</div><div class="b-track"><div class="b-fill a-bad" style="width:28%"></div></div><div class="b-val">00.0</div></div>
+      <div class="bar"><div class="b-name">丑</div><div class="b-track"><div class="b-fill a-bad" style="width:24%"></div></div><div class="b-val">00.0</div></div>
+    </div>
+    <div class="bench">
+      <div class="bk"><div class="bv">00.0<span style="font-size:14px">%</span></div><div class="bl">合计 / 基准</div></div>
+      <div class="bk"><div class="bv">00<span style="font-size:14px">%</span></div><div class="bl">业务目标</div></div>
+      <div class="bk gap"><div class="bv">-0.0<span style="font-size:14px">pp</span></div><div class="bl">距目标缺口</div></div>
+    </div>
+  </div>
+  <div class="ft"><div>诊断报告 · 数据截止 YYYY-MM-DD · 全表见附录</div><div><span class="pg">03</span></div></div>
+</section>
+
+<!-- P4 归因 · 帕累托（可加和）-->
+<section class="page">
+  <div class="hd"><div><b>诊断报告</b> · 归因</div><div>谁在拉低</div></div>
+  <div class="inner">
+    <div class="title"><div class="t-no">03</div><div><div class="t-main">缺口归因 · 影响度帕累托</div><div class="t-en">Attribution</div></div></div>
+    <div class="rule"></div>
+    <div class="lede">影响度 = 各项缺口 ÷ 合计，<b>可加和</b>，各项之和 = 整体缺口。前几名合计 <b>00.0%</b>，是主来源（压力色 a-press；其余汇总用 a-rest 中性）。</div>
+    <div class="bars">
+      <div class="bar"><div class="b-name">甲</div><div class="b-track"><div class="b-fill a-press" style="width:91%"></div></div><div class="b-val">00.0</div></div>
+      <div class="bar"><div class="b-name">乙</div><div class="b-track"><div class="b-fill a-press" style="width:33%"></div></div><div class="b-val">00.0</div></div>
+      <div class="bar"><div class="b-name">丙</div><div class="b-track"><div class="b-fill a-press" style="width:21%"></div></div><div class="b-val">00.0</div></div>
+      <div class="bar"><div class="b-name">丁</div><div class="b-track"><div class="b-fill a-press" style="width:17%"></div></div><div class="b-val">00.0</div></div>
+      <div class="bar"><div class="b-name">戊</div><div class="b-track"><div class="b-fill a-press" style="width:10%"></div></div><div class="b-val">00.0</div></div>
+      <div class="bar"><div class="b-name">其余 N 家</div><div class="b-track"><div class="b-fill a-rest" style="width:39%"></div></div><div class="b-val">00.0</div></div>
+    </div>
+    <div class="cards">
+      <div class="card"><div class="c-h">问题一 · 标题</div><div class="c-p">用业务白话陈述第一个问题，带 <b>关键数字</b> 与点名对象。一句结论。</div></div>
+      <div class="card warn"><div class="c-h">问题二 · 标题</div><div class="c-p">第二个问题，区分卡片色（warn/ok/ac/默认红）表达不同性质。<b>关键数字</b> 收尾。</div></div>
+    </div>
+    <div class="insight"><b>行动指向</b>：把归因落到"资源往哪倾斜"的一句话。</div>
+  </div>
+  <div class="ft"><div>诊断报告 · 数据截止 YYYY-MM-DD</div><div><span class="pg">04</span></div></div>
+</section>
+
+<!-- P5 进度排名（进度口径·不亮灯·中性色）-->
+<section class="page">
+  <div class="hd"><div><b>诊断报告</b> · 进度</div><div>未到期 · 进度口径</div></div>
+  <div class="inner">
+    <div class="title"><div class="t-no">04</div><div><div class="t-main">进度排名 · 中性色（不亮灯）</div><div class="t-en">In-progress</div></div></div>
+    <div class="rule"></div>
+    <div class="lede">进度口径（数据截止早于完成时点，仍在进行中）——续保率/完成率为<b>进度</b>，随时间补齐，<b>不亮灯</b>、统一用中性强调色 a-prog，避免误读为最终值。</div>
+    <div class="bars">
+      <div class="bar"><div class="b-name">甲</div><div class="b-track"><div class="b-fill a-prog" style="width:89%"></div></div><div class="b-val">00.0</div></div>
+      <div class="bar"><div class="b-name">乙</div><div class="b-track"><div class="b-fill a-prog" style="width:65%"></div></div><div class="b-val">00.0</div></div>
+      <div class="bar"><div class="b-name">丙</div><div class="b-track"><div class="b-fill a-prog" style="width:60%"></div></div><div class="b-val">00.0</div></div>
+      <div class="bar"><div class="b-name">丁</div><div class="b-track"><div class="b-fill a-prog" style="width:55%"></div></div><div class="b-val">00.0</div></div>
+      <div class="bar"><div class="b-name">戊</div><div class="b-track"><div class="b-fill a-prog" style="width:53%"></div></div><div class="b-val">00.0</div></div>
+      <div class="bar"><div class="b-name">己</div><div class="b-track"><div class="b-fill a-prog" style="width:49%"></div></div><div class="b-val">00.0</div></div>
+      <div class="bar"><div class="b-name">庚</div><div class="b-track"><div class="b-fill a-prog" style="width:46%"></div></div><div class="b-val">00.0</div></div>
+      <div class="bar"><div class="b-name">辛</div><div class="b-track"><div class="b-fill a-prog" style="width:43%"></div></div><div class="b-val">00.0</div></div>
+      <div class="bar"><div class="b-name">壬</div><div class="b-track"><div class="b-fill a-prog" style="width:40%"></div></div><div class="b-val">00.0</div></div>
+      <div class="bar"><div class="b-name">癸</div><div class="b-track"><div class="b-fill a-prog" style="width:36%"></div></div><div class="b-val">00.0</div></div>
+      <div class="bar"><div class="b-name">子</div><div class="b-track"><div class="b-fill a-prog" style="width:31%"></div></div><div class="b-val">00.0</div></div>
+    </div>
+    <div class="bench">
+      <div class="bk"><div class="bv">00.0<span style="font-size:14px">%</span></div><div class="bl">合计 · 报价率</div></div>
+      <div class="bk"><div class="bv">00.0<span style="font-size:14px">%</span></div><div class="bl">合计 · 进度</div></div>
+      <div class="bk"><div class="bv">0,000</div><div class="bl">最大盘子（杠杆）</div></div>
+    </div>
+    <div class="note"><b>分盘说明</b>：补充另一窗口（如更细分盘）的合计与标杆/落后，一句带过。</div>
+  </div>
+  <div class="ft"><div>诊断报告 · 数据截止 YYYY-MM-DD · 进度口径</div><div><span class="pg">05</span></div></div>
+</section>
+
+<!-- P6 推进图（节奏 / 阶段累计）-->
+<section class="page">
+  <div class="hd"><div><b>诊断报告</b> · 节奏</div><div>阶段推进</div></div>
+  <div class="inner">
+    <div class="title"><div class="t-no">05</div><div><div class="t-main">阶段推进 · 早动作决定结果</div><div class="t-en">Front-loaded</div></div></div>
+    <div class="rule"></div>
+    <div class="lede">同一盘子累计值随时点推进——<b>早期就锁定大部分结果</b>。p-fill 普通 / cur 当前 / lead 标杆，三色区分。</div>
+    <div class="prog">
+      <div class="prow"><div class="p-name">合计 · 阶段一</div><div class="p-track"><div class="p-fill" style="width:28%">00.0%</div></div></div>
+      <div class="prow"><div class="p-name">合计 · 阶段二</div><div class="p-track"><div class="p-fill" style="width:45%">00.0%</div></div></div>
+      <div class="prow"><div class="p-name">合计 · 当前</div><div class="p-track"><div class="p-fill cur" style="width:54%">00.0% · 进度仍补齐中</div></div></div>
+      <div class="prow"><div class="p-name">标杆 · 当前</div><div class="p-track"><div class="p-fill lead" style="width:80%">00.0% · 标杆</div></div></div>
+    </div>
+    <div class="cards">
+      <div class="card ok"><div class="c-h">标杆 · 名称全程领先</div><div class="c-p">阶段一 <b>00.0%</b> → 阶段二 <b>00.0%</b> → 当前 <b>00.0%</b>，每个时点都领先合计。点明其根因。</div></div>
+      <div class="card"><div class="c-h">短板 · 大盘起步慢</div><div class="c-p">大盘主体早期 <b>00.0%</b> 偏低，盘子最大却动作最弱——把它提到标杆水平是最大空间。</div></div>
+    </div>
+    <div class="insight"><b>打法</b>：把标杆的早动作节奏做成可复制 SOP，向慢起步主体推广。</div>
+  </div>
+  <div class="ft"><div>诊断报告 · 数据截止 YYYY-MM-DD</div><div><span class="pg">06</span></div></div>
+</section>
+
+<!-- P7 行动建议（四卡 2×2）-->
+<section class="page">
+  <div class="hd"><div><b>诊断报告</b> · 行动</div><div>主线</div></div>
+  <div class="inner">
+    <div class="title"><div class="t-no">06</div><div><div class="t-main">行动主线</div><div class="t-en">Action Plan</div></div></div>
+    <div class="rule"></div>
+    <div class="lede">围绕核心缺口，按<b>紧急度与杠杆</b>排序——先止血、再压杠杆、同时练内功。</div>
+    <div class="cards" style="margin-top:14px;">
+      <div class="card"><div class="c-h">① 标题（本周）</div><div class="c-p">最紧急动作，带 <b>数字</b> 与点名对象，说清为什么本周必须做、不做的后果。<br><b>抓手</b>：具体清单 / 派单到人。</div></div>
+      <div class="card ac"><div class="c-h">② 标题</div><div class="c-p">高杠杆动作：资源往哪倾斜，<b>数字</b> 支撑——既是集中度最高、又是盘子最大。<br><b>抓手</b>：专项 / 单列考核。</div></div>
+      <div class="card ok"><div class="c-h">③ 标题</div><div class="c-p">能力建设：复制标杆全程领先的打法，点明其根因（早动作 / 早触达）。<br><b>抓手</b>：做成 SOP 向慢起步主体推广。</div></div>
+      <div class="card warn"><div class="c-h">④ 标题</div><div class="c-p">结构性动作：针对根因（非表象）的长期抓手，区分"催完成"与"促成交"，<b>数字</b> 收尾。</div></div>
+    </div>
+    <div class="insight"><b>一句话</b>：先止血、再压杠杆、同时练内功——四条线并行，点名最大增量在哪里。收尾给一个可量化的目标（如"把合计 X 率从 00.0% 提到 00.0%"），让行动可考核、可追踪。</div>
+  </div>
+  <div class="ft"><div>诊断报告 · 数据截止 YYYY-MM-DD</div><div><span class="pg">07</span></div></div>
+</section>
+
+<!-- P8 附录密表（dense2 · 双表全量数据）-->
+<section class="page">
+  <div class="hd"><div><b>附录</b> · 全量数据</div><div>表 X · 表 Y</div></div>
+  <div class="inner dense2">
+    <div class="dt-h">表 X · 名称 <span>窗口 / 口径说明 · 亮灯表保留 🟢🔵🟡🔴</span></div>
+    <table class="dt">
+      <tr><th>主体</th><th>分母</th><th>已A</th><th>已B</th><th>未A</th><th>缺口</th><th>影响度</th><th>A率</th><th>B率</th></tr>
+      <tr><td>甲</td><td>000</td><td>000</td><td>000</td><td>00</td><td>000</td><td>00.0%</td><td>00.0% 🟢</td><td>00.0% 🔴</td></tr>
+      <tr><td>乙</td><td>000</td><td>000</td><td>000</td><td>00</td><td>000</td><td>00.0%</td><td>00.0% 🟢</td><td>00.0% 🟡</td></tr>
+      <tr><td>丙</td><td>000</td><td>000</td><td>000</td><td>00</td><td>000</td><td>00.0%</td><td>00.0% 🔵</td><td>00.0% 🔴</td></tr>
+      <tr><td>丁</td><td>000</td><td>000</td><td>000</td><td>00</td><td>000</td><td>00.0%</td><td>00.0% 🔵</td><td>00.0% 🔴</td></tr>
+      <tr><td>戊</td><td>000</td><td>000</td><td>000</td><td>00</td><td>000</td><td>00.0%</td><td>00.0% 🟢</td><td>00.0% 🔴</td></tr>
+      <tr><td>己</td><td>000</td><td>000</td><td>000</td><td>00</td><td>000</td><td>00.0%</td><td>00.0% 🔵</td><td>00.0% 🔴</td></tr>
+      <tr><td>庚</td><td>000</td><td>000</td><td>000</td><td>00</td><td>000</td><td>00.0%</td><td>00.0% 🟢</td><td>00.0% 🔴</td></tr>
+      <tr><td>辛</td><td>000</td><td>000</td><td>000</td><td>00</td><td>000</td><td>00.0%</td><td>00.0% 🔵</td><td>00.0% 🟡</td></tr>
+      <tr><td>壬</td><td>000</td><td>000</td><td>000</td><td>00</td><td>000</td><td>00.0%</td><td>00.0% 🟢</td><td>00.0% 🔴</td></tr>
+      <tr><td>癸</td><td>00</td><td>00</td><td>00</td><td>0</td><td>00</td><td>00.0%</td><td>00.0% 🔵</td><td>00.0% 🔴</td></tr>
+      <tr class="sum"><td>合计</td><td>0,000</td><td>0,000</td><td>0,000</td><td>000</td><td>0,000</td><td>00.0%</td><td>00.0%</td><td>00.0%</td></tr>
+    </table>
+    <div class="dt-h" style="margin-top:10px;">表 Y · 名称 <span>进度口径表续保率不亮灯</span></div>
+    <table class="dt">
+      <tr><th>主体</th><th>分母</th><th>已A</th><th>已B</th><th>A率</th><th>B率(进度)</th></tr>
+      <tr><td>甲</td><td>0,000</td><td>0,000</td><td>000</td><td>00.0% 🟡</td><td>00.0%</td></tr>
+      <tr><td>乙</td><td>0,000</td><td>000</td><td>000</td><td>00.0% 🟢</td><td>00.0%</td></tr>
+      <tr><td>丙</td><td>000</td><td>000</td><td>000</td><td>00.0% 🔵</td><td>00.0%</td></tr>
+      <tr><td>丁</td><td>000</td><td>000</td><td>000</td><td>00.0% 🔴</td><td>00.0%</td></tr>
+      <tr><td>戊</td><td>000</td><td>000</td><td>000</td><td>00.0% 🔵</td><td>00.0%</td></tr>
+      <tr><td>己</td><td>000</td><td>000</td><td>000</td><td>00.0% 🔵</td><td>00.0%</td></tr>
+      <tr><td>庚</td><td>000</td><td>000</td><td>000</td><td>00.0% 🟡</td><td>00.0%</td></tr>
+      <tr><td>辛</td><td>000</td><td>000</td><td>000</td><td>00.0% 🔵</td><td>00.0%</td></tr>
+      <tr><td>壬</td><td>00</td><td>00</td><td>00</td><td>00.0% 🔴</td><td>00.0%</td></tr>
+      <tr class="sum"><td>合计</td><td>0,000</td><td>0,000</td><td>0,000</td><td>00.0%</td><td>00.0%</td></tr>
+    </table>
+    <div class="note"><b>口径</b>：指标定义 + 亮灯阈值一行；<b>进度口径表（未到期/在途）续保率不亮灯</b>，仅最终留存表亮灯。各主体一行，合计置底加粗。</div>
+  </div>
+  <div class="ft"><div>诊断报告 · 附录 · 数据截止 YYYY-MM-DD</div><div><span class="pg">08</span></div></div>
+</section>
+
+<script src="deck-16x9.js"></script>
+</body>
+</html>
