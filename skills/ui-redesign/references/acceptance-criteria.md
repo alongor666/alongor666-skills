@@ -31,6 +31,7 @@
   - 易踩雷：`formatPercent(已是百分比)` vs `formatAchievementRate(0-1 小数)` — 后者会再 ×100
   - 易踩雷：`formatPremiumWan(input=元)` vs `formatWanAdaptive(input=万元)` — 前者会再 ÷10000
   - 简单核法：对照 Phase A 简报里"后端字段契约速查表"，每条数据 tile 写一行注释"value unit = X, formatter expects Y"。
+- [ ] **静态数据稿 / deck**（数字硬编码进 JS 数组的报告 / 盯盘，无后端）：所有数字进**唯一数据源数组**（每行一记录 + 一行合计），写**"列求和 = 合计"自洽脚本**，渲染前先全绿再谈视觉（一键抓转写错）。**禁止把灯色 / 状态字符串与数值混在同一位置数组**——明细行带灯色列、合计行不带会"索引漂移"（实战踩过 2 次：bulletRow `r[8]` vs `r[9]`、tableMatured `sum[6]` vs `sum[5]`）；优先**具名字段对象**取代位置数组。多页 16:9 数据 deck 的完整组件与契约见 xcl-html2pdf `references/dashboard-deck.md`。
 - [ ] **接口断言**（数据驱动页强制）：用 jq/curl 对每个数据信号断言后端真实返回，不能只看 DOM。
   ```bash
   TOKEN=$(...)  # 项目登录获取

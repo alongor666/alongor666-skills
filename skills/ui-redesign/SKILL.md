@@ -1,7 +1,7 @@
 ---
 name: ui-redesign
 description: 任意项目前端页面/模块的"视觉重做"编排，配合 Claude Design（claude.ai/design）。AI 自动发现该项目的技术栈与设计系统（不硬编码），把当前页还原成 standalone HTML + 写高命中率设计简报，存进专项文件夹供上传；用户在 Claude Design 操作并导出后，AI 落地回组件并按确定性验收标准检查；每次运行复盘并把通用经验回写本 skill（自进化）。Use when 用户说"重新设计/重做这个页面/redesign/换个设计/用 Claude Design 改 XX 页/视觉翻新"某个前端页面或模块时。
-version: 2.0.0
+version: 2.1.0
 user_invocable: true
 ---
 
