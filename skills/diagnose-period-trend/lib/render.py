@@ -20,9 +20,9 @@ if "dhr_lib" not in _sys.modules:
     from pathlib import Path as _P
     _dhr_lib_path = next(
         (p / "chexian-report-shell" / "lib" for p in _P(__file__).resolve().parents
-         if p.name == "skills" and (p / "chexian-report-shell").is_dir()),
-        _P.home() / ".claude/skills/chexian-report-shell/lib",  # 兜底（ADR-001）
-    )
+         if p.name == "skills" and (p / "chexian-report-shell" / "lib").is_dir()),
+        None,
+    ) or (_P.home() / ".claude/skills/chexian-report-shell/lib")  # 兜底（惰性，ADR-001）
     _spec = _ilu.spec_from_file_location(
         "dhr_lib", str(_dhr_lib_path / "__init__.py"),
         submodule_search_locations=[str(_dhr_lib_path)],

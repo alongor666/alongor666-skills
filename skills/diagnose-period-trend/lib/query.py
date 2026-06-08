@@ -33,9 +33,9 @@ CUSTOMER_CATEGORIES_REGISTERED = [
 if "dhr_lib" not in _sys.modules:
     _dhr_path = next(
         (p / "chexian-report-shell" / "lib" for p in Path(__file__).resolve().parents
-         if p.name == "skills" and (p / "chexian-report-shell").is_dir()),
-        Path.home() / ".claude/skills/chexian-report-shell/lib",  # 兜底（ADR-001）
-    )
+         if p.name == "skills" and (p / "chexian-report-shell" / "lib").is_dir()),
+        None,
+    ) or (Path.home() / ".claude/skills/chexian-report-shell/lib")  # 兜底（惰性，ADR-001）
     _spec_obj = _spec.spec_from_file_location(
         "dhr_lib", str(_dhr_path / "__init__.py"),
         submodule_search_locations=[str(_dhr_path)],

@@ -24,17 +24,15 @@ from lib import render_page, ...
 
 ## 决策（Decision）
 
-在基座 `chexian-report-shell` 提供一个约 30 行、零依赖的路径解析器 `skill_path(name)`，**按优先级探测**多个候选根，返回第一个存在者：
+在基座 `chexian-report-shell` 提供一个零依赖的路径解析器 `skill_path(name)` / `skill_lib(name)`，**按优先级探测**候选根，返回第一个存在者：
 
-1. `$CLAUDE_SKILLS_DIR`（环境变量，显式覆盖）
-2. `~/.claude/skills`
-3. `~/.claude/plugins/alongor666-skills/skills`
-4. `~/.agents/skills`
-5. 相对调用文件回溯出的仓库根 `skills/`
+1. `$CLAUDE_SKILLS_DIR`（环境变量，显式覆盖，最高优先——运维旋钮）
+2. 相对调用文件回溯到 `skills/` 取兄弟（`resolve()` 穿透软链，覆盖软链直连 / 同根安装）
+3. 已知安装根兜底：`~/.claude/skills` → `~/.claude/plugins/alongor666-skills/skills` → `~/.agents/skills`
 
-所有跨技能 `sys.path.insert(... 硬编码 ...)` 改为调用 `skill_path("chexian-report-shell")` 等。
+**实现说明（鸡生蛋约束）**：能直接 import 解析器的调用点（如 `diagnose-org-weekly/render_v*_org.py` 这类「二跳点」，运行时基座已在 `sys.path`）一律改调 `skill_lib(...)`；而「自举点」（本身负责定位基座，import 解析器前无从加载）只能内联同款回溯逻辑，按技能各收敛到一处（如 `diagnose-loss-development/lib/_shell.py`、`diagnose-period-trend/lib/_dhr_bootstrap.py`）。路径探测因此从散落 10 处收敛到 ~4 个集中点 + 解析器。
 
-**向后兼容**：现有 `~/.claude/skills` 仍是候选之一 → 上线解析器不改变现状行为，可安全先部署、后逐处替换。
+**兼容性**：兄弟回溯优先于旧硬编码（短路，非平级兜底）；在 sync-skills「软链=消费态」模型下解析目标与旧行为一致，故快乐路径无感知变化。但当工作树兄弟与已安装版本内容不同时解析目标会变——因此不宣称严格「零行为变化」。内联兜底改为惰性求值（仅回溯未命中才碰 `Path.home()`），HOME 不可解析时安全降级为 `FileNotFoundError`。
 
 ## 后果（Consequences）
 

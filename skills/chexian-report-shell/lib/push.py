@@ -13,7 +13,31 @@ import subprocess
 from pathlib import Path
 from typing import Iterable
 
-IM_PUSH_TOOLS = Path.home() / ".claude/skills/chexian-im-push/tools"
+def _im_push_tools() -> Path:
+    """定位 chexian-im-push 的 tools/（ADR-001：经解析器，兼容多安装位）。
+
+    chexian-im-push 是外部技能（不在本仓），可能装在 ~/.claude/skills 或经 npx 快照。
+    无法解析时回退标准安装位，延迟到实际推送（subprocess 跑脚本）时再报"文件不存在"。
+    """
+    try:
+        from .skill_path import skill_path
+    except ImportError:  # lib 被作为顶层包加入 sys.path 时（如 dhr_lib 别名）
+        try:
+            from skill_path import skill_path  # type: ignore[no-redef]
+        except ImportError:
+            skill_path = None  # type: ignore[assignment]
+    if skill_path is not None:
+        try:
+            return skill_path("chexian-im-push") / "tools"
+        except Exception:
+            pass
+    try:
+        return Path.home() / ".claude/skills/chexian-im-push/tools"
+    except (RuntimeError, KeyError):  # 病态 HOME：返回相对占位，使用处自然报错
+        return Path("chexian-im-push/tools")
+
+
+IM_PUSH_TOOLS = _im_push_tools()
 SEND_LARK = IM_PUSH_TOOLS / "send-lark-html.sh"
 SEND_WECOM = IM_PUSH_TOOLS / "send-wecom-html.sh"
 
