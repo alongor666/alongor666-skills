@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-# 仅在分支切换时（第三参 = 1）补齐技能直连软链，捕获「切到含新技能的分支」。
-# 文件级 checkout（第三参 = 0）跳过。失败绝不阻断 git。
-[ "${3:-0}" = "1" ] || exit 0
-root="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
-[ -x "$root/scripts/sync-skills.sh" ] || exit 0
-"$root/scripts/sync-skills.sh" link || true

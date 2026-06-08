@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-# 合并 / git pull 后：把本仓技能的直连软链补齐到 ~/.claude/skills（幂等、零网络）。
-# 捕获「pull main 后新增了技能」的场景。失败绝不阻断 git。
-root="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
-[ -x "$root/scripts/sync-skills.sh" ] || exit 0
-"$root/scripts/sync-skills.sh" link || true
