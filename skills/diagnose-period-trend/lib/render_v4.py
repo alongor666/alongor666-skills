@@ -32,17 +32,15 @@ fmt_num = dhr_lib.fmt_num
 try:
     from .anomalies import (AUX_DIM_LABELS, AUX_VALUE_LABELS, PERIOD_ORDER, YTD_LABEL, YOY_LABEL,
                             build_drilldown_data, DRILL_SEC_LIST, _SEC_FIELD)
-    from .themes_v2 import (
-        FONT_LINKS, BASE_CSS, DARK_CSS, THEME_TOGGLE_CSS,
-        THEME_INIT_SCRIPT, THEME_TOGGLE_JS, theme_toggle_btn,
-    )
 except ImportError:
     from anomalies import (AUX_DIM_LABELS, AUX_VALUE_LABELS, PERIOD_ORDER, YTD_LABEL, YOY_LABEL,  # type: ignore[no-redef]
                            build_drilldown_data, DRILL_SEC_LIST, _SEC_FIELD)
-    from themes_v2 import (  # type: ignore[no-redef]
-        FONT_LINKS, BASE_CSS, DARK_CSS, THEME_TOGGLE_CSS,
-        THEME_INIT_SCRIPT, THEME_TOGGLE_JS, theme_toggle_btn,
-    )
+
+# 主题资源下沉到基座（ADR-002）
+from dhr_lib.themes_v2 import (
+    FONT_LINKS, BASE_CSS, DARK_CSS, THEME_TOGGLE_CSS,
+    THEME_INIT_SCRIPT, THEME_TOGGLE_JS, theme_toggle_btn,
+)
 
 
 def _get_th() -> dict:

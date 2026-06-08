@@ -99,7 +99,7 @@ CHEXIAN_PROJECT_ROOT=/path/to/chexian-api python3 ~/.claude/skills/diagnose-peri
 | `lib/render_v4.py` | `*-table.html` | Python SSR + JS 渲染超表（列冻结 + 搜索 + 排序 + 展开行） |
 | `lib/render.py` | `*.html` (legacy) | 旧版交互表（含 SPA 下钻页） |
 
-共享层：`lib/anomalies.py`（Top 异常计算）· `lib/themes_v2.py`（暖色 CSS token）
+共享层：`lib/anomalies.py`（Top 异常计算）· 主题 CSS token 已下沉基座 `chexian-report-shell/lib/themes_v2.py`，经 `dhr_lib.themes_v2` 取用（ADR-002，原 `lib/themes_v2.py` 已迁出）
 
 ## QC 自检（CLI 输出，三视图模式）
 

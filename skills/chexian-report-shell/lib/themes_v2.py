@@ -27,6 +27,10 @@ CSS 变量按用途分组：
   - DARK_CSS：[data-theme="dark"] 覆盖变量
   - theme_toggle_btn()：插入 TopBar 的一键切换按钮（CSS 驱动文字，零额外 JS）
   - 所有三个视图在 <html> 上打 data-theme 属性，localStorage key = 'diag-theme'（与壳库对齐）
+
+归属备注（ADR-002）：本模块原属 diagnose-period-trend，P1 下沉到 chexian-report-shell
+基座以断 org-weekly↔period-trend 横向依赖。当前**暂寄**车险诊断基座；若日后被车险域
+之外的技能复用，应上提到中性 L0（与项目无关的通用主题层），避免重蹈 crystallize 正名。
 """
 
 # Google Fonts 预连接 + CSS link

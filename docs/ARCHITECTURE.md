@@ -86,13 +86,15 @@ L0 基座   report-shell · xcl-html2pdf · commit-push-pr-core
 
 ## 6. 风险与迁移路线图
 
-| 阶段 | 动作 | ADR | 风险 | 工作量 |
-|---|---|---|---|---|
-| **P0 立即** | 加 `skill_path()` 解析器，替换所有硬编码 `sys.path` | 001 | 低（向后兼容） | 半天 |
-| **P0 立即** | `crystallize-skill` 正名 + 归簇 | 003 | 低 | 1 小时 |
-| **P1 短期** | 下沉 org-weekly↔period-trend 共享码到基座，断横向边 | 002 | 中（需回归两报告） | 1 天 |
-| **P1 短期** | `governance_stats.py` 等纯逻辑脚本补最小单测 | 004 | 低 | 半天 |
-| **P2 持续** | SKILL.md 加 `requires_skills` 声明 + 重资产补 README | 005 | 低 | 增量 |
+| 阶段 | 动作 | ADR | 风险 | 工作量 | 状态 |
+|---|---|---|---|---|---|
+| **P0 立即** | 加 `skill_path()` 解析器，替换所有硬编码 `sys.path` | 001 | 低（向后兼容） | 半天 | ✅ 已交付（PR #14） |
+| **P0 立即** | `crystallize-skill` 正名 + 归簇 | 003 | 低 | 1 小时 | ✅ 已交付（PR #14） |
+| **P1 短期** | 下沉 org-weekly↔period-trend 共享码到基座，断横向边 | 002 | 中（需回归两报告） | 1 天 | ✅ 已交付（`themes_v2` 下沉基座 `dhr_lib`，6 消费者改走基座取法，横向注入消除） |
+| **P1 短期** | `governance_stats.py` 等纯逻辑脚本补最小单测 | 004 | 低 | 半天 | ✅ 已交付（25 项纯函数回归，覆盖正则边界/样本阈值/降级警告） |
+| **P2 持续** | SKILL.md 加 `requires_skills` 声明 + 重资产补 README | 005 | 低 | 增量 | ⏳ 待办 |
+
+> P1 遗留（独立后续 PR，中风险）：`diagnose-period-trend` 的 4 处 bootstrap 入口仍内联基座定位逻辑（链式依赖渲染核）。其正确性修正（惰性兜底 + `is_dir`）已在先前提交（PR #14）完成；**本 PR 仅做横向解耦**（`themes_v2` 下沉基座 + 6 消费者改基座取法），未触及这 4 个文件，import 链重构留待后续。
 
 **迁移安全保证**：兄弟回溯优先、原硬编码作**惰性兜底**，每步可独立回滚。注：兄弟回溯优先于旧硬编码（短路），在 sync-skills「软链=消费态」模型下解析目标一致；当工作树兄弟与已安装版本内容不同时目标会变，故不宣称严格"零行为变化"。
 
@@ -101,3 +103,4 @@ L0 基座   report-shell · xcl-html2pdf · commit-push-pr-core
 - 新增跨技能依赖时：调用 `chexian-report-shell` 的 `skill_path(name)` 解析依赖根，禁止再写硬编码 `~/.claude/skills/...`。
 - 新增技能时：领域技能用领域前缀；项目无关通用工具不强加前缀。
 - 修改 L0 基座对外 API 前：先过基座 tests/（见 ADR-004）。
+- **不变量（org-weekly 渲染器入口）**：`render_v{1,3,4}_org.py` 的 `from lib.themes_v2 import ...` 无兜底，依赖 `cli.py` 在导入渲染器前已把 `SHELL_ROOT` 注入 `sys.path`。现状下 `cli.py` 是这些渲染器的唯一入口（已核：仅 `cli.py` import 它们）。**若日后新增非 `cli.py` 入口**（如直接脚本调用渲染器），必须在该入口同样注入 `SHELL_ROOT`，或给该 import 补回退——否则 `lib.themes_v2` 解析失败。

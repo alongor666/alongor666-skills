@@ -657,21 +657,11 @@ def render_v1(ctx, drill_long_df, args):
         "premium": f"{prem / 10000:,.0f}" if prem else "—",
     }
 
-    # 7. 主题 CSS + JS（从 DPT themes_v2 复用）
-    try:
-        from themes_v2 import (  # type: ignore[import-not-found]
-            FONT_LINKS, BASE_CSS, DARK_CSS, THEME_TOGGLE_CSS,
-            THEME_INIT_SCRIPT, THEME_TOGGLE_JS, theme_toggle_btn,
-        )
-    except ImportError:
-        import importlib, sys
-        from lib.skill_path import skill_lib  # report-shell 根已由 cli.py 注入 sys.path（ADR-001 真实调用解析器）
-        sys.path.insert(0, str(skill_lib("diagnose-period-trend")))
-        _tv2 = importlib.import_module("themes_v2")
-        FONT_LINKS, BASE_CSS = _tv2.FONT_LINKS, _tv2.BASE_CSS
-        DARK_CSS, THEME_TOGGLE_CSS = _tv2.DARK_CSS, _tv2.THEME_TOGGLE_CSS
-        THEME_INIT_SCRIPT, THEME_TOGGLE_JS = _tv2.THEME_INIT_SCRIPT, _tv2.THEME_TOGGLE_JS
-        theme_toggle_btn = _tv2.theme_toggle_btn
+    # 7. 主题 CSS + JS——从基座取（ADR-002：themes_v2 已下沉 chexian-report-shell，不再借道 DPT）
+    from lib.themes_v2 import (  # report-shell 根已由 cli.py 注入 sys.path
+        FONT_LINKS, BASE_CSS, DARK_CSS, THEME_TOGGLE_CSS,
+        THEME_INIT_SCRIPT, THEME_TOGGLE_JS, theme_toggle_btn,
+    )
 
     # 带主题切换按钮的 topbar + 跨视图切换链接（驾驶舱为当前页，链到叙事/超表）
     toggle_btn = theme_toggle_btn()
