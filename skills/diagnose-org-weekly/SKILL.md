@@ -8,6 +8,8 @@ description: >-
   "天府/高新/宜宾经营诊断"、"组织绩效周报"时触发。
 user_invocable: true
 version: "1.20.0"
+requires_skills:
+  - chexian-report-shell   # 渲染层 + 多维多窗查询 + 四级亮灯 + IM 推送薄壳（运行时必需；cli.py 注入 SHELL_ROOT 后 from lib import）
 ---
 
 # diagnose-org-weekly: 三级机构经营诊断周报

@@ -8,6 +8,8 @@ description: >-
   "超表"、"分析师超表"、"驾驶舱"、"三视图" 时使用。
 user_invocable: true
 version: "2.0.0"
+requires_skills:
+  - chexian-report-shell   # 渲染基础设施（亮灯/格式化/SVG 图表/超表），经 _dhr_bootstrap 动态加载为 dhr_lib（运行时必需）
 ---
 
 # diagnose-period-trend: 车险经营 · 短中长期对照（三视图版）

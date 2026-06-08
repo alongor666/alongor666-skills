@@ -92,7 +92,7 @@ L0 基座   report-shell · xcl-html2pdf · commit-push-pr-core
 | **P0 立即** | `crystallize-skill` 正名 + 归簇 | 003 | 低 | 1 小时 | ✅ 已交付（PR #14） |
 | **P1 短期** | 下沉 org-weekly↔period-trend 共享码到基座，断横向边 | 002 | 中（需回归两报告） | 1 天 | ✅ 已交付（`themes_v2` 下沉基座 `dhr_lib`，6 消费者改走基座取法，横向注入消除） |
 | **P1 短期** | `governance_stats.py` 等纯逻辑脚本补最小单测 | 004 | 低 | 半天 | ✅ 已交付（25 项纯函数回归，覆盖正则边界/样本阈值/降级警告） |
-| **P2 持续** | SKILL.md 加 `requires_skills` 声明 + 重资产补 README | 005 | 低 | 增量 | ⏳ 待办 |
+| **P2 持续** | SKILL.md 加 `requires_skills` 声明 + 重资产补 README | 005 | 低 | 增量 | ✅ 已交付（4 依赖声明 + 4 重资产 README；依赖边经全仓扫描核实一致） |
 
 > P1 遗留（独立后续 PR，中风险）：`diagnose-period-trend` 的 4 处 bootstrap 入口仍内联基座定位逻辑（链式依赖渲染核）。其正确性修正（惰性兜底 + `is_dir`）已在先前提交（PR #14）完成；**本 PR 仅做横向解耦**（`themes_v2` 下沉基座 + 6 消费者改基座取法），未触及这 4 个文件，import 链重构留待后续。
 
@@ -100,7 +100,8 @@ L0 基座   report-shell · xcl-html2pdf · commit-push-pr-core
 
 ## 7. 维护说明
 
-- 新增跨技能依赖时：调用 `chexian-report-shell` 的 `skill_path(name)` 解析依赖根，禁止再写硬编码 `~/.claude/skills/...`。
+- 新增跨技能依赖时：调用 `chexian-report-shell` 的 `skill_path(name)` 解析依赖根，禁止再写硬编码 `~/.claude/skills/...`；**同时**在该技能 SKILL.md frontmatter 的 `requires_skills` 补上被依赖技能（ADR-005，给人读的依赖契约，不引入加载器）。`requires_skills` 须与实际运行时调用保持一致——删除某依赖的最后一处调用时，同步删声明。
+- 当前已声明的依赖边（2026-06-08 全仓扫描核实）：`diagnose-org-weekly` / `diagnose-period-trend` / `diagnose-loss-development` → `chexian-report-shell`（运行时必需）；`chexian-report-shell` → `chexian-im-push`（可选 · 外部技能 · 仅推送降级）。基座不反向依赖任何业务技能。
 - 新增技能时：领域技能用领域前缀；项目无关通用工具不强加前缀。
 - 修改 L0 基座对外 API 前：先过基座 tests/（见 ADR-004）。
 - **不变量（org-weekly 渲染器入口）**：`render_v{1,3,4}_org.py` 的 `from lib.themes_v2 import ...` 无兜底，依赖 `cli.py` 在导入渲染器前已把 `SHELL_ROOT` 注入 `sys.path`。现状下 `cli.py` 是这些渲染器的唯一入口（已核：仅 `cli.py` import 它们）。**若日后新增非 `cli.py` 入口**（如直接脚本调用渲染器），必须在该入口同样注入 `SHELL_ROOT`，或给该 import 补回退——否则 `lib.themes_v2` 解析失败。

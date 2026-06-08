@@ -8,6 +8,8 @@ description: >-
   不通过 /xxx 调用——直接跑业务 skill 即可。
 user_invocable: false
 version: "1.21.0"
+requires_skills:
+  - chexian-im-push   # 可选 · 外部技能（不在本仓）· 仅 lib/push.py 飞书/企微推送用，缺失时降级兜底，不影响渲染主链路
 ---
 
 # chexian-report-shell: 车险诊断报告渲染基础设施

@@ -9,6 +9,8 @@ description: >-
   "人伤案件 vs 人伤金额"、"赔付率成熟曲线" 时使用。
 user_invocable: true
 version: "2.4.0"
+requires_skills:
+  - chexian-report-shell   # 渲染基础设施（亮灯/格式化/SPA 拼装），经 _shell.py 注入 SHELL_ROOT 后 from lib import（运行时必需）
 ---
 
 # diagnose-loss-development: 多年保单赔付发展三角形
