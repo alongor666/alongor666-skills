@@ -21,11 +21,11 @@ python3 ~/.claude/skills/diagnose-loss-development/lib/cli.py \
 
 常用参数（全集见 SKILL.md）：
 
-| 参数 | 默认 | 说明 |
+| 参数 | 默认 / 必填 | 说明 |
 |---|---|---|
-| `--cutoff` | 必填 | 数据截止日（观察时点）；约束所有观察期的真实暴露天数 |
-| `--project-root` | — | 数据湖项目根，解析 `policy/current/*.parquet` |
-| `--out` | 无 | 完整输出路径（不给则仅控制台验证） |
+| `--project-root` | **必填** | 数据湖项目根绝对路径，解析 `policy/current/*.parquet` |
+| `--cutoff` | 自动 | 数据截止日（观察时点）；默认 DuckDB 取 `MAX(policy_date)`。约束所有观察期的真实暴露天数 |
+| `--out` | 无 | 完整输出路径（不给则仅控制台验证，不写文件） |
 | `--deploy` | 关 | 产出后落到 `public/reports/...`，配合 VPS 同步 + 企微推送链路 |
 
 ## 依赖

@@ -17,6 +17,8 @@
      - chexian-report-shell   # 渲染基础设施
    ```
    解析仍由 ADR-001 的 `skill_path()` 在运行时完成；`requires_skills` 只是**可读的依赖契约**，不新增机制。
+
+   **口径（范围界定）**：`requires_skills` **仅覆盖 `sys.path` 运行时 import 边**——即经 `skill_path`/`skill_lib`/`SHELL_ROOT`/`dhr_lib` 把另一技能的代码装进本进程 import 的那种硬依赖（也正是本 ADR 背景所指、`skill_path()` 能解析的依赖）。**不在内**的两类松耦合：① **编排式调用**——技能 A 在工作流里以斜杠命令 / 子进程跑技能 B（如 `chexian-ops-review` 串起 `chexian-market-analysis`/`chexian-channel`/`chexian-pricing-decision`）；② **产物消费**——技能 A 读技能 B 的输出文件（如 `company-vortex-card` 消费 `company-vortex` 的 `.md`）。这两类已在各自 SKILL.md 正文可见，`skill_path()` 也不解析它们，故不混入 `requires_skills`，以保持契约可机器校验、与实际 import 一一对应。
 2. **重资产补 README**：`diagnose-org-weekly` / `diagnose-period-trend` / `diagnose-loss-development` / `xcl-html2pdf` 各补一份独立 README（快速上手 + 依赖 + 产物示例），降低复用门槛。
 3. **轻资产不强制**：单文件编排型技能（如 `rewrite-conclusion`、`chexian-pricing-decision`）SKILL.md 已足够，不强加 README。
 
