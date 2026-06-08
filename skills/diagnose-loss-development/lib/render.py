@@ -13,7 +13,11 @@ from typing import Optional
 import pandas as pd
 
 # 导入 dhr_lib（2026-05-17 重命名：原 diagnose-html-render → chexian-report-shell）
-_DHR_PATH = Path.home() / ".claude/skills/chexian-report-shell"
+_DHR_PATH = next(
+    (p / "chexian-report-shell" for p in Path(__file__).resolve().parents
+     if p.name == "skills" and (p / "chexian-report-shell").is_dir()),
+    Path.home() / ".claude/skills/chexian-report-shell",  # 兜底：标准安装位（ADR-001）
+)
 if str(_DHR_PATH) not in sys.path:
     sys.path.insert(0, str(_DHR_PATH))
 from lib import (  # type: ignore[no-redef]

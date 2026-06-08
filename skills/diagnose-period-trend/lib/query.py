@@ -31,7 +31,11 @@ CUSTOMER_CATEGORIES_REGISTERED = [
 # 这里通过 dhr_lib 顶层包 re-export，保留本模块 `SHORT_CATEGORY_LABEL` 与 `short_category`
 # 名称兼容，render.py / cli.py 既有调用方无需改动。
 if "dhr_lib" not in _sys.modules:
-    _dhr_path = Path.home() / ".claude/skills/chexian-report-shell/lib"
+    _dhr_path = next(
+        (p / "chexian-report-shell" / "lib" for p in Path(__file__).resolve().parents
+         if p.name == "skills" and (p / "chexian-report-shell").is_dir()),
+        Path.home() / ".claude/skills/chexian-report-shell/lib",  # 兜底（ADR-001）
+    )
     _spec_obj = _spec.spec_from_file_location(
         "dhr_lib", str(_dhr_path / "__init__.py"),
         submodule_search_locations=[str(_dhr_path)],

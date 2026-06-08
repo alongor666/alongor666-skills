@@ -665,7 +665,12 @@ def render_v1(ctx, drill_long_df, args):
         )
     except ImportError:
         import importlib, sys
-        sys.path.insert(0, str(Path.home() / ".claude/skills/diagnose-period-trend/lib"))
+        _pt_lib = next(
+            (p / "diagnose-period-trend" / "lib" for p in Path(__file__).resolve().parents
+             if p.name == "skills" and (p / "diagnose-period-trend").is_dir()),
+            Path.home() / ".claude/skills/diagnose-period-trend/lib",  # 兜底（ADR-001）
+        )
+        sys.path.insert(0, str(_pt_lib))
         _tv2 = importlib.import_module("themes_v2")
         FONT_LINKS, BASE_CSS = _tv2.FONT_LINKS, _tv2.BASE_CSS
         DARK_CSS, THEME_TOGGLE_CSS = _tv2.DARK_CSS, _tv2.THEME_TOGGLE_CSS

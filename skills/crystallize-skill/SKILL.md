@@ -1,5 +1,5 @@
 ---
-name: chexian-crystallize-skill
+name: crystallize-skill
 description: >-
   把重复性流程 / 动作沉淀（固化）为一个可复用 skill 的元流程编排。
   当用户说"沉淀成 skill"、"把这个流程做成 skill"、"固化成技能"、"封装成 skill"、
@@ -10,7 +10,7 @@ user_invocable: true
 version: "1.0.0"
 ---
 
-# chexian-crystallize-skill：把重复流程沉淀为可复用 skill
+# crystallize-skill：把重复流程沉淀为可复用 skill
 
 用户是 AI-Agent native（不写代码、不亲自维护文件），但会发现重复流程并下指令"沉淀成 skill"。本 skill 是 AI 必须自动执行的**五步流水线**，把维护纪律绑定到动作上，而不是靠 AI 每次自觉。
 

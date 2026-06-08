@@ -23,7 +23,11 @@ from pathlib import Path
 import duckdb
 
 # 注入 chexian-report-shell 到 sys.path 以便 `from lib import ...`
-SHELL_ROOT = Path.home() / ".claude" / "skills" / "chexian-report-shell"
+SHELL_ROOT = next(
+    (p / "chexian-report-shell" for p in Path(__file__).resolve().parents
+     if p.name == "skills" and (p / "chexian-report-shell").is_dir()),
+    Path.home() / ".claude" / "skills" / "chexian-report-shell",  # 兜底：标准安装位（ADR-001）
+)
 if not SHELL_ROOT.exists():
     print(f"未找到渲染层依赖 chexian-report-shell：{SHELL_ROOT}", file=sys.stderr)
     raise SystemExit(2)
