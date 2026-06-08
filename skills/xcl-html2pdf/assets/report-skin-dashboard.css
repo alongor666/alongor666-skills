@@ -7,7 +7,8 @@
  *   单一强调色 --ac；状态四级 --ok/--watch/--warn/--bad 必须四档可辨。改规范只改本文件。
  * ========================================================================= */
   :root{--ac:#2b5ce6;--ac2:#1e40af;--ink:#1f2937;--dim:#6b7280;--panel:#ffffff;--soft:#f3f5f9;--line:#e5e7eb;
-        --ok:#16a34a;--watch:#0ea5e9;--warn:#f59e0b;--bad:#ef4444;--press:#fb7185;}
+        --ok:#16a34a;--watch:#0ea5e9;--warn:#f59e0b;--bad:#ef4444;--press:#fb7185;--edge:#d8deea;}
+  /* --edge：统一低调边缘色。设计契约——文本框/强调条/号码块边框一律用它，颜色只进亮灯圆点+大数字+条形（见 references/dashboard-deck.md v2 契约 2）。 */
   body,body.deck{background:#e6eaf0;}
   .page{color:var(--ink);box-shadow:0 16px 44px rgba(30,41,59,.16);background:linear-gradient(180deg,#ffffff,#fbfcfe);}
   .hd{position:absolute;top:26px;left:64px;right:64px;display:flex;justify-content:space-between;align-items:center;
@@ -67,6 +68,9 @@
   .a-rest{background:linear-gradient(90deg,#cbd5e1,#94a3b8);}
   .a-prog{background:linear-gradient(90deg,#93b4f7,var(--ac));}
   .b-val{width:48px;flex:none;text-align:right;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:#1f2937;}
+  /* 体量标注：挂排名条右侧，破解"率低≠问题大"误读（v2 契约 7）。低调中性，不抢亮灯。 */
+  .b-tag{flex:none;font-size:11px;color:var(--dim);font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .b-tag b{color:var(--ac2);font-weight:700;}
   .bench{display:flex;gap:14px;margin-top:12px;}
   .bench .bk{flex:1;background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:11px 18px;display:flex;align-items:baseline;gap:10px;}
   .bench .bv{font-size:23px;font-weight:800;font-variant-numeric:tabular-nums;color:#0f172a;}
@@ -107,6 +111,9 @@
   .dt tr.sum td{background:#eaf0fb;font-weight:800;color:#0f172a;border-top:2px solid var(--ac);}
   .note{font-size:12.5px;color:#475569;line-height:1.55;margin-top:8px;}
   .note b{color:var(--ac2);}
+  /* 图表底部说明：读图说明（排序方向/图元含义/亮灯口径）落图表底，与顶部结论区分离（v2 契约 5）。用 --edge 分隔线呼应统一边缘。 */
+  .p-note{margin-top:12px;padding-top:9px;border-top:1px solid var(--edge);font-size:12px;color:var(--dim);line-height:1.5;}
+  .p-note b{color:var(--ac2);}
   .two{display:grid;grid-template-columns:1fr;gap:10px;}
   /* 双表附录页：收紧行高（.dt 默认继承 body 1.7 行高过松） */
   .dense2 .dt{font-size:11px;}

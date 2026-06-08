@@ -1,7 +1,8 @@
 /* deck-16x9.js —— PPT 16:9 演示翻页（仅屏幕生效）
  *   丝滑演示引擎：一屏一页、GPU transform 横向「推入」过渡（类 PowerPoint Push），无滚动条、无惯性回弹。
  *   交互（演示导向，区别于 PDF 的 deck.js）：
- *   · 左右翻页【只认 ← → 方向键】（Home/End 跳首末）——不再有「点击页面左右」「滚轮翻页」。
+ *   · 翻页键：← →（下一/上一）、↑ ↓ 同义、空格(下一)/Shift+空格(上一)、PageDown/PageUp、Home/End 跳首末——不绑「点击页面左右」「滚轮」以免误触。
+ *   · 缩略图总览态：方向键移动所选页（←→ 单步、↑↓ 跨整行）、Home/End、回车/空格进入该页。
  *   · 底部【序号条】：点页码一键直达；远跳也只做一次单步推入（不论距离），当前页高亮。
  *   · 【缩略图总览】：点 ▦ 或在页面上按 Esc 打开（无序号、纯缩略图，淡入上浮），点缩略图进入该页。
  *   · 【Esc 两级退出】页面 → 缩略图总览；缩略图 → 退出全屏（关总览 + 退浏览器全屏）。⛶ 进入/退出全屏演示。
@@ -94,11 +95,23 @@
     function toggleFs(){ isFs()?exitFs():enterFs(); }
 
     // —— 缩略图总览（懒构建，仅用户首次触发时才进 DOM，避免污染 .page 计数/导出）——
-    var ov=null;
+    var ov=null, ovSel=0;
+    function ovThumbs(){ return ov?[].slice.call(ov.querySelectorAll('.deck-thumb')):[]; }
+    function ovHighlight(){
+      ovThumbs().forEach(function(t,k){ t.classList.toggle('on',k===ovSel); });
+      var sel=ovThumbs()[ovSel]; if(sel&&sel.scrollIntoView) sel.scrollIntoView({block:'nearest'});
+    }
+    function ovCols(){ // 每行列数：按 offsetTop 分组取首行格子数（供 ↑↓ 跨行移动）
+      var ts=ovThumbs(); if(ts.length<2) return 1;
+      var top0=ts[0].offsetTop, n=0;
+      for(var i=0;i<ts.length;i++){ if(ts[i].offsetTop===top0) n++; else break; }
+      return Math.max(1,n);
+    }
+    function ovMove(d){ ovSel=Math.max(0,Math.min(ovThumbs().length-1,ovSel+d)); ovHighlight(); }
     function buildOverview(){
       ov=document.createElement('div'); ov.className='deck-overview';
       var hd=document.createElement('div'); hd.className='deck-ov-hd';
-      hd.textContent='全部页 · 点击进入 · Esc 退出';
+      hd.textContent='全部页 · 方向键选 / 点击 · 回车进入 · Esc 退出';
       var wrap=document.createElement('div'); wrap.className='deck-overview-grid';
       var pw=pages[0].offsetWidth, ph=pages[0].offsetHeight, TW=300, scale=TW/pw;
       pages.forEach(function(p,i){
@@ -117,7 +130,7 @@
     }
     function openOverview(){
       if(!ov) buildOverview();
-      [].forEach.call(ov.querySelectorAll('.deck-thumb'),function(t,k){t.classList.toggle('on',k===idx);});
+      ovSel=idx; ovHighlight();                          // 打开时选中当前页
       requestAnimationFrame(function(){document.body.classList.add('ov-open');}); // 下一帧加类 → 淡入动画
     }
     function closeOverview(){document.body.classList.remove('ov-open');}
@@ -136,9 +149,19 @@
         } // else 真全屏 + 未开总览：不拦截，让浏览器原生退出全屏（总览改用 ▦）
         return;
       }
-      if(document.body.classList.contains('ov-open')) return; // 总览态不翻页
-      if(e.key==='ArrowRight'){e.preventDefault();go(1);}
-      else if(e.key==='ArrowLeft'){e.preventDefault();go(-1);}
+      if(document.body.classList.contains('ov-open')){          // 总览态：方向键移动所选页
+        if(e.key==='ArrowRight'){e.preventDefault();ovMove(1);}
+        else if(e.key==='ArrowLeft'){e.preventDefault();ovMove(-1);}
+        else if(e.key==='ArrowDown'){e.preventDefault();ovMove(ovCols());}
+        else if(e.key==='ArrowUp'){e.preventDefault();ovMove(-ovCols());}
+        else if(e.key==='Home'){e.preventDefault();ovSel=0;ovHighlight();}
+        else if(e.key==='End'){e.preventDefault();ovSel=ovThumbs().length-1;ovHighlight();}
+        else if(e.key==='Enter'||e.key===' '||e.key==='Spacebar'){e.preventDefault();closeOverview();jump(ovSel);}
+        return;
+      }
+      if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key==='PageDown'){e.preventDefault();go(1);}
+      else if(e.key==='ArrowLeft'||e.key==='ArrowUp'||e.key==='PageUp'){e.preventDefault();go(-1);}
+      else if(e.key===' '||e.key==='Spacebar'){e.preventDefault();go(e.shiftKey?-1:1);}
       else if(e.key==='Home'){e.preventDefault();jump(0);}
       else if(e.key==='End'){e.preventDefault();jump(slides.length-1);}
     });
