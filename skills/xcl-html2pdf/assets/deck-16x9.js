@@ -28,7 +28,7 @@
       var sc=Math.min((window.innerHeight*0.94)/ph,(window.innerWidth*0.86)/pw);
       pages.forEach(function(p){ p.style.transform='scale('+sc+')'; });
     }
-    fit(); window.addEventListener('resize',fit);
+    fit(); window.addEventListener('resize',function(){ fit(); ovColCount=0; }); // resize 可能改总览列数 → 失效列数缓存
 
     // —— 序号条（先建，jump 要用 setActive）——
     var bar=document.createElement('div'); bar.className='deck-bar';
@@ -95,23 +95,24 @@
     function toggleFs(){ isFs()?exitFs():enterFs(); }
 
     // —— 缩略图总览（懒构建，仅用户首次触发时才进 DOM，避免污染 .page 计数/导出）——
-    var ov=null, ovSel=0;
-    function ovThumbs(){ return ov?[].slice.call(ov.querySelectorAll('.deck-thumb')):[]; }
+    var ov=null, ovSel=0, ovCells=[], ovColCount=0;   // ovCells/ovColCount：总览建好即缓存，避免每次按键全树查询 + 重排
+    function ovThumbs(){ return ovCells; }
     function ovHighlight(){
-      ovThumbs().forEach(function(t,k){ t.classList.toggle('on',k===ovSel); });
-      var sel=ovThumbs()[ovSel]; if(sel&&sel.scrollIntoView) sel.scrollIntoView({block:'nearest'});
+      ovCells.forEach(function(t,k){ t.classList.toggle('on',k===ovSel); });
+      var sel=ovCells[ovSel]; if(sel&&sel.scrollIntoView) sel.scrollIntoView({block:'nearest'});
     }
-    function ovCols(){ // 每行列数：按 offsetTop 分组取首行格子数（供 ↑↓ 跨行移动）
-      var ts=ovThumbs(); if(ts.length<2) return 1;
-      var top0=ts[0].offsetTop, n=0;
-      for(var i=0;i<ts.length;i++){ if(ts[i].offsetTop===top0) n++; else break; }
-      return Math.max(1,n);
+    function ovCols(){ // 每行列数：首行格子数（缓存；resize 时由 ovColCount=0 失效重算）
+      if(ovColCount) return ovColCount;
+      if(ovCells.length<2){ ovColCount=1; return 1; }
+      var top0=ovCells[0].offsetTop, n=0;
+      for(var i=0;i<ovCells.length;i++){ if(ovCells[i].offsetTop===top0) n++; else break; }
+      ovColCount=Math.max(1,n); return ovColCount;
     }
-    function ovMove(d){ ovSel=Math.max(0,Math.min(ovThumbs().length-1,ovSel+d)); ovHighlight(); }
+    function ovMove(d){ ovSel=Math.max(0,Math.min(ovCells.length-1,ovSel+d)); ovHighlight(); }
     function buildOverview(){
       ov=document.createElement('div'); ov.className='deck-overview';
       var hd=document.createElement('div'); hd.className='deck-ov-hd';
-      hd.textContent='全部页 · 方向键选 / 点击 · 回车进入 · Esc 退出';
+      hd.textContent='全部页 · 方向键选 / 点击 · 回车/空格进入 · Esc 退出';
       var wrap=document.createElement('div'); wrap.className='deck-overview-grid';
       var pw=pages[0].offsetWidth, ph=pages[0].offsetHeight, TW=300, scale=TW/pw;
       pages.forEach(function(p,i){
@@ -127,18 +128,20 @@
       ov.appendChild(hd); ov.appendChild(wrap);
       ov.addEventListener('click',function(e){if(e.target===ov||e.target===hd)closeOverview();});
       document.body.appendChild(ov);
+      ovCells=[].slice.call(wrap.querySelectorAll('.deck-thumb'));   // 缓存缩略图列表（建好不再变）
     }
     function openOverview(){
       if(!ov) buildOverview();
-      ovSel=idx; ovHighlight();                          // 打开时选中当前页
-      requestAnimationFrame(function(){document.body.classList.add('ov-open');}); // 下一帧加类 → 淡入动画
+      ovSel=idx;
+      // 与加 ov-open 类同一帧再高亮 + 滚动：此时总览已可见，scrollIntoView 才能把当前页缩略图滚进视区（页多需滚动时尤甚）
+      requestAnimationFrame(function(){ document.body.classList.add('ov-open'); ovHighlight(); });
     }
     function closeOverview(){document.body.classList.remove('ov-open');}
     function toggleOverview(){
       document.body.classList.contains('ov-open')?closeOverview():openOverview();
     }
 
-    // —— 键盘：左右翻页只认方向键；Esc 只负责退出 ——
+    // —— 键盘：← →／↑ ↓／空格(Shift 回退)／PageUp·Down 翻页 + Home/End 跳首末；总览态方向键移动所选页；Esc 退出 ——
     window.addEventListener('keydown',function(e){
       if(e.key==='Escape'){
         // Esc 两级退出：① 页面 → 缩略图总览 ② 缩略图 → 退出全屏（关总览 + 退浏览器全屏）

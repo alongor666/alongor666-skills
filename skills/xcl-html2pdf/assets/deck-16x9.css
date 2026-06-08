@@ -56,7 +56,7 @@ body{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei","Source Han Sans
   .deck-grid-btn{font-size:15px;padding:0 9px;
     border-left:1px solid rgba(241,231,207,.26);border-radius:0 14px 14px 0;}
 
-  /* —— 浮动翻页箭头：桌面鼠标 + 手机触摸都可见可点（补足「只认方向键」对不熟练用户/无键盘设备的盲区） —— */
+  /* —— 浮动翻页箭头：桌面鼠标 + 手机触摸都可见可点（补足键盘翻页对不熟练用户 / 无键盘设备的盲区） —— */
   .deck-arrow{position:fixed;top:50%;transform:translateY(-50%);z-index:98;
     width:48px;height:48px;border:0;border-radius:50%;cursor:pointer;
     background:rgba(20,18,12,.40);color:#f1e7cf;font-size:24px;line-height:1;

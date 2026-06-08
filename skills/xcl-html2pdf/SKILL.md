@@ -25,7 +25,7 @@ user_invocable: true
 > | **PPT（默认）** | 屏幕 / 投影 / 大屏 / 演讲 | `deck-16x9.css` + `report-skin.css` + `skin-16x9.css` + `deck-16x9.js` + `skeleton-16x9.html` | 16:9（1280×720px） |
 > | **PDF** | 打印 / 密排长报告 / 归档 | `page-deck.css` + `report-skin.css` + `deck.js` + `skeleton.html` | A4 纵向（210×297mm） |
 >
-> 翻页脚本两套不同：**PPT 用 `deck-16x9.js`**（演示导向：GPU transform 推入过渡 + ← →／↑ ↓／空格(Shift 回退)／PageUp·Down 翻页 + Home·End 跳首末 + **触摸滑动 + 浮动 ‹ › 箭头** + 序号条直达 + Esc/▦ 缩略图总览（总览内方向键移动所选页、回车进入）+ ⛶ 全屏演示；箭头/滑动让手机与不熟键盘的用户也能翻），**PDF 用 `deck.js`**（← → / 点击左右 / 滚轮），互不影响。
+> 翻页脚本两套不同：**PPT 用 `deck-16x9.js`**（演示导向：GPU transform 推入过渡 + ← →／↑ ↓／空格(Shift 回退)／PageUp·Down 翻页 + Home·End 跳首末 + **触摸滑动 + 浮动 ‹ › 箭头** + 序号条直达 + Esc/▦ 缩略图总览（总览内方向键移动所选页、回车/空格进入）+ ⛶ 全屏演示；箭头/滑动让手机与不熟键盘的用户也能翻），**PDF 用 `deck.js`**（← → / 点击左右 / 滚轮），互不影响。
 >
 > 两套**共用 report-skin.css**（配色/字体/组件单一真相源），视觉天然一致；**同一个 `driver.mjs` 验收**（填充率比例法 + `preferCSSPageSize`，画幅无关）。
 >
