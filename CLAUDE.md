@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **上市公司诊断**：`company-vortex`（涡旋结构诊断）、`company-vortex-card`（诊断→视觉卡片）
 - **工程治理 / 横切**：`commit-push-pr-core`、`sync-skills`、`cleanup-worktrees`、`extract-backlog-governance`、`crystallize-skill`、`ui-redesign`、`xcl-html2pdf`（HTML→PDF/PPT 基座）、`chexian-report-shell`（报告渲染基座）
 
-每个技能 = `skills/<name>/` 一个目录，必有 `SKILL.md`（带 frontmatter），按需附 `*.py` / `*.sh` / `*.mjs` / `lib/` / `references/` / `assets/` / `tests/`。**没有 build / lint / 包管理**（无 `package.json`）——这是脚本 + 文档 + 前端 HTML 的集合。
+每个技能 = `skills/<name>/` 一个目录，必有 `SKILL.md`（带 frontmatter），按需附 `*.py` / `*.sh` / `*.mjs` / `lib/` / `references/` / `assets/` / `tests/`。**没有 build / lint / 包管理**（无 `package.json`）——这是脚本 + 文档 + 前端 HTML 的集合；其中 `*.mjs`（driver / bundle）依赖本机 Node + Chrome/CDP，其余为纯 Python / bash。
 
 ## 常用命令
 
@@ -18,14 +18,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # 测试（仅基座与纯逻辑脚本有 tests/；pytest 9，无 pytest.ini/conftest，测试自注入 sys.path）
 python3 -m pytest skills/chexian-report-shell/tests/ skills/extract-backlog-governance/tests/ -q
 python3 -m pytest skills/chexian-report-shell/tests/test_skill_path.py -v   # 单文件
-python3 -m pytest skills/chexian-report-shell/tests/test_skill_path.py -k test_resolves_self -v  # 单用例
+python3 -m pytest skills/chexian-report-shell/tests/test_skill_path.py -k sibling_walkup -v  # 单用例（-k 子串匹配）
 
 # 技能软链同步（见下「同步模型」）——改源即生效的关键
 skills/sync-skills/sync-skills.sh link    --repo "$(pwd)" --dest ~/.claude/skills --subdir skills
 skills/sync-skills/sync-skills.sh doctor  --repo "$(pwd)" --dest ~/.claude/skills --subdir skills  # 体检软链是否直连
 skills/sync-skills/sync-skills.sh install-hooks  # 装 post-checkout/post-merge 钩子，切分支/pull 后自动补软链
 
-# HTML 报告类技能（xcl-html2pdf / company-vortex-card）的零依赖验收与打包
+# HTML 报告类技能：验收 driver.mjs（xcl-html2pdf 与 company-vortex-card 均有）；打包 bundle.mjs（仅 xcl-html2pdf）
 node skills/xcl-html2pdf/driver.mjs <report.html>   # CDP 实测每页填充率/溢出/真实页数
 node skills/xcl-html2pdf/bundle.mjs <report.html>   # 外链 css/js 内联成自包含单文件
 ```
