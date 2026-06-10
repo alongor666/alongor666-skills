@@ -9,7 +9,7 @@ description: >-
   KPI 看板、dashboard、机构盯盘、自包含单文件、跨平台适配、Windows 打不开、手机翻页、
   文字错位。内容专属模板（如涡旋诊断卡片）见 company-vortex-card。
 user_invocable: true
-version: "1.7.0"
+version: "1.7.1"
 ---
 
 # xcl-html2pdf：HTML → 印刷级 PDF / 演示级 PPT 基座

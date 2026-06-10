@@ -32,8 +32,8 @@ body{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei","Source Han Sans
 @media screen{
   /* 视口即舞台：一屏一页，无滚动条、无惯性回弹 */
   body.deck{margin:0;width:100vw;height:100vh;overflow:hidden;padding:0;position:relative;background:#cdbf9c;}
-  /* 每页绝对铺满视口；只对 transform 做过渡 → GPU 合成、丝滑。左/右页停在 ±100%（移出视口） */
-  body.deck .slide{position:absolute;top:0;left:0;width:100vw;height:100vh;
+  /* 每页铺满主体区（底部留 56px 切换带）；只对 transform 做过渡 → GPU 合成、丝滑。左/右页停在 ±100%（移出视口） */
+  body.deck .slide{position:absolute;top:0;left:0;width:100vw;height:calc(100vh - 56px);
     display:flex;align-items:center;justify-content:center;backface-visibility:hidden;
     transition:transform .52s cubic-bezier(.22,.61,.36,1);will-change:transform;}
   body.deck-no-anim .slide{transition:none!important;} /* 初始摆位 / 远跳预置：临时关过渡 */

@@ -25,7 +25,7 @@
     // —— 屏幕缩放适配：把 1280×720 的 .page 等比缩到视口（transform 不影响填充率比例）——
     function fit(){
       var pw=pages[0].offsetWidth, ph=pages[0].offsetHeight;
-      var sc=Math.min((window.innerHeight*0.94)/ph,(window.innerWidth*0.86)/pw);
+      var sc=Math.min((window.innerHeight-56)/ph,window.innerWidth/pw); /* 占满主体区（留底部切换带） */
       pages.forEach(function(p){ p.style.transform='scale('+sc+')'; });
     }
     fit(); window.addEventListener('resize',function(){ fit(); ovColCount=0; }); // resize 可能改总览列数 → 失效列数缓存
