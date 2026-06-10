@@ -6,11 +6,8 @@ description: >
   红线自审与自进化机制。Use when 用户说 "提交并建 PR"、"commit push pr"、"开个 PR"、
   "走提交流程"，或需要把改动安全地提交、推送、创建 Pull Request 时。设计为被各项目
   的薄 wrapper（如 <project>-commit-push-pr）import 复用，wrapper 只填项目专属红线与脚本路径。
-version: 1.0.0
 user_invocable: true
-requires:
-  - git
-  - gh CLI（GitHub PR；非 GitHub 平台见 §5 备注）
+version: "1.0.0"
 ---
 
 # commit-push-pr-core：可复用的提交建 PR 工作流基座
@@ -22,6 +19,8 @@ requires:
 > **复用模型**：本 skill = L1 骨架 + L2 通用护栏 + L3 方法层。
 > 各项目建一个薄 wrapper import 本 skill，只补 L3 的**内容**（红线条目、脚本路径）。
 > 这是「方法复用，非内容复用」——禁止把任何单一项目的红线条目硬写进本文件。
+
+**环境依赖**：git；gh CLI（GitHub PR；非 GitHub 平台见 §5 备注）。
 
 ---
 

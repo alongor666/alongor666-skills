@@ -121,7 +121,7 @@ python3 数据管理/integrations/wecom_bot/push_html.py \
 - 路由：`GET /api/reports/:reportId/:snapshot/*`（[server/src/routes/reports.ts](../../../Downloads/底层数据湖DUD/chexian-api/server/src/routes/reports.ts)）
 - 白名单：`ALLOWED_REPORT_IDS = {'diagnose-loss-development'}`
 - 校验：报告 ID 白名单 + snapshot `YYYY-MM-DD` 格式 + 子路径拒绝 `..`/`\`/绝对路径 + `validatePathWithinDirectory` 防符号链接逃逸
-- 鉴权：沿用 `authMiddleware`（admin/CxAdmin@2026!）
+- 鉴权：沿用 `authMiddleware`（管理员账号；凭据由 chexian-api 项目侧密钥管理维护，**禁止写入本仓任何文件**）
 - CSP：沿用现有 `REPORT_HTML_CSP`（允许内联 JS + jsdelivr）
 
 **历史快照**：rsync 用 `--no-delete` 累积，每个 cutoff 一个独立快照目录。需定期清理时手动 `rm -rf server/data/reports/diagnose-loss-development/2025-*`（保留近 N 天）。
@@ -146,13 +146,13 @@ python3 ~/.claude/skills/diagnose-loss-development/lib/cli.py \
 ```
 ~/.claude/skills/diagnose-loss-development/
 ├── SKILL.md                ← 本文件
-├── lib/
-│   ├── __init__.py
-│   ├── cli.py              ← 编排：argparse + run() + render_html() + main()
-│   ├── query.py            ← SQL 构造（CTE + GROUPING SETS）+ derive_metrics()
-│   └── render.py           ← render_dev_triangle() + render_dim_card() + 5 指标 JS
-└── examples/
-    └── preview-mvp.html    ← cutoff=2026-05-14 的固化样例
+├── README.md               ← 渲染管线 / lib 模块职责（重资产内部文档）
+└── lib/
+    ├── __init__.py
+    ├── _shell.py            ← chexian-report-shell 根定位（ADR-001，本技能集中一处）
+    ├── cli.py               ← 编排：argparse + run() + render_html() + main()
+    ├── query.py             ← SQL 构造（CTE + GROUPING SETS）+ derive_metrics()
+    └── render.py            ← render_dev_triangle() + render_dim_card() + 指标切换 JS
 ```
 
 ## 依赖
@@ -209,7 +209,7 @@ python3 ~/.claude/skills/diagnose-loss-development/lib/cli.py \
 - **v2.2.0-deploy** (2026-05-17) 生产部署能力：
   - **cli.py 加 `--deploy` 模式**：自动输出到 `{project-root}/server/data/reports/diagnose-loss-development/{cutoff}/`，与现有 `node scripts/sync-vps.mjs` rsync 链路无缝集成。
   - **chexian-api 后端新路由 `GET /api/reports/:reportId/:snapshot/*`**（[PR #392](https://github.com/alongor666/chexian-api/pull/392)）：报告 ID 白名单 + snapshot YYYY-MM-DD 校验 + 子路径 traversal 防护 + 沿用 authMiddleware + CSP。
-  - **生产 URL**：`https://chexian.cretvalu.com/api/reports/diagnose-loss-development/{cutoff}/preview-mvp.html`（admin/CxAdmin@2026! 登录后访问）
+  - **生产 URL**：`https://chexian.cretvalu.com/api/reports/diagnose-loss-development/{cutoff}/preview-mvp.html`（管理员登录后访问，凭据见项目侧密钥管理）
   - **/daily-sync skill 加 Step 3.5**：ETL 完成后可选生成 + 部署报告，纳入每日数据流闭环。
   - **企微推送**：v2.2.1 已扩展 push_html.py `--external-url`，多文件报告主页自动推送到企微智能表格。
 

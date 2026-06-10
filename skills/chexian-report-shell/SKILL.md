@@ -23,8 +23,7 @@ requires_skills:
 │  业务诊断层（diagnose-* 家族，user_invocable=true）                │
 │  ├ diagnose-org-weekly        三级机构经营诊断周报（10 板块）       │
 │  ├ diagnose-period-trend      短中长期对照（7 时间窗 × 7 指标）     │
-│  ├ diagnose-loss-development  赔付率发展诊断（cohort + 月份矩阵）   │
-│  └ rewrite-conclusion         L2 诊断结论 AI 重写                  │
+│  └ diagnose-loss-development  赔付率发展诊断（同期保单组 + 月份矩阵）│
 └──────────────────────────────┬─────────────────────────────────────┘
                                │ from lib import ...
                                ▼
@@ -48,55 +47,19 @@ requires_skills:
 └────────────────────────────────────────────────────────────────────┘
 ```
 
-## v1.19 (2026-05-17) 单文件 SPA + 业务工具剥离
+## 布局组件族（v1.21 起，自 diagnose-period-trend 收编）
 
-**同日两次大改**：
-1. 上午：下钻回归 SPA 模式（删 `lib/drill_writer.py`，复用 `render_page(drill_pages=...)`）
-2. 下午：业务工具 `examples/org_weekly.py` + `examples/sections/*` 全部独立成 `diagnose-org-weekly` skill；本 skill 改名 `chexian-report-shell`，聚焦渲染基础设施
+除基础卡片表格外，`lib/render/` 提供三套整页布局组件（公开符号均经 `lib/__init__.py` 导出）：
 
-技术变更：
-- **下钻 SPA 模式**：`render_page(drill_pages=[(id,title,body),...])` 原生支持 hidden section + onclick=showPage(id) 同窗口切换
-- **新增 `lib/drill_body.py`**：`build_drill_body(dim_key, dim_value, ctx)` + `build_all_drill_pages(ctx)`
-- **新增 `lib/page_ids.py:drill_page_id(dim_key, dim_value)`**：md5 哈希成稳定短 DOM id
-- **`render.py` 加 drill-toc CSS + IntersectionObserver JS**：下钻页左侧 sticky TOC
-- **`render_table:drill_hrefs` 语义变更**：保留签名兼容，等同 `drilldown_target_by_dim`（值视为 page_id），删除 `target=_blank`
-- **删除文件**：`lib/drill_writer.py`、`examples/`（搬走）
-- **改名**：`diagnose-html-render` → `chexian-report-shell`（旧名引起"渲染层混装业务工具"误导）
+| 布局 | 模块 | 主要符号 |
+|---|---|---|
+| V1 驾驶舱 | `lib/render/dashboard.py` | `render_topbar` / `render_rail` / `render_kpi_strip` / `render_anomaly_grid` / `render_section_detail` |
+| V3 叙事周报（A4 打印） | `lib/render/deck.py` | `trend_svg` / `scatter_svg` / `render_toolbar` / `render_cover` / `render_chapter` / `render_resp_cards` / `render_watchlist` / `render_apx_table` / `DECK_CSS` |
+| V4 超表（搜索/排序/行展开/交叉下钻） | `lib/render/supertable.py` | `SUPERTABLE_CSS` / `SUPERTABLE_JS` / `render_controls` / `render_footer` / `render_table_shell` |
 
-## v1.20 (2026-05-28) 组件拆分 + 新模块下沉
+配套：增强版 `sparkline()`（area fill + dots）、跨维异常排名 `lib/anomaly_cross.py`（`CrossAnomaly` + `compute_top_anomalies` + `build_drilldown_data`）、`render_page(show_theme_toggle=...)` 主题切换。
 
-**技术变更**：
-- **`render.py` 拆分**：1851 行 → `lib/render/` 子包（7 子模块 + `_assets.py`）；`lib/render.py` 保留为历史标记（Python 优先加载 package）；所有旧 import 路径零改动
-- **新增 `lib/time_windows.py`**：`Period` dataclass + `build_periods(cutoff, preset)` + `WEEKLY_KEYS` + `TREND_KEYS`；`make_weekly_windows()` 改为薄包装（向后兼容）
-- **新增 `lib/anomaly_base.py`**：`Anomaly` dataclass（通用骨架）+ `SEV_WEIGHT` + `rank_anomalies()`
-- **新增 `lib/loader.py`**：`load_shell()` 一行 importlib 隔离加载，兼容 period-trend 已有的 `dhr_lib` 别名
-- **`lib/__init__.py` 升级**：显式 `__all__`（补 v1.20 新符号）+ `get_threshold(metric_key, index)` 单点阈值入口
-- **补契约测试**：`tests/test_sections_contract.py` 18 个用例（TestTimeWindows / TestAnomalyBase / TestRenderFacade / TestLoader / TestThresholdAPI），全 PASS
-- **删废弃**：空目录 `examples/` / `styles/` 已删除
-
-**向后兼容保证**：3 个下游 skill + 本仓库 2 个 ad-hoc 脚本（young_driver_diagnosis.py / callout_redesign_demo.py）零改动可用。
-
-## v1.21 (2026-05-28) diagnose-period-trend 能力全面收编
-
-**来源**：`diagnose-period-trend` 业务 skill 7367 行代码中的通用渲染能力上提到壳库。
-
-**技术变更**（6 个 Phase）：
-- **P1 主题切换交互层**：复用壳库已有 `ink/midnight` 双主题 CSS，移植 DPT 的切换按钮 + JS + localStorage 交互层；`render_page()` 新增 `show_theme_toggle` 参数；`_assets.py` 新增 `THEME_TOGGLE_CSS`/`THEME_INIT_SCRIPT`/`THEME_TOGGLE_JS`/`theme_toggle_btn()`
-- **P2 增强版 sparkline**：`lib/render/weekly.py` 新增 `sparkline()`（area fill + dots + color_mode 可选）；保留 `_sparkline_svg()` 不动（零 breaking）
-- **P3 跨维异常排名**：新增 `lib/anomaly_cross.py`（503 行）；`CrossAnomaly` dataclass（17 字段 superset）+ `compute_top_anomalies()` + `build_drilldown_data()`；pandas 依赖进壳库；`anomaly_base.py` 保持不变（零 breaking）
-- **P4 V1 驾驶舱布局**：新增 `lib/render/dashboard.py`；`render_topbar()`/`render_rail()`/`render_kpi_strip()`/`render_anomaly_grid()`/`render_section_detail()`
-- **P5 V3 叙事周报布局**：新增 `lib/render/deck.py`；`trend_svg()`/`scatter_svg()` SVG 工具 + `render_toolbar()`/`render_cover()`/`render_chapter()`/`render_resp_cards()`/`render_watchlist()`/`render_apx_table()` + `DECK_CSS`（A4 打印）
-- **P6 V4 超表**：新增 `lib/render/supertable.py`；列冻结 CSS + 全字段超表 CSS + 客户端渲染 JS（搜索/排序/行展开/交叉下钻）+ `SUPERTABLE_CSS`/`SUPERTABLE_JS`
-
-**新增公开符号**（`lib/__init__.py` 导出）：
-- P2: `sparkline`
-- P4: `render_topbar`, `render_rail`, `render_kpi_strip`, `render_anomaly_grid`, `render_section_detail`
-- P5: `trend_svg`, `scatter_svg`, `render_toolbar`, `render_cover`, `render_chapter`, `render_resp_cards`, `render_watchlist`, `render_apx_table`, `DECK_CSS`
-- P6: `SUPERTABLE_CSS`, `SUPERTABLE_JS`, `render_controls`, `render_footer`, `render_table_shell`
-
-**向后兼容保证**：壳库现有 API 签名与行为不变，只增不改不删；DPT 侧改为薄委托（import 壳库）。
-
-## 推荐 import 方式（v1.21）
+## 推荐 import 方式
 
 | 场景 | 推荐 |
 |---|---|
@@ -200,13 +163,18 @@ danger_val = get_threshold("earned_loss_ratio_pct", 2)  # 危险线 = 75
 
 任何新建的 `diagnose-*` skill 只需 3 步即可复用本 shell：
 
-### Step 1：sys.path 注入
+### Step 1：sys.path 注入（ADR-001：兄弟回溯优先，禁止只写硬编码安装路径）
 
 ```python
 import sys
 from pathlib import Path
 
-SHELL_ROOT = Path.home() / ".claude" / "skills" / "chexian-report-shell"
+# 兄弟技能回溯优先（worktree / 任意安装位都成立），标准安装位仅作兜底
+SHELL_ROOT = next(
+    (p / "chexian-report-shell" for p in Path(__file__).resolve().parents
+     if p.name == "skills" and (p / "chexian-report-shell" / "lib").is_dir()),
+    None,
+) or (Path.home() / ".claude" / "skills" / "chexian-report-shell")
 sys.path.insert(0, str(SHELL_ROOT))
 
 from lib import (
@@ -402,7 +370,9 @@ class SectionContext:
 
 ## 变更日志
 
+- **v1.21.0（2026-05-28）**：diagnose-period-trend 通用渲染能力收编（6 Phase）：主题切换交互层（`render_page(show_theme_toggle=...)` + localStorage）；增强版 `sparkline()`（area fill + dots）；跨维异常排名 `lib/anomaly_cross.py`（`CrossAnomaly` 17 字段 + `compute_top_anomalies` + `build_drilldown_data`，pandas 进壳库）；V1 驾驶舱 `lib/render/dashboard.py`；V3 叙事周报 `lib/render/deck.py`（含 `DECK_CSS` A4 打印）；V4 超表 `lib/render/supertable.py`（列冻结 + 客户端搜索/排序/行展开/交叉下钻）。壳库现有 API 只增不改不删，DPT 侧改薄委托
 - **v1.20.0（2026-05-28）**：render.py 1851 行 → `lib/render/` 子包（7 子模块 + `_assets.py` 存放 PAGE_HEAD）；`lib/render.py` 保留为历史标记（Python package 优先级高于同名 .py）；新增 `lib/time_windows.py`（`Period` + `build_periods` + `WEEKLY_KEYS` + `TREND_KEYS`，`make_weekly_windows` 改薄包装）；新增 `lib/anomaly_base.py`（`Anomaly` + `SEV_WEIGHT` + `rank_anomalies`）；新增 `lib/loader.py`（`load_shell()` importlib 隔离一行入口）；`lib/__init__.py` 补显式 `__all__` + `get_threshold(metric_key, index)` + `render_status_bar` 导出；删除空目录 `examples/` / `styles/`；`tests/test_sections_contract.py` 全量重写为 18 个 v1.20 契约测试（TestTimeWindows/TestAnomalyBase/TestRenderFacade/TestLoader/TestThresholdAPI），全 PASS；3 个下游 skill + 2 个 ad-hoc 脚本向后兼容，零改动
+- **v1.19.0（2026-05-17）**：下钻回归 SPA 模式（删 `lib/drill_writer.py`，`render_page(drill_pages=...)` 原生 hidden section + showPage 切换）；新增 `lib/drill_body.py`（`build_drill_body` / `build_all_drill_pages`）与 `lib/page_ids.py:drill_page_id`（md5 稳定短 DOM id）；drill-toc CSS + IntersectionObserver；业务工具 `examples/*` 独立成 `diagnose-org-weekly` skill；本 skill 由 `diagnose-html-render` 改名 `chexian-report-shell`，聚焦渲染基础设施
 - **v1.17.0（2026-05-14）**：板块化重构 `org_weekly.py` — 主入口 679 → 156 行；新建 `examples/sections/` 含 `overview.py` / `customer_type.py` + `__init__.py` 注册；新建 `lib/report_queries.py` 收纳 6 个跨板块 fetch；新建 `lib/context.py` 定义 frozen `SectionContext` dataclass；page_id 改用 `hashlib.md5(name)[:8]` 跨进程稳定；反馈卡 → 右上 fixed 浮按钮 `<a class="btn-feedback">` + Lucide message-circle-question SVG；浮按钮组排序 主题→说明→反馈；说明按钮改 `toggleInfo()` 在主页/说明间切换；说明页 main 扩到 1140px（CSS `:has(#page-info:not([hidden]))`）+ 公式/口径列 min-width 240/280；子页（说明/下钻）隐藏 TOC + 汉堡 + main 居中（CSS `:has(#page-main[hidden])`）；可下钻行去 `›` caret，整行 onclick + 维度文字蓝色加粗（`.dim-link`），hover 加下划线；说明页阈值表头/数字格 `white-space: nowrap`；新增 `tests/test_sections_contract.py` 9 个契约单测全 PASS
 - **v1.16.0（2026-05-14）**：飞书云文档式三栏布局：`<aside class="app-toc">` 240px 常驻 + `<main class="app-main">` 880px + `.app-actions` 右上 fixed 浮按钮组；IntersectionObserver 监听 `.card[id^="section-"]` 同步 TOC active；移动端 TOC 折叠为浮层（`.app-toc.open` + overlay）+ 汉堡按钮；CSS grid + grid-template-areas；`render_card(card_id=...)` 注入板块锚点；`render_page(nav_items=[...])` 接受板块列表自动渲染 TOC；`@media print` 隐藏所有导航元素
 - **v1.15.0（2026-05-13）**：每页 sticky toolbar 含目录 dropdown + 标题 + 返回 + 说明 + 主题切换；目录 dropdown 全屏 z-index；点击外部关闭；主题图标用 Lucide SUN/MOON SVG（语义"显示目标主题"）

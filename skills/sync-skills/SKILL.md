@@ -5,11 +5,8 @@ description: >
   直连技能仓 / 给技能仓装钩子"，或新机器要让某个 git 技能仓对 Claude 生效、
   或误跑 `npx skills add --all` 后要把直连修回时。项目无关：把任意 git 技能仓的
   `<subdir>/*` 直连软链到 `~/.claude/skills`，改源即生效；并可装 git 钩子自动补链。
-version: 1.0.0
 user_invocable: true
-requires:
-  - git
-  - python3（realpath 解析）
+version: "1.0.0"
 ---
 
 # sync-skills：技能仓「改源即生效」直连同步器
@@ -22,6 +19,8 @@ git 源不重跑 npx 就不生效，新技能甚至完全没装。本 skill 把 
 git 工作树本身，改源即生效、永不漂移**。push 仅用于发布给别人。
 
 项目无关——靠 `--repo/--dest/--subdir` 适配任意技能仓，不写死路径。
+
+**环境依赖**：git；python3（realpath 解析）。
 
 ## When to Use
 

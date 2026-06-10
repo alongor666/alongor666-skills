@@ -1,8 +1,8 @@
 ---
 name: chexian-market-analysis
 description: Use when analyzing an auto insurance market for competitive structure, growth opportunities, or risk assessment — including city-level market entry decisions, market attractiveness evaluation, or identifying structural gaps for Hua'an Insurance in any province. 当用户说「分析XX市场」「市场吸引力评估」「市场进入决策」「该不该进这个城市」「结构性机会」「这个市场值不值得做」时使用。
-version: 1.2.0
 user_invocable: true
+version: "1.2.0"
 ---
 
 # 车险市场分析

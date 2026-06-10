@@ -15,8 +15,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 常用命令
 
 ```bash
-# 测试（仅基座与纯逻辑脚本有 tests/；pytest 9，无 pytest.ini/conftest，测试自注入 sys.path）
-python3 -m pytest skills/chexian-report-shell/tests/ skills/extract-backlog-governance/tests/ -q
+# 全仓技能巡检（frontmatter 模式 / 依赖声明一致性 / 死链 / 分层红线 / 明文凭据，规则见脚本头注释）
+python3 scripts/validate_skills.py            # 0 错误才可提交；--strict 警告也算失败
+
+# 测试（基座 + 纯逻辑脚本 + 巡检器；无 pytest.ini/conftest，测试自注入 sys.path）
+python3 -m pytest skills/chexian-report-shell/tests/ skills/extract-backlog-governance/tests/ scripts/test_validate_skills.py -q
 python3 -m pytest skills/chexian-report-shell/tests/test_skill_path.py -v   # 单文件
 python3 -m pytest skills/chexian-report-shell/tests/test_skill_path.py -k sibling_walkup -v  # 单用例（-k 子串匹配）
 
@@ -64,7 +67,7 @@ requires_skills:         # 仅声明「运行时 import 边」——见下口径
   - chexian-report-shell
 ```
 
-`requires_skills` **口径（ADR-005）**：只覆盖 `sys.path` 运行时 import 依赖（`skill_path`/`skill_lib`/`SHELL_ROOT`/`dhr_lib` 那类）。**编排式调用**（斜杠命令工作流，如 ops-review 调 market/channel/pricing）和**产物消费**（如 vortex-card 读 vortex 的 `.md`）**不入** `requires_skills`，记在 SKILL.md 正文。删掉某依赖最后一处 import 时，同步删声明。当前已声明的 import 边：`diagnose-{org-weekly,period-trend,loss-development}` → `chexian-report-shell`（必需）；`chexian-report-shell` → `chexian-im-push`（可选·外部技能·仅推送降级）。一致性目前**靠人工保证，无自动巡检**。
+`requires_skills` **口径（ADR-005）**：只覆盖 `sys.path` 运行时 import 依赖（`skill_path`/`skill_lib`/`SHELL_ROOT`/`dhr_lib` 那类）。**编排式调用**（斜杠命令工作流，如 ops-review 调 market/channel/pricing）和**产物消费**（如 vortex-card 读 vortex 的 `.md`）**不入** `requires_skills`，记在 SKILL.md 正文。删掉某依赖最后一处 import 时，同步删声明。当前已声明的 import 边：`diagnose-{org-weekly,period-trend,loss-development}` → `chexian-report-shell`（必需）；`chexian-report-shell` → `chexian-im-push`（可选·外部技能·仅推送降级）。一致性由 `scripts/validate_skills.py` **自动巡检**（声明↔代码双向核对 + L1 横向边检测），提交前必须 0 错误。
 
 ## 改动技能时的关键约束
 

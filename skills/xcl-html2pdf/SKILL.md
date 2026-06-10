@@ -1,17 +1,15 @@
 ---
 name: xcl-html2pdf
-description: >
-  把任意 HTML 报告做成两种版式：印刷级 PDF（A4 纵向、密排打印）或演示级 PPT（16:9 大字号、屏幕/投影）。
-  两者都屏幕一屏一页横向翻页、导出一页一张、无半空白页、内容不跨页。
-  提供版面盒 CSS（page-deck.css=A4 / deck-16x9.css=16:9）+ 固化字体/字号分级/字色的标准皮肤（report-skin.css）
-  + PPT 演示字号叠加（skin-16x9.css）+ 横向翻页脚本，和一个零依赖的验收 driver（实测每页填充率/溢出/真实页数，画幅无关）。
-  套标准 class 即得统一的国家地理风视觉，无需自调样式。两套共用 report-skin.css，PDF 与 PPT 视觉天然一致。
-  PPT 另提供第二套皮肤「经营仪表盘风」report-skin-dashboard.css（现代浅色 + KPI 卡片 / 横向条形 / 帕累托 / 进度推进 / 行动卡 / 紧凑附录表），面向经营诊断盯盘报告，与国家地理风并列二选一，配 skeleton-dashboard-16x9.html 起点，见 references/dashboard-deck.md。
-  分发用 bundle.mjs 把外链 css/js 内联成「自包含单文件」，发一个 .html 到任意电脑/手机/浏览器（Edge/Chrome/Safari）都一致显示并翻页；翻页支持方向键 + 触摸滑动 + 浮动箭头 + 序号条，跨平台 CJK 字体栈防文字错位。
-  触发词：html2pdf、xcl_html2pdf、做成 PDF、做成 PPT、印刷级报告、演示版、16:9、大屏卡片、投影、keynote、一页一张、横向翻页卡片、A4 卡片、打印成 PDF、标准报告、report to pdf、build report、verify card、诊断报告、经营仪表盘、KPI 看板、dashboard、机构盯盘、自包含单文件、跨平台适配、Windows 打不开、手机翻页、文字错位。
-  内容专属的模板（如涡旋诊断卡片）见 company-vortex-card，它在本基座之上。
-version: 1.7.0
+description: >-
+  把任意 HTML 报告做成印刷级 PDF（A4 纵向）或演示级 PPT（16:9）——屏幕一屏一页横向翻页、
+  导出一页一张、内容不跨页；含标准皮肤（国家地理风 / 经营仪表盘风二选一）、零依赖验收
+  driver、bundle 自包含单文件分发。触发词：html2pdf、xcl_html2pdf、做成 PDF、做成 PPT、
+  印刷级报告、演示版、16:9、大屏卡片、投影、keynote、一页一张、横向翻页卡片、A4 卡片、
+  打印成 PDF、标准报告、report to pdf、build report、verify card、诊断报告、经营仪表盘、
+  KPI 看板、dashboard、机构盯盘、自包含单文件、跨平台适配、Windows 打不开、手机翻页、
+  文字错位。内容专属模板（如涡旋诊断卡片）见 company-vortex-card。
 user_invocable: true
+version: "1.7.0"
 ---
 
 # xcl-html2pdf：HTML → 印刷级 PDF / 演示级 PPT 基座
@@ -127,7 +125,7 @@ PPT（16:9）骨架同样本机跑通：
 - driver 自启静态 http server + 系统 Chrome（CDP），导航后测每页 `.inner` 子元素底部 / 可用高 = 填充率，再用 `Page.printToPDF`（`preferCSSPageSize`）数真实页数。
 - **退出码**：`0`=全部达标、`1`=有页不达标/页数不符、`2`=运行错误。可直接接脚本或 CI。
 - 想留存 PDF：`node driver.mjs your.html N --pdf out.pdf`。
-- **完成即开**：`--open` 让验收**全 PASS 后**自动用系统默认浏览器打开该 html（FAIL 不开）；跨平台（macOS `open` / Linux `xdg-open` / Windows `start`）。这就是 v1.1.0 约定的"通过后即开"，现已落到 driver。
+- **完成即开**：`--open` 让验收**全 PASS 后**自动用系统默认浏览器打开该 html（FAIL 不开）；跨平台（macOS `open` / Linux `xdg-open` / Windows `start`）。
 - 想看真实渲染（截图自查）：
 
 ```bash

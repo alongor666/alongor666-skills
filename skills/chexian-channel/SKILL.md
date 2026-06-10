@@ -1,8 +1,8 @@
 ---
 name: chexian-channel
 description: Use when evaluating whether to invest in, continue, or exit a distribution channel for auto insurance — including 4S dealers, sub-dealers, brokers, agents, and any channel where fee levels, customer quality, or renewal retention need to be assessed; 或当用户问某渠道"还要不要做 / 能不能进 / 该不该退 / 值不值得投"时。
-version: 1.2.0
 user_invocable: true
+version: "1.2.0"
 ---
 
 # 车险渠道策略
