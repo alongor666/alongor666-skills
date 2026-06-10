@@ -32,8 +32,8 @@ body{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei","Source Han Sans
 @media screen{
   /* 视口即舞台：一屏一页，无滚动条、无惯性回弹 */
   body.deck{margin:0;width:100vw;height:100vh;overflow:hidden;padding:0;position:relative;background:#cdbf9c;}
-  /* 每页绝对铺满视口；只对 transform 做过渡 → GPU 合成、丝滑。左/右页停在 ±100%（移出视口） */
-  body.deck .slide{position:absolute;top:0;left:0;width:100vw;height:100vh;
+  /* 每页铺满主体区（底部留 56px 切换带）；只对 transform 做过渡 → GPU 合成、丝滑。左/右页停在 ±100%（移出视口） */
+  body.deck .slide{position:absolute;top:0;left:0;width:100vw;height:calc(100vh - 56px);
     display:flex;align-items:center;justify-content:center;backface-visibility:hidden;
     transition:transform .52s cubic-bezier(.22,.61,.36,1);will-change:transform;}
   body.deck-no-anim .slide{transition:none!important;} /* 初始摆位 / 远跳预置：临时关过渡 */
@@ -56,19 +56,8 @@ body{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei","Source Han Sans
   .deck-grid-btn{font-size:15px;padding:0 9px;
     border-left:1px solid rgba(241,231,207,.26);border-radius:0 14px 14px 0;}
 
-  /* —— 浮动翻页箭头：桌面鼠标 + 手机触摸都可见可点（补足键盘翻页对不熟练用户 / 无键盘设备的盲区） —— */
-  .deck-arrow{position:fixed;top:50%;transform:translateY(-50%);z-index:98;
-    width:48px;height:48px;border:0;border-radius:50%;cursor:pointer;
-    background:rgba(20,18,12,.40);color:#f1e7cf;font-size:24px;line-height:1;
-    display:flex;align-items:center;justify-content:center;
-    opacity:.34;transition:opacity .2s,background .2s;-webkit-tap-highlight-color:transparent;
-    box-shadow:0 4px 14px rgba(0,0,0,.3);}
-  .deck-arrow:hover{opacity:1;background:rgba(20,18,12,.72);}
-  .deck-arrow.prev{left:16px;} .deck-arrow.next{right:16px;}
-  .deck-arrow[disabled]{opacity:0;pointer-events:none;}
-  /* 窄屏（手机/平板竖屏）：箭头更明显、序号条更易点 */
+  /* 窄屏（手机/平板竖屏）：序号条更易点 */
   @media (max-width:860px){
-    .deck-arrow{opacity:.62;width:44px;height:44px;font-size:22px;}
     .deck-bar{opacity:.85;bottom:10px;}
     .deck-num{min-width:30px;height:30px;line-height:30px;font-size:14px;}
   }
@@ -105,6 +94,6 @@ body{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei","Source Han Sans
     transform:none!important;opacity:1!important;visibility:visible!important;transition:none!important;}
   .page{margin:0;box-shadow:none;transform:none!important;break-after:page;page-break-after:always;}
   .page:last-child{break-after:auto;page-break-after:auto;}
-  .deck-bar,.deck-overview,.deck-arrow{display:none!important;}
+  .deck-bar,.deck-overview{display:none!important;}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
 }
