@@ -49,17 +49,7 @@
     document.body.appendChild(bar);
     function setActive(i){
       nums.forEach(function(b,k){b.classList.toggle('on',k===i);});
-      prevA.disabled=(i<=0); nextA.disabled=(i>=slides.length-1); // 首/末页隐藏对应箭头
     }
-
-    // —— 浮动翻页箭头：桌面鼠标 + 手机触摸都可见可点（不依赖键盘） ——
-    var prevA=document.createElement('button'); prevA.className='deck-arrow prev';
-    prevA.innerHTML='&#8249;'; prevA.title='上一页'; prevA.setAttribute('aria-label','上一页');
-    prevA.addEventListener('click',function(){go(-1);});
-    var nextA=document.createElement('button'); nextA.className='deck-arrow next';
-    nextA.innerHTML='&#8250;'; nextA.title='下一页'; nextA.setAttribute('aria-label','下一页');
-    nextA.addEventListener('click',function(){go(1);});
-    document.body.appendChild(prevA); document.body.appendChild(nextA);
 
     // —— 单步推入引擎：每次翻页都只做一次相邻推进，远跳也不例外 ——
     var idx=0;
