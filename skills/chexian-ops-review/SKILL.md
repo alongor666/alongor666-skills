@@ -1,8 +1,8 @@
 ---
 name: chexian-ops-review
 description: Use when conducting a full city-level auto insurance operating review for Hua'an Insurance — combining market, pricing, and channel analysis into a complete diagnosis with resource allocation recommendations. 当用户说"城市经营复盘/华安城市级诊断/市场+渠道+承保+理赔合并视图"时使用。
-version: 1.1.0
 user_invocable: true
+version: "1.1.0"
 ---
 
 # 车险城市经营诊断

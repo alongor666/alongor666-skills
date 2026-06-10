@@ -5,11 +5,8 @@ description: >
   worktree 太多清一下"，或 PR 合并后要批量回收对应 worktree 与本地分支、阶段性回收
   磁盘时。项目无关的通用 git worktree 安全回收器：识别多来源 worktree（人工 /
   sub-agent / codex CLI）、陈旧锁、squash 落地、脏残留，默认只删零损失项。
-version: 2.0.1
 user_invocable: true
-requires:
-  - git
-  - gh CLI（可选：squash-merge PR 落地判定，缺失自动降级）
+version: "2.0.1"
 ---
 
 # cleanup-worktrees：多来源 git worktree 安全回收器
@@ -23,6 +20,8 @@ requires:
 
 **永不动**：codex CLI 的 `.codex/worktrees/`（自管）、当前 / 主 worktree、
 **运行中会话持有的 locked worktree**、含未落地工作的脏 worktree。
+
+**环境依赖**：git；gh CLI（可选，用于 squash-merge PR 落地判定，缺失自动降级）。
 
 ## When to Use
 

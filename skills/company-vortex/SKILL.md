@@ -6,8 +6,8 @@ description: >
   "company-vortex", stock codes, or any request for a 结构诊断.md report. Also when user pastes
   a stock ticker (A-share/HK/US) and wants a lifecycle structural teardown (listed company
   structural diagnosis).
-version: 1.3.0
 user_invocable: true
+version: "1.3.0"
 ---
 
 # Company Vortex: 上市公司涡旋结构诊断

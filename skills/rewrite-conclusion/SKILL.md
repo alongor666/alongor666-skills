@@ -1,8 +1,8 @@
 ---
 name: rewrite-conclusion
 description: 把车险 5Why 规则化诊断数据（L1 车型子文档 + 机构诊断卡）提炼成管理层可直接阅读的结构化判断（金字塔原理、定量后定性）。Use when asked to "重写结论" / "AI解读" / "rewrite conclusion"，或在跑完 出险率/费用率/保费达成 5Why 脚本之后。支持 --topic 出险率|费用率|保费达成。
-version: 1.0.0
 user_invocable: true
+version: "1.0.0"
 ---
 
 # L2 诊断结论重写

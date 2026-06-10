@@ -93,6 +93,7 @@ L0 基座   report-shell · xcl-html2pdf · commit-push-pr-core
 | **P1 短期** | 下沉 org-weekly↔period-trend 共享码到基座，断横向边 | 002 | 中（需回归两报告） | 1 天 | ✅ 已交付（`themes_v2` 下沉基座 `dhr_lib`，6 消费者改走基座取法，横向注入消除） |
 | **P1 短期** | `governance_stats.py` 等纯逻辑脚本补最小单测 | 004 | 低 | 半天 | ✅ 已交付（25 项纯函数回归，覆盖正则边界/样本阈值/降级警告） |
 | **P2 持续** | SKILL.md 加 `requires_skills` 声明 + 重资产补 README | 005 | 低 | 增量 | ✅ 已交付（4 依赖声明 + 4 重资产 README；运行时 import 依赖经全仓扫描核实一致） |
+| **P2 持续** | 技能仓自动巡检器 `scripts/validate_skills.py`（frontmatter 模式 / 依赖声明双向核对 / L1 横向边 / 死链 / 明文凭据）+ 契约测试 | 002/005 | 低 | 半天 | ✅ 已交付（巡检 12 类错误 3 类警告，0 错误为提交门槛；闭合"靠人工保证"缺口） |
 
 > P1 遗留（独立后续 PR，中风险）：`diagnose-period-trend` 的 4 处 bootstrap 入口仍内联基座定位逻辑（链式依赖渲染核）。其正确性修正（惰性兜底 + `is_dir`）已在先前提交（PR #14）完成；**本 PR 仅做横向解耦**（`themes_v2` 下沉基座 + 6 消费者改基座取法），未触及这 4 个文件，import 链重构留待后续。
 
@@ -101,7 +102,7 @@ L0 基座   report-shell · xcl-html2pdf · commit-push-pr-core
 ## 7. 维护说明
 
 - 新增跨技能依赖时：调用 `chexian-report-shell` 的 `skill_path(name)` 解析依赖根，禁止再写硬编码 `~/.claude/skills/...`；**同时**在该技能 SKILL.md frontmatter 的 `requires_skills` 补上被依赖技能（ADR-005，给人读的依赖契约，不引入加载器）。**口径**：`requires_skills` 仅覆盖 `sys.path` **运行时 import 边**（`skill_path`/`skill_lib`/`SHELL_ROOT`/`dhr_lib` 那类）；**编排式调用**（斜杠命令工作流）与**产物消费**（读另一技能的输出文件）不在内——它们记在各自 SKILL.md 正文。删除某依赖的最后一处 import 时，同步删声明。
-- 当前已声明的**运行时 import 依赖边**（2026-06-08 一次性全仓人工扫描核实；**尚无自动化巡检**，一致性目前靠人工保证）：`diagnose-org-weekly` / `diagnose-period-trend` / `diagnose-loss-development` → `chexian-report-shell`（必需）；`chexian-report-shell` → `chexian-im-push`（可选 · 外部技能 · 仅推送降级）。基座不反向依赖任何业务技能。编排 / 产物边不入 `requires_skills`、另见各 SKILL.md（如 `chexian-ops-review` 工作流调用 `chexian-market-analysis`/`chexian-channel`/`chexian-pricing-decision`、`company-vortex-card` 消费 `company-vortex` 的 `.md` 产物）。
+- 当前已声明的**运行时 import 依赖边**（2026-06-09 起由 `scripts/validate_skills.py` 自动巡检：从源码推断真实边、与声明双向核对、检测 L1 横向边，配套 `scripts/test_validate_skills.py` 契约测试）：`diagnose-org-weekly` / `diagnose-period-trend` / `diagnose-loss-development` → `chexian-report-shell`（必需）；`chexian-report-shell` → `chexian-im-push`（可选 · 外部技能 · 仅推送降级）。基座不反向依赖任何业务技能。编排 / 产物边不入 `requires_skills`、另见各 SKILL.md（如 `chexian-ops-review` 工作流调用 `chexian-market-analysis`/`chexian-channel`/`chexian-pricing-decision`、`company-vortex-card` 消费 `company-vortex` 的 `.md` 产物）。
 - 新增技能时：领域技能用领域前缀；项目无关通用工具不强加前缀。
 - 修改 L0 基座对外 API 前：先过基座 tests/（见 ADR-004）。
 - **不变量（org-weekly 渲染器入口）**：`render_v{1,3,4}_org.py` 的 `from lib.themes_v2 import ...` 无兜底，依赖 `cli.py` 在导入渲染器前已把 `SHELL_ROOT` 注入 `sys.path`。现状下 `cli.py` 是唯一注入 `SHELL_ROOT` 的**进程入口**（已核：渲染器仅经 `cli.py` 进程启动；`render_v3/v4_org` 互相 `import render_v1_org` 复用常量，不构成新的进程入口）。**若日后新增非 `cli.py` 进程入口**（如直接脚本调用渲染器），必须在该入口同样注入 `SHELL_ROOT`，或给该 import 补回退——否则 `lib.themes_v2` 解析失败。

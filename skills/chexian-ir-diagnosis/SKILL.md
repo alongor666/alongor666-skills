@@ -1,8 +1,8 @@
 ---
 name: chexian-ir-diagnosis
 description: Use when diagnosing auto insurance incident rate deterioration, investigating why 出险率 is worsening, or performing root cause analysis on loss frequency (ir = Incident Rate 出险率). Trigger phrases — 分析出险率, 出险率恶化, 出险率诊断, 为什么出险率上升, incident rate drill-down.
-version: 1.1.0
 user_invocable: true
+version: "1.1.0"
 ---
 
 # 出险率自主诊断
@@ -47,7 +47,8 @@ user_invocable: true
 ### Step 2 — 运行主下钻脚本
 
 ```bash
-cd /Users/alongor666/Desktop/私董会--车险作战地图
+# 工作目录可经 ZSD_ROOT 环境变量覆盖（默认本机作战地图项目根）
+cd "${ZSD_ROOT:-/Users/alongor666/Desktop/私董会--车险作战地图}"
 python3 04_工程/脚本/生成出险率下钻_v2.py
 ```
 
