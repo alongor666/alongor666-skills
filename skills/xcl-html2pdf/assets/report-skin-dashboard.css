@@ -1,6 +1,6 @@
 /* ===========================================================================
  * report-skin-dashboard.css —— 经营仪表盘皮肤（现代浅色 · 数据产品风）
- *   xcl-html2pdf 的「诊断报告 / 经营仪表盘」预设皮肤，与「国家地理风」report-skin.css 并列二选一。
+ *   xcl-html2pdf 的「诊断报告 / 经营仪表盘」预设皮肤，与「国家地理风」report-skin.css、「墨水风」report-skin-ink.css 并列三选一。
  *   配 deck-16x9.css（16:9 演示版面机制）使用；本文件自带配色 + 字号 + 组件，无需再叠 skin-16x9.css。
  *   引入顺序：<link deck-16x9.css>（机制）→ <link report-skin-dashboard.css>（皮肤）→ 页尾 <script deck-16x9.js>
  *   组件语汇见 references/dashboard-deck.md。诊断报告铁律：进度口径(a-prog 中性色) ≠ 最终留存(a-ok/watch/warn/bad 四级亮灯)。

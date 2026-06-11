@@ -14,17 +14,17 @@
 | 分发 | 网页链接 | bundle 自包含单文件 / PDF |
 
 美学同源（配色与字体层次移植自其「电子杂志 × 电子墨水」体系），但**零运行时依赖**：5 套主题 hex 已全量固化在本文件与皮肤 CSS，magazine-web-ppt 升级与本皮肤无关。
+**归属说明**：magazine-web-ppt 不在本仓 19 个技能内——它是装在 `~/.claude/skills/magazine-web-ppt/` 的用户级外部技能（主题原始出处为其 `references/themes.md`）；此处引用是设计上的仓外美学来源，不是断链。
 
-## 5 套主题（六变量一组，整体替换 :root，禁止混搭）
+## 5 套主题（四变量一组，整体替换 :root，禁止混搭）
 
-切主题 = 整体替换 `report-skin-ink.css` 顶部 `:root` 里这六个变量，一处全换。
+切主题 = 整体替换 `report-skin-ink.css` 顶部 `:root` 里这四个变量，一处全换。面板 / 发丝线 / 次级灰均由 `--paper-rgb` / `--ink-rgb` 加 alpha 推导，不需要额外表面色变量。
 
 ### 🖋 墨水经典（默认）——通用分享、商业发布，任何场景都安全
 
 ```css
 --ink:#0a0a0b; --ink-rgb:10,10,11;
 --paper:#f1efea; --paper-rgb:241,239,234;
---paper-tint:#e8e5de; --ink-tint:#18181a;
 ```
 
 ### 🌊 靛蓝瓷 —— 科技 / 研究 / 数据分享、深度内容
@@ -32,7 +32,6 @@
 ```css
 --ink:#0a1f3d; --ink-rgb:10,31,61;
 --paper:#f1f3f5; --paper-rgb:241,243,245;
---paper-tint:#e4e8ec; --ink-tint:#152a4a;
 ```
 
 ### 🌿 森林墨 —— 自然 / 可持续 / 文化 / 非虚构内容
@@ -40,7 +39,6 @@
 ```css
 --ink:#1a2e1f; --ink-rgb:26,46,31;
 --paper:#f5f1e8; --paper-rgb:245,241,232;
---paper-tint:#ece7da; --ink-tint:#253d2c;
 ```
 
 ### 🍂 牛皮纸 —— 怀旧 / 人文 / 阅读 / 历史
@@ -48,7 +46,6 @@
 ```css
 --ink:#2a1e13; --ink-rgb:42,30,19;
 --paper:#eedfc7; --paper-rgb:238,223,199;
---paper-tint:#e0d0b6; --ink-tint:#3a2a1d;
 ```
 
 ### 🌙 沙丘 —— 艺术 / 设计 / 创意、审美优先
@@ -56,7 +53,6 @@
 ```css
 --ink:#1f1a14; --ink-rgb:31,26,20;
 --paper:#f0e6d2; --paper-rgb:240,230,210;
---paper-tint:#e3d7bf; --ink-tint:#2d2620;
 ```
 
 **选择参考**：不知道选啥→墨水经典；技术/产品→靛蓝瓷；行业观察/文化→森林墨；书评/人文→牛皮纸；设计/艺术→沙丘。

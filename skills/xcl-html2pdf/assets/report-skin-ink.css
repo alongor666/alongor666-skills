@@ -4,7 +4,7 @@
  *   配 deck-16x9.css（16:9 演示版面机制）使用；本文件自带配色 + 字号 + 组件，无需再叠 skin-16x9.css。
  *   引入顺序：<link deck-16x9.css>（机制）→ <link report-skin-ink.css>（皮肤）→ 页尾 <script deck-16x9.js>
  *   · 默认整 deck 暗色（墨底纸字）；需要呼吸节奏时个别页加 .page.light 反转（纸底墨字）。
- *   · 5 套主题 = 整体替换 :root 里六个主题变量（见下注释块与 references/ink-deck.md），一处全换，禁止混搭。
+ *   · 5 套主题 = 整体替换 :root 里四个主题变量（见下注释块与 references/ink-deck.md），一处全换，禁止混搭。
  *   · 语义三色（利好 --good / 压力 --press / 中性 --neut）由 .page / .light 上下文自动换挡——
  *     组件只引用变量，禁止写死 hex，否则 light 页对比度崩。
  *   · 字体走本地跨平台栈（离线/PDF 铁律：不在线引字体）；西文衬线本地退化 Georgia。
@@ -12,15 +12,15 @@
  *   本皮肤用于需要 driver 验收、导出 PDF、离线分发的暗色 deck。改规范只改本文件。
  * ========================================================================= */
 :root{
-  /* ◆ 主题六变量（整体替换这一组即切主题；其余 5 套见 references/ink-deck.md）
-   *   🖋 墨水经典（默认）  --ink:#0a0a0b --ink-rgb:10,10,11  --paper:#f1efea --paper-rgb:241,239,234 --paper-tint:#e8e5de --ink-tint:#18181a
-   *   🌊 靛蓝瓷            --ink:#0a1f3d --ink-rgb:10,31,61  --paper:#f1f3f5 --paper-rgb:241,243,245 --paper-tint:#e4e8ec --ink-tint:#152a4a
-   *   🌿 森林墨            --ink:#1a2e1f --ink-rgb:26,46,31  --paper:#f5f1e8 --paper-rgb:245,241,232 --paper-tint:#ece7da --ink-tint:#253d2c
-   *   🍂 牛皮纸            --ink:#2a1e13 --ink-rgb:42,30,19  --paper:#eedfc7 --paper-rgb:238,223,199 --paper-tint:#e0d0b6 --ink-tint:#3a2a1d
-   *   🌙 沙丘              --ink:#1f1a14 --ink-rgb:31,26,20  --paper:#f0e6d2 --paper-rgb:240,230,210 --paper-tint:#e3d7bf --ink-tint:#2d2620 */
+  /* ◆ 主题四变量（整体替换这一组即切主题；其余 5 套见 references/ink-deck.md。
+   *   面板/发丝线/次级灰均由 --paper-rgb / --ink-rgb 加 alpha 推导，无需更多表面色。）
+   *   🖋 墨水经典（默认）  --ink:#0a0a0b --ink-rgb:10,10,11  --paper:#f1efea --paper-rgb:241,239,234
+   *   🌊 靛蓝瓷            --ink:#0a1f3d --ink-rgb:10,31,61  --paper:#f1f3f5 --paper-rgb:241,243,245
+   *   🌿 森林墨            --ink:#1a2e1f --ink-rgb:26,46,31  --paper:#f5f1e8 --paper-rgb:245,241,232
+   *   🍂 牛皮纸            --ink:#2a1e13 --ink-rgb:42,30,19  --paper:#eedfc7 --paper-rgb:238,223,199
+   *   🌙 沙丘              --ink:#1f1a14 --ink-rgb:31,26,20  --paper:#f0e6d2 --paper-rgb:240,230,210 */
   --ink:#0a0a0b; --ink-rgb:10,10,11;
   --paper:#f1efea; --paper-rgb:241,239,234;
-  --paper-tint:#e8e5de; --ink-tint:#18181a;
   /* ◆ 字体层次（四层，本地栈） */
   --serif-zh:"Noto Serif SC","Songti SC","STSong","SimSun",serif;
   --sans-zh:"Noto Sans SC","PingFang SC","Microsoft YaHei","Source Han Sans SC","Noto Sans CJK SC",sans-serif;

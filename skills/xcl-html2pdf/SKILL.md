@@ -56,7 +56,7 @@ version: "1.8.0"
 - **版面机制（二选一，勿改）** — `page-deck.css`（A4 纵向盒）或 `deck-16x9.css`（16:9 演示盒）；都含横向翻页 + 导出一页一张。
 - **report-skin.css** — 标准视觉（国家地理风）：字体、字号分级、语义字色、通用组件，全部**固化**（勿改；改规范只改这一处，PDF/PPT 同步生效）。
 - **report-skin-dashboard.css** — 第二套皮肤（经营仪表盘风，仅 PPT/16:9）：现代浅色 + KPI 卡片 / 条形 / 帕累托 / 进度推进 / 行动卡 / 紧凑附录表，**自带演示字号**（不叠 skin-16x9.css）。与 report-skin.css 互斥，勿改；组件与铁律见 `references/dashboard-deck.md`。
-- **report-skin-ink.css** — 第三套皮肤（墨水风，仅 PPT/16:9）：暗色双色编辑风（墨底纸字，`.page.light` 反转呼吸页）+ 5 套主题（改 `:root` 六变量一处全换）+ 杂志版式三件套（kicker / display-zh / stat 数据大字），**自带演示字号**（不叠 skin-16x9.css）。三套皮肤互斥三选一，勿改；主题 / 明暗 / 语义色契约见 `references/ink-deck.md`。
+- **report-skin-ink.css** — 第三套皮肤（墨水风，仅 PPT/16:9）：暗色双色编辑风（墨底纸字，`.page.light` 反转呼吸页）+ 5 套主题（改 `:root` 四变量一处全换）+ 杂志版式三件套（kicker / display-zh / stat 数据大字），**自带演示字号**（不叠 skin-16x9.css）。三套皮肤互斥三选一，勿改；主题 / 明暗 / 语义色契约见 `references/ink-deck.md`。
 - **skin-16x9.css** — 仅"国家地理风 PPT"用的演示字号叠加层：把字号/留白放大到屏幕可读尺度（**叠加在 report-skin 之上，勿改**；仪表盘皮肤不需要它）。
 - **你的 .html** — 只管内容；套标准 class 即得统一的中国国家地理风视觉。
 
