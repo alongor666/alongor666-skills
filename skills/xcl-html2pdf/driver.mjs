@@ -7,9 +7,9 @@
  */
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
-import { extname, resolve, dirname, basename } from 'node:path';
+import { extname, resolve, dirname, basename, join } from 'node:path';
 
 const argv = process.argv.slice(2);
 const flag = (n, d) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : d; };
@@ -28,12 +28,19 @@ const MIME = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript
 
 function findChrome() {
   if (process.env.CHROME) return process.env.CHROME;
-  const cands = [
+  // 逐一探测：macOS 安装位（existsSync）→ Linux/通用 PATH 内名称；
+  // 全失败回退 mac 默认路径（spawn 失败报「Chrome CDP 未就绪」，与原版一致）
+  const macApps = [
     '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
     '/Applications/Chromium.app/Contents/MacOS/Chromium',
-    'google-chrome', 'google-chrome-stable', 'chromium', 'chromium-browser',
   ];
-  return cands[0]; // macOS 默认；Linux 经 CHROME 覆盖或 PATH 内名称
+  for (const p of macApps) if (existsSync(p)) return p;
+  const names = ['google-chrome', 'google-chrome-stable', 'chromium', 'chromium-browser'];
+  for (const d of (process.env.PATH || '').split(':')) {
+    if (!d) continue;
+    for (const n of names) if (existsSync(join(d, n))) return join(d, n);
+  }
+  return macApps[0];
 }
 
 const log = (...a) => console.log(...a);

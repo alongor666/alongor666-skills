@@ -10,7 +10,7 @@ description: >-
   自包含单文件、跨平台适配、Windows 打不开、手机翻页、
   文字错位。内容专属模板（如涡旋诊断卡片）见 company-vortex-card。
 user_invocable: true
-version: "1.8.0"
+version: "1.8.1"
 ---
 
 # xcl-html2pdf：HTML → 印刷级 PDF / 演示级 PPT 基座
@@ -68,8 +68,9 @@ version: "1.8.0"
 
 ```bash
 node --version   # 需 ≥ 21（内置全局 WebSocket / fetch；实测 v22.16.0）
-# 系统已装 Chrome/Chromium。macOS 默认路径已内置；其它平台用 CHROME 覆盖：
-# export CHROME=/usr/bin/google-chrome   (Linux)
+# 系统已装 Chrome/Chromium。driver 自动探测：macOS 安装位 → PATH 内
+# google-chrome/chromium（Linux 零配置）；特殊安装位才需 CHROME 覆盖：
+# export CHROME=/opt/custom/chrome
 ```
 
 ## 起一个新报告（agent 主路径）

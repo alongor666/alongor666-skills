@@ -26,8 +26,8 @@
 | 3 | company-vortex | P1：`$WORKDIR` 私人默认值散布多处（已可覆盖）；外部脚本依赖的降级路径需活体核对 | ✅ 过尺通过·免刨（WORKDIR 全部可覆盖且重复 export 是文档明示设计） |
 | 4 | diagnose-org-weekly | P2：重资产 L1，README/SKILL 与渲染器入口不变量（SHELL_ROOT 注入）对账 | ✅ #27 |
 | 5 | diagnose-period-trend | P2：重资产 L1，同上口径对账 | ✅ #28 |
-| 6 | diagnose-loss-development | P2：重资产 L1，同上口径对账 | 🔨 本轮 |
-| 7 | xcl-html2pdf | P2：L0 基座，driver/bundle 文档命令活体对账，三套皮肤引用完整性 | ⏳ |
+| 6 | diagnose-loss-development | P2：重资产 L1，同上口径对账 | ✅ #29 |
+| 7 | xcl-html2pdf | P2：L0 基座，driver/bundle 文档命令活体对账，三套皮肤引用完整性 | 🔨 本轮 |
 | 8 | chexian-channel | 轻量：description 触发词与正文一致性 | ⏳ |
 | 9 | chexian-market-analysis | 轻量：同上 | ⏳ |
 | 10 | chexian-pricing-decision | 轻量：同上 | ⏳ |
