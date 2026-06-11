@@ -60,8 +60,8 @@
 
 ## 回炉清单（下一轮入口）
 
-- **待用户确认**：chexian-pricing-decision 引用的 `chexian-pricing-redline` 不在本仓
-  （疑 chexian-api 项目侧技能）——若已废弃，清掉引用
+- ~~**待用户确认**：chexian-pricing-decision 引用的 `chexian-pricing-redline`~~ →
+  **已确认（2026-06-11）**：是 chexian-api 项目侧技能、仍在用；SKILL.md 已标注归属，引用保留
 - ~~**已知边界**：push.py 的 VPS IP 仍在 git 历史中~~ → **已处理（2026-06-11 用户决策"务必解决"）**：
   v1.24.0 起 IP/用户名字面量彻底出仓（环境变量 > `~/.config/chexian/vps_target` > 跳过）；
   HEAD 残留 0。git 历史与已合并 PR 描述中的旧字面量代码层不可消，缓解在基础设施侧
