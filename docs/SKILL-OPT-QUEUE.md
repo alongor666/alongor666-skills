@@ -32,16 +32,37 @@
 | 9 | chexian-market-analysis | 轻量：同上 | ✅ 过尺通过·免刨 |
 | 10 | chexian-pricing-decision | 轻量：同上 | ✅ 过尺通过·免刨（注：正文引用的 chexian-pricing-redline 不在本仓，疑为项目侧技能，待用户确认是否仍在用） |
 | 11 | chexian-ops-review | L2：编排边（调 market/channel/pricing）记录在正文而非 requires_skills 的口径核对 | ✅ 过尺通过·免刨 |
-| 12 | company-vortex-card | L2：产物消费边（读 vortex 的 .md）口径核对 | 🔨 本轮（driver.mjs 与 xcl-html2pdf 同款 findChrome 假探测） |
-| 13 | rewrite-conclusion | 轻量 | ⏳ |
-| 14 | commit-push-pr-core | L0：与实际提交流程对账 | ⏳ |
-| 15 | sync-skills | 轻量（v1.1 护栏刚收口） | ⏳ |
-| 16 | cleanup-worktrees | 轻量 | ⏳ |
-| 17 | crystallize-skill | 轻量 | ⏳ |
-| 18 | ui-redesign | 轻量 | ⏳ |
-| 19 | extract-backlog-governance | 轻量 | ⏳ |
+| 12 | company-vortex-card | L2：产物消费边（读 vortex 的 .md）口径核对 | ✅ #31（driver.mjs 同款 findChrome 假探测已修） |
+| 13 | rewrite-conclusion | 轻量 | ✅ 过尺通过·免刨（外部知识库相对路径有 cwd 明示约定） |
+| 14 | commit-push-pr-core | L0：与实际提交流程对账 | ✅ 过尺通过·免刨（通用护栏完备、平台无关） |
+| 15 | sync-skills | 轻量（v1.1 护栏刚收口） | ✅ 过尺通过·免刨（测试夹具签名健壮性已在 #23 修） |
+| 16 | cleanup-worktrees | 轻量 | ✅ 过尺通过·免刨 |
+| 17 | crystallize-skill | 轻量 | ✅ 过尺通过·免刨 |
+| 18 | ui-redesign | 轻量 | ✅ 过尺通过·免刨 |
+| 19 | extract-backlog-governance | 轻量 | ✅ 过尺通过·免刨 |
 | 20 | luban | — | ✅ 已完成（#22 安装 / #23 描述压缩 / #24 渐进披露拆分） |
 
 ## 完成记录（完成即证明：PR 链接 = 凭证）
 
 - luban：#22、#23、#24（均已合并）
+- 逐技能优化轮（2026-06-11，全部已合并）：
+  - #25 chexian-ir-diagnosis v1.1.1（模板 glob 波浪号静默失败 + CHEXIAN_DATA_ROOT 接轨）+ 本队列建档
+  - #26 chexian-report-shell v1.23.0（VPS 目标 / 域名下沉环境变量）
+  - #27 diagnose-org-weekly v1.20.1（引导解析对齐 ADR-001 三级优先级）
+  - #28 diagnose-period-trend v2.0.1（同上）
+  - #29 diagnose-loss-development v2.4.1（同上，三个 diagnose-* 全部对齐）
+  - #30 xcl-html2pdf v1.8.1（findChrome 假探测 → 真探测，Linux 零配置）
+  - #31 company-vortex-card v1.0.1（同款 findChrome 修复）+ 四技能免刨核账
+  - 免刨 8 项：company-vortex、chexian-channel、chexian-market-analysis、
+    chexian-pricing-decision、chexian-ops-review、rewrite-conclusion、
+    commit-push-pr-core、sync-skills、cleanup-worktrees、crystallize-skill、
+    ui-redesign、extract-backlog-governance（共 12 项，过尺无证据支持改动）
+
+## 回炉清单（下一轮入口）
+
+- **待用户确认**：chexian-pricing-decision 引用的 `chexian-pricing-redline` 不在本仓
+  （疑 chexian-api 项目侧技能）——若已废弃，清掉引用
+- **已知边界**：push.py 的 VPS IP 仍在 git 历史中（#26 只解耦不消历史），真要隐藏需
+  轮换 IP / 加固 SSH（用户决策）
+- **观察项**：luban 上游 LearnPrompt/luban-skill 后续更新时，本仓已有描述压缩与
+  渐进披露两处分叉，同步时按 references 结构折算
