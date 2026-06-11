@@ -6,7 +6,7 @@ description: >
   或误跑 `npx skills add --all` 后要把直连修回时。项目无关：把任意 git 技能仓的
   `<subdir>/*` 直连软链到 `~/.claude/skills`，改源即生效；并可装 git 钩子自动补链。
 user_invocable: true
-version: "1.0.0"
+version: "1.1.0"
 ---
 
 # sync-skills：技能仓「改源即生效」直连同步器
@@ -66,6 +66,10 @@ git 工作树 <repo>/<subdir>/<name>  ──软链──→  <dest>/<name>  → 
 - `link` 幂等：已正确直连则跳过；旧软链重指向；实体副本先归档到 `<dest>/_archive/` 再改直连。
 - `install-hooks` 生成的钩子调用本脚本（绝对路径，install 时固化）做 `link --quiet`，
   失败绝不阻断 git；`core.hooksPath` 是本机配置，不随 clone，**新机克隆后重跑一次本命令**。
+- **防劫持护栏（v1.1.0，双层）**：① 脚本层——`--repo`（或默认推导）落在 linked worktree 时，
+  自动用 `git-common-dir` 改指主仓根并提示，全部子命令生效；② 钩子层——生成的钩子在
+  linked worktree 内直接跳过。背景：worktree 创建会触发 post-checkout，曾把全局软链整体
+  指进 worktree，worktree 一删 19 条链全断（2026-06-11 实测）。测试见 `tests/test_worktree_guard.py`。
 
 ## Common Mistakes
 
@@ -73,5 +77,6 @@ git 工作树 <repo>/<subdir>/<name>  ──软链──→  <dest>/<name>  → 
 - **`npx skills add --all` 之后又不同步** → `--all` 会把直连覆盖回快照；`doctor` 会报「指向别处」，`link` 一键修回。
 - **新仓技能不在 `skills/` 子目录** → 用 `--subdir` 指定（技能在仓库根则 `--subdir .`）。
 - **新机器钩子不触发** → `core.hooksPath` 是本机配置；克隆后重跑 `install-hooks`。
+- **开过 worktree 后技能全失效 / doctor 报"指向别处"且目标在 `.claude/worktrees/`** → 旧版钩子被 worktree 劫持所致（v1.1.0 护栏已根治）；从主仓跑 `link` 一键修回；若 `core.hooksPath` 被 worktree 工具改走，重跑 `install-hooks` 恢复。
 
 相关 memory：技能同步模型见 `skills-install-via-npx`。

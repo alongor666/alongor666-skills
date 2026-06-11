@@ -50,6 +50,20 @@ if [ -z "$REPO" ]; then
   [ -n "$REPO" ] || { echo "未指定 --repo 且当前不在 git 仓库内"; exit 2; }
 fi
 REPO="$(cd "$REPO" && pwd)"
+
+# —— 防劫持护栏：REPO 落在 linked worktree 时自动改用主仓根 ——
+# worktree 内触发钩子 / 误传 --repo 会把全局软链指进 worktree，worktree 一删全成死链
+# （2026-06-11 实测：EnterWorktree 触发 post-checkout，19 条链全断）。
+# git-common-dir 推导主仓根；普通仓两值相等、子模块两值相等，均不受影响。
+if git -C "$REPO" rev-parse --git-dir >/dev/null 2>&1; then
+  GD="$(cd "$REPO" && cd "$(git rev-parse --git-dir)" && pwd)"
+  GCD="$(cd "$REPO" && cd "$(git rev-parse --git-common-dir)" && pwd)"
+  if [ "$GD" != "$GCD" ]; then
+    MAIN_ROOT="$(dirname "$GCD")"
+    warn "repo 是 linked worktree（${REPO}）→ 自动改用主仓根 ${MAIN_ROOT}"
+    REPO="$MAIN_ROOT"
+  fi
+fi
 SKILLS_SRC="$REPO/$SUBDIR"
 ARCHIVE="$DEST/_archive"
 
@@ -60,11 +74,15 @@ install_hooks() {
   cat > "$hooks_dir/post-merge" <<HOOK
 #!/usr/bin/env bash
 # 由 sync-skills install-hooks 生成。合并/pull 后补齐技能直连软链（幂等零网络，失败不阻断 git）。
+# linked worktree 内跳过：防止把全局软链指进 worktree（worktree 一删即全断链）。
+[ "\$(git rev-parse --git-dir)" = "\$(git rev-parse --git-common-dir)" ] || exit 0
 "$self" link --repo "\$(git rev-parse --show-toplevel)" --dest "$DEST" --subdir "$SUBDIR" --quiet || true
 HOOK
   cat > "$hooks_dir/post-checkout" <<HOOK
 #!/usr/bin/env bash
 # 由 sync-skills install-hooks 生成。仅分支切换（第三参=1）时补齐技能直连软链。
+# linked worktree 内跳过：防止把全局软链指进 worktree（worktree 一删即全断链）。
+[ "\$(git rev-parse --git-dir)" = "\$(git rev-parse --git-common-dir)" ] || exit 0
 [ "\${3:-0}" = "1" ] || exit 0
 "$self" link --repo "\$(git rev-parse --show-toplevel)" --dest "$DEST" --subdir "$SUBDIR" --quiet || true
 HOOK
