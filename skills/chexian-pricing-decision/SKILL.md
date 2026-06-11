@@ -1,8 +1,8 @@
 ---
 name: chexian-pricing-decision
-description: Use when deciding how to price auto insurance business — including commercial vehicle premium quotes, underwriting acceptance decisions, rate level judgments, or evaluating whether specific business segments are worth writing at current market conditions. 当用户问"这单该不该接 / 报多少 / 这价能不能成交 / 某车型某渠道定价决策 / 核保该不该接 / 报这个价合不合适"时触发。面向前瞻报价决策；与 chexian-pricing-redline（已成交业务的反事实定价复盘）相区分。
+description: Use when deciding how to price auto insurance business — including commercial vehicle premium quotes, underwriting acceptance decisions, rate level judgments, or evaluating whether specific business segments are worth writing at current market conditions. 当用户问"这单该不该接 / 报多少 / 这价能不能成交 / 某车型某渠道定价决策 / 核保该不该接 / 报这个价合不合适"时触发。面向前瞻报价决策；与 chexian-pricing-redline（已成交业务的反事实定价复盘，chexian-api 项目侧技能）相区分。
 user_invocable: true
-version: "1.1.0"
+version: "1.1.1"
 ---
 
 # 车险定价决策
@@ -15,7 +15,7 @@ version: "1.1.0"
 
 - **用本 skill**：前瞻定价——给某区域/客户/车型/渠道的业务报多少、该不该承接、这价能否成交、是否值得写。
 - **不用本 skill**：
-  - 已成交业务的反事实定价复盘 → 走 `chexian-pricing-redline`
+  - 已成交业务的反事实定价复盘 → 走 `chexian-pricing-redline`（chexian-api 项目侧技能，不在本仓，2026-06-11 用户确认在用）
   - 出险率恶化根因分析 → 走 `chexian-ir-diagnosis`
   - 纯交强险查询（制度化基准，无自由报价空间）
 
