@@ -19,6 +19,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 python3 scripts/validate_skills.py            # 0 错误才可提交；--strict 警告也算失败
 
 # 测试（基座 + 纯逻辑脚本 + 同步器护栏 + 巡检器；无 pytest.ini/conftest，测试自注入 sys.path）
+# 依赖 pytest + pyyaml + pandas + duckdb——云端/新机环境先 pip3 install 这四个，否则基座契约测试会因缺包失败
 python3 -m pytest skills/chexian-report-shell/tests/ skills/extract-backlog-governance/tests/ skills/sync-skills/tests/ scripts/test_validate_skills.py -q
 python3 -m pytest skills/chexian-report-shell/tests/test_skill_path.py -v   # 单文件
 python3 -m pytest skills/chexian-report-shell/tests/test_skill_path.py -k sibling_walkup -v  # 单用例（-k 子串匹配）

@@ -18,8 +18,13 @@ from typing import Optional
 import duckdb
 import pandas as pd
 
-# ============== 数据源路径（本机）==============
-PARQUET_ROOT = Path("/Users/alongor666/Downloads/底层数据湖DUD/chexian-api/数据管理/warehouse/fact")
+# ============== 数据源路径（默认本机，$CHEXIAN_DATA_ROOT 可覆盖）==============
+try:
+    from .paths import DATA_ROOT
+except ImportError:  # lib 被作为顶层包加入 sys.path 时（如 dhr_lib 别名）
+    from paths import DATA_ROOT  # type: ignore[no-redef]
+
+PARQUET_ROOT = DATA_ROOT / "数据管理/warehouse/fact"
 POLICY_GLOB = str(PARQUET_ROOT / "policy/current/*.parquet")
 CLAIMS_GLOB = str(PARQUET_ROOT / "claims_detail/*.parquet")
 

@@ -24,7 +24,12 @@ def run(cmd, cwd=None):
 
 
 def git(*args, cwd):
-    return run(["git", "-c", "user.email=t@t", "-c", "user.name=t", *args], cwd=cwd)
+    # commit.gpgsign=false：宿主若全局强制提交签名，临时仓签名失败会以 128 崩掉夹具
+    return run(
+        ["git", "-c", "user.email=t@t", "-c", "user.name=t",
+         "-c", "commit.gpgsign=false", *args],
+        cwd=cwd,
+    )
 
 
 @pytest.fixture()

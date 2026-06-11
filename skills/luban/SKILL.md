@@ -1,14 +1,12 @@
 ---
 name: luban
 description: |
-  鲁班（Luban）——Skill打磨工坊。把一个"能用的Skill"打磨成"能被理解、能被安装、能被传播、能被验证、能持续进化"的公共Skill资产。
-  方法论是工匠式的五个动作：验料（先挑战这个Skill的前提是否成立，不值得雕的料直说）、访行（联网寻找同类Skill，看清自己在生态里站什么位置）、过尺（结构、实测、活体三把尺一起量——活体指拉真实运行产物对账，绿色的CI会撒谎）、慢刨（冻结原版做基线，改动必须通过验证门才保留，否则回刀；验证手段尽量沉淀为仓库里的工具和规矩）、回炉（发布不是终点，留对标观察清单，下一轮从真实反馈进）。
-  当用户想要升级、优化、打磨、产品化、发布自己开发的Skill时使用。最终产出一份结构化的《Skill打磨报告》、可直接替换的改写片段，以及一张可截图传播的"出师证书"结果卡。
-  触发词包括但不限于：让鲁班看看这个skill、班门打磨、打磨我的skill、升级我的skill、优化这个skill、skill体检、skill审计、产品化我的skill、这个skill怎么发布、对标一下同类skill、为什么我的skill没人装、帮我把skill发到GitHub/ClawHub、改进SKILL.md。
-  即使用户只是丢来一个Skill目录、GitHub仓库链接或一段SKILL.md说"帮我看看怎么改"，只要上下文是想让Skill变得更好用、更可传播，都应该触发。
-  不要用于从零创建一个新Skill（用skill-creator）、不要用于普通的代码review（用code-review）、不要用于改写一段和Skill资产无关的普通提示语。
+  鲁班（Luban）——Skill打磨工坊。用验料、访行、过尺、慢刨、回炉五个工匠动作，把"能用的Skill"打磨成能被理解、安装、传播、验证、持续进化的公共资产，产出《Skill打磨报告》、可直接替换的改写片段和"出师证书"结果卡。
+  当用户想升级、优化、打磨、产品化、审计、发布自己开发的Skill，或丢来Skill目录/GitHub链接/SKILL.md说"帮我看看怎么改"时使用。
+  触发词：让鲁班看看这个skill、班门打磨、打磨/升级/优化我的skill、skill体检、skill审计、对标同类skill、为什么我的skill没人装、这个skill怎么发布到GitHub/ClawHub、改进SKILL.md。
+  不用于从零创建新Skill（用skill-creator）、普通代码review（用code-review）或与Skill资产无关的提示语改写。
 user_invocable: true
-version: "1.0.0"
+version: "1.1.0"
 ---
 
 # 鲁班 | Skill打磨工坊

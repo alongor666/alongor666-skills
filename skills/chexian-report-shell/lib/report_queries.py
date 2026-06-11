@@ -9,14 +9,14 @@ from datetime import date
 import pandas as pd
 
 from .queries import (
-    standard_query, POLICY_GLOB, CLAIMS_GLOB, METRICS_SELECT,
+    standard_query, DATA_ROOT, POLICY_GLOB, CLAIMS_GLOB, METRICS_SELECT,
 )
 from .queries import register_udfs
 
 
-PLAN_PARQUET = "/Users/alongor666/Downloads/底层数据湖DUD/chexian-api/数据管理/warehouse/dim/plan/latest.parquet"
-RENEWAL_PARQUET = "/Users/alongor666/Downloads/底层数据湖DUD/chexian-api/数据管理/warehouse/fact/renewal_tracker/latest.parquet"
-CROSS_SELL_PARQUET = "/Users/alongor666/Downloads/底层数据湖DUD/chexian-api/数据管理/warehouse/fact/cross_sell/latest.parquet"
+PLAN_PARQUET = str(DATA_ROOT / "数据管理/warehouse/dim/plan/latest.parquet")
+RENEWAL_PARQUET = str(DATA_ROOT / "数据管理/warehouse/fact/renewal_tracker/latest.parquet")
+CROSS_SELL_PARQUET = str(DATA_ROOT / "数据管理/warehouse/fact/cross_sell/latest.parquet")
 
 
 def _org_pred(level: str, org, col: str = "org_level_3"):
