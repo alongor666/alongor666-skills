@@ -7,7 +7,7 @@ description: >-
   "客户类别 × 时间窗"、"全局画像首页报告"、"经营开屏报告"、"周期趋势报告"、"趋势叙事周报"、
   "超表"、"分析师超表"、"驾驶舱"、"三视图" 时使用。
 user_invocable: true
-version: "2.0.0"
+version: "2.0.1"
 requires_skills:
   - chexian-report-shell   # 渲染基础设施（亮灯/格式化/SVG 图表/超表），经 _dhr_bootstrap 动态加载为 dhr_lib（运行时必需）
 ---

@@ -14,11 +14,36 @@ import importlib.util as _iu
 import sys
 from pathlib import Path
 
-_SHELL_LIB = next(
-    (p / "chexian-report-shell" / "lib" for p in Path(__file__).resolve().parents
-     if p.name == "skills" and (p / "chexian-report-shell" / "lib").is_dir()),
-    None,
-) or (Path.home() / ".claude/skills/chexian-report-shell/lib")  # 兜底（惰性，ADR-001）
+# 引导期无法 import 基座的 skill_path（鸡生蛋），内联同一套三级优先级（ADR-001）：
+#   $CLAUDE_SKILLS_DIR 显式覆盖 > 兄弟目录回溯 > 已知安装根兜底（病态 HOME 自动跳过）
+def _resolve_shell_lib():
+    import os
+    env = os.environ.get("CLAUDE_SKILLS_DIR")
+    if env:
+        cand = Path(env).expanduser() / "chexian-report-shell" / "lib"
+        if cand.is_dir():
+            return cand
+    for p in Path(__file__).resolve().parents:
+        if p.name == "skills" and (p / "chexian-report-shell" / "lib").is_dir():
+            return p / "chexian-report-shell" / "lib"
+    try:
+        home = Path.home()
+    except (RuntimeError, KeyError):
+        return None
+    for root in (home / ".claude" / "skills",
+                 home / ".claude" / "plugins" / "alongor666-skills" / "skills",
+                 home / ".agents" / "skills"):
+        if (root / "chexian-report-shell" / "lib").is_dir():
+            return root / "chexian-report-shell" / "lib"
+    return None
+
+
+_SHELL_LIB = _resolve_shell_lib()
+if _SHELL_LIB is None:
+    raise FileNotFoundError(
+        "未找到渲染层依赖 chexian-report-shell/lib：已尝试 $CLAUDE_SKILLS_DIR、"
+        "兄弟回溯与已知安装根；可设 CLAUDE_SKILLS_DIR 指定技能安装根"
+    )
 _ALIAS = "dhr_lib"
 
 

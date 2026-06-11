@@ -24,8 +24,8 @@
 | 1 | chexian-ir-diagnosis | P0：保单级模板 `glob("~/...")` 不展开波浪号必然空跑（静默失败）；数据湖路径未接 `CHEXIAN_DATA_ROOT` 单一事实源 | ✅ #25 |
 | 2 | chexian-report-shell | P0：push.py 写死 VPS IP 与部署用户名，应下沉环境变量（v1.22 只收敛了数据湖路径） | ✅ #26 |
 | 3 | company-vortex | P1：`$WORKDIR` 私人默认值散布多处（已可覆盖）；外部脚本依赖的降级路径需活体核对 | ✅ 过尺通过·免刨（WORKDIR 全部可覆盖且重复 export 是文档明示设计） |
-| 4 | diagnose-org-weekly | P2：重资产 L1，README/SKILL 与渲染器入口不变量（SHELL_ROOT 注入）对账 | 🔨 本轮 |
-| 5 | diagnose-period-trend | P2：重资产 L1，同上口径对账 | ⏳ |
+| 4 | diagnose-org-weekly | P2：重资产 L1，README/SKILL 与渲染器入口不变量（SHELL_ROOT 注入）对账 | ✅ #27 |
+| 5 | diagnose-period-trend | P2：重资产 L1，同上口径对账 | 🔨 本轮 |
 | 6 | diagnose-loss-development | P2：重资产 L1，同上口径对账 | ⏳ |
 | 7 | xcl-html2pdf | P2：L0 基座，driver/bundle 文档命令活体对账，三套皮肤引用完整性 | ⏳ |
 | 8 | chexian-channel | 轻量：description 触发词与正文一致性 | ⏳ |
