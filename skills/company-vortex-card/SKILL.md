@@ -6,7 +6,7 @@ description: >
   触发词：视觉卡片、做成卡片、结构诊断卡片、涡旋卡片、xcl_html2pdf、html2pdf 公司、诊断做成 PDF、把诊断报告做成卡片、company vortex card。
   机制层（A4 版面/横向翻页/打印/验收）复用 xcl-html2pdf；本 skill 在其之上提供涡旋诊断专属的 12 页模板与填充规范。
 user_invocable: true
-version: "1.0.0"
+version: "1.0.1"
 ---
 
 # company-vortex-card：涡旋诊断视觉卡片
