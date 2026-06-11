@@ -23,13 +23,34 @@ from pathlib import Path
 import duckdb
 
 # 注入 chexian-report-shell 到 sys.path 以便 `from lib import ...`
-SHELL_ROOT = next(
-    (p / "chexian-report-shell" for p in Path(__file__).resolve().parents
-     if p.name == "skills" and (p / "chexian-report-shell" / "lib").is_dir()),
-    None,
-) or (Path.home() / ".claude" / "skills" / "chexian-report-shell")  # 兜底（惰性，ADR-001）
-if not SHELL_ROOT.exists():
-    print(f"未找到渲染层依赖 chexian-report-shell：{SHELL_ROOT}", file=sys.stderr)
+# 引导期无法 import 基座的 skill_path（鸡生蛋），故内联同一套三级优先级（ADR-001）：
+#   $CLAUDE_SKILLS_DIR 显式覆盖 > 兄弟目录回溯 > 已知安装根兜底（病态 HOME 自动跳过）
+def _resolve_shell_root() -> Path | None:
+    import os
+    env = os.environ.get("CLAUDE_SKILLS_DIR")
+    if env:
+        cand = Path(env).expanduser() / "chexian-report-shell"
+        if (cand / "lib").is_dir():
+            return cand
+    for p in Path(__file__).resolve().parents:
+        if p.name == "skills" and (p / "chexian-report-shell" / "lib").is_dir():
+            return p / "chexian-report-shell"
+    try:
+        home = Path.home()
+    except (RuntimeError, KeyError):
+        return None
+    for root in (home / ".claude" / "skills",
+                 home / ".claude" / "plugins" / "alongor666-skills" / "skills",
+                 home / ".agents" / "skills"):
+        if (root / "chexian-report-shell" / "lib").is_dir():
+            return root / "chexian-report-shell"
+    return None
+
+
+SHELL_ROOT = _resolve_shell_root()
+if SHELL_ROOT is None:
+    print("未找到渲染层依赖 chexian-report-shell：已尝试 $CLAUDE_SKILLS_DIR、"
+          "兄弟回溯与已知安装根；可设 CLAUDE_SKILLS_DIR 指定技能安装根", file=sys.stderr)
     raise SystemExit(2)
 sys.path.insert(0, str(SHELL_ROOT))
 
