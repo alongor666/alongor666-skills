@@ -15,6 +15,7 @@ lib/
 ├── alerts.py        TH 四级阈值（镜像 chexian-api/数据管理/diagnose_common.py）
 ├── format.py        fmt_num / fmt_pct / fmt_wan / 简称转换
 ├── labels.py        SHORT_LABEL / FULL_LABEL 单一事实源
+├── paths.py         DATA_ROOT 数据湖根路径单一事实源（$CHEXIAN_DATA_ROOT 可覆盖）
 ├── queries.py       standard_query / build_base_cte / DuckDB UDF
 ├── report_queries.py 项目专用 fetch_* 函数
 ├── dimensions.py    9 维下钻元数据 + ValueDef 注册表

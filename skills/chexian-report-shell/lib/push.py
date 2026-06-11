@@ -102,7 +102,11 @@ def push_to_im(html_path: Path | str,
 
     if sync_vps and base_url == DEFAULT_BASE_URL:
         ssh_key = Path.home() / ".ssh/chexian_deploy"
-        local_reports = Path("/Users/alongor666/Downloads/底层数据湖DUD/chexian-api/server/data/reports")
+        try:
+            from .paths import DATA_ROOT
+        except ImportError:  # lib 被作为顶层包加入 sys.path 时（如 dhr_lib 别名）
+            from paths import DATA_ROOT  # type: ignore[no-redef]
+        local_reports = DATA_ROOT / "server/data/reports"
         if shutil.which("rsync") and ssh_key.is_file() and local_reports.is_dir():
             r = subprocess.run([
                 "rsync", "-az", "--exclude", ".DS_Store",
