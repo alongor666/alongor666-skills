@@ -1,6 +1,6 @@
 # xcl-html2pdf · HTML → 印刷级 PDF / 演示级 PPT 基座
 
-把任意 HTML 报告做成**屏幕横向一屏一页、导出一页一张**的印刷 / 演示级文档。分离式架构：版面机制 + 视觉皮肤 + 你的内容，套标准 class 即得统一的「中国国家地理风 / 经营仪表盘风」视觉。
+把任意 HTML 报告做成**屏幕横向一屏一页、导出一页一张**的印刷 / 演示级文档。分离式架构：版面机制 + 视觉皮肤 + 你的内容，套标准 class 即得统一的「中国国家地理风 / 经营仪表盘风 / 墨水风」视觉。
 
 > 完整的版式 / 皮肤选择规则、组件语汇、实战坑（Gotchas）、Troubleshooting 见 [`SKILL.md`](./SKILL.md)。本 README 只讲快速上手、依赖、产物。
 
@@ -21,6 +21,7 @@
 # 1. 复制对应套件到工作目录（*-deck.css / report-skin.css / deck*.js 等勿改）
 #    PPT·国家地理风（默认）：skeleton-16x9.html + deck-16x9.css + report-skin.css + skin-16x9.css + deck-16x9.js
 #    PPT·经营仪表盘风：skeleton-dashboard-16x9.html + deck-16x9.css + report-skin-dashboard.css + deck-16x9.js
+#    PPT·墨水风（暗色编辑风）：skeleton-ink-16x9.html + deck-16x9.css + report-skin-ink.css + deck-16x9.js（5 套主题改 :root 一处全换）
 #    PDF：skeleton.html + page-deck.css + report-skin.css + deck.js
 
 # 2. 把骨架每个 <section class="page"> 换成你的内容，套标准 class（sec-head / table.data / verdict ...）
@@ -49,7 +50,7 @@ node driver.mjs assets/skeleton-16x9.html 4   # 自启 http server + 系统 Chro
 | 形态 | 文件 | 说明 |
 |---|---|---|
 | 开发态（多文件） | `your.html` + 外链 css/js | 便于改皮肤 / 机制；**勿单独分发**（外链相对路径，换电脑会 404 → 文字错位 + 翻不动） |
-| 分发态（单文件） | `your.standalone.html` | `bundle.mjs` 内联全部 css/js；Edge / Chrome / Safari · PC 与手机一致显示并翻页（方向键 + 触摸滑动 + 浮动 ‹ › 箭头 + 序号条） |
+| 分发态（单文件） | `your.standalone.html` | `bundle.mjs` 内联全部 css/js；Edge / Chrome / Safari · PC 与手机一致显示并翻页（方向键 + 触摸滑动 + 序号条） |
 | 导出 PDF | `out.pdf` | `driver.mjs --pdf out.pdf` 或浏览器 `Cmd/Ctrl+P`（**取消页眉页脚**）→ 一页一张 |
 
 > 涡旋诊断专属组件（stage / triad / shape / vortex）不在本基座，见 company-vortex-card。

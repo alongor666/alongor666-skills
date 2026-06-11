@@ -1,6 +1,6 @@
 # 经营仪表盘皮肤（诊断报告版）· 组件速查
 
-> `report-skin-dashboard.css` 是 xcl-html2pdf 的第二套皮肤——**现代浅色经营仪表盘风**，与「国家地理风」`report-skin.css` 并列二选一。
+> `report-skin-dashboard.css` 是 xcl-html2pdf 的第二套皮肤——**现代浅色经营仪表盘风**，与「国家地理风」`report-skin.css`、「墨水风」`report-skin-ink.css` 并列三选一。
 > 配 `deck-16x9.css`（16:9 机制）使用；本皮肤自带配色 + 字号 + 组件，**无需再叠 `skin-16x9.css`**。
 > 套件：`deck-16x9.css` + `report-skin-dashboard.css` + `deck-16x9.js` + `skeleton-dashboard-16x9.html`（起点）。
 
