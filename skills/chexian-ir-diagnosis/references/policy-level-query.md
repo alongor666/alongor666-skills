@@ -18,17 +18,22 @@ parquet 有保单号+车架号，是真正的保单级数据。**用车架号（
 > **维度顺序非固定**：先按 `global.diagnosis` 与 `why1_tracked` 的车型特征判断哪些维度最可能有区分度，再决定遍历哪几个，不必全跑。下方 8 维 for 循环是参考全集，按业务语境选路。
 
 ```python
-import pandas as pd, glob, sys
+import glob, os, sys
+import pandas as pd
 sys.path.insert(0, "04_工程/脚本")
 from common import (derive_price_band, derive_plate_origin,
                     derive_customer_source_category, derive_seat_group)
 
+# glob 不展开 ~，必须 expanduser，否则静默返回空列表；数据湖根可经 CHEXIAN_DATA_ROOT 覆盖
+DATA_ROOT = os.path.expanduser(os.environ.get(
+    "CHEXIAN_DATA_ROOT", "~/Downloads/底层数据湖DUD/chexian-api"))
 files = sorted(glob.glob(
-    "~/Downloads/底层数据湖DUD/chexian-api/数据管理/warehouse/fact/policy/daily/2026-*.parquet"
+    f"{DATA_ROOT}/数据管理/warehouse/fact/policy/daily/2026-*.parquet"
 ))[-30:]
+assert files, f"未找到保单 parquet：检查 {DATA_ROOT} 是否存在或设置 CHEXIAN_DATA_ROOT"
 df = pd.concat([pd.read_parquet(f) for f in files])
 claims = pd.read_parquet(
-    "~/Downloads/底层数据湖DUD/chexian-api/数据管理/warehouse/fact/claims/latest.parquet")
+    f"{DATA_ROOT}/数据管理/warehouse/fact/claims/latest.parquet")
 
 # 赔案按车架号聚合
 claims_agg = claims.groupby("车架号").agg(总赔案件数=("赔案件数","sum")).reset_index()
