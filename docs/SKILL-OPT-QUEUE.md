@@ -21,8 +21,8 @@
 
 | # | 技能 | 意图（为什么排这里 / 已知线索） | 状态 |
 |--:|------|--------------------------------|------|
-| 1 | chexian-ir-diagnosis | P0：保单级模板 `glob("~/...")` 不展开波浪号必然空跑（静默失败）；数据湖路径未接 `CHEXIAN_DATA_ROOT` 单一事实源 | 🔨 本轮 |
-| 2 | chexian-report-shell | P0：push.py 写死 VPS IP 与部署用户名，应下沉环境变量（v1.22 只收敛了数据湖路径） | ⏳ |
+| 1 | chexian-ir-diagnosis | P0：保单级模板 `glob("~/...")` 不展开波浪号必然空跑（静默失败）；数据湖路径未接 `CHEXIAN_DATA_ROOT` 单一事实源 | ✅ #25 |
+| 2 | chexian-report-shell | P0：push.py 写死 VPS IP 与部署用户名，应下沉环境变量（v1.22 只收敛了数据湖路径） | 🔨 本轮 |
 | 3 | company-vortex | P1：`$WORKDIR` 私人默认值散布多处（已可覆盖）；外部脚本依赖的降级路径需活体核对 | ⏳ |
 | 4 | diagnose-org-weekly | P2：重资产 L1，README/SKILL 与渲染器入口不变量（SHELL_ROOT 注入）对账 | ⏳ |
 | 5 | diagnose-period-trend | P2：重资产 L1，同上口径对账 | ⏳ |

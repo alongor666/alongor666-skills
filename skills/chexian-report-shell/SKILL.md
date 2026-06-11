@@ -7,7 +7,7 @@ description: >-
   等 diagnose-* 业务诊断 skill import 复用。本 skill 本身不直接面向用户，
   不通过 /xxx 调用——直接跑业务 skill 即可。
 user_invocable: false
-version: "1.22.0"
+version: "1.23.0"
 requires_skills:
   - chexian-im-push   # 可选 · 外部技能（不在本仓）· 仅 lib/push.py 飞书/企微推送用，缺失时降级兜底，不影响渲染主链路
 ---
@@ -370,6 +370,7 @@ class SectionContext:
 
 ## 变更日志
 
+- **v1.23.0（2026-06-11）**：push.py 基础设施信息下沉环境变量——`CHEXIAN_BASE_URL`（HTML 公网域名）与 `CHEXIAN_VPS_TARGET`（rsync 推送目标 user@host:path），默认值不变、本机零感知；换机器/测试机免改代码。注：历史提交中的 IP 仍在 git 历史里，真要隐藏需轮换 IP/加固 SSH，代码层只解耦不消历史
 - **v1.22.0（2026-06-11）**：新增 `lib/paths.py`——数据湖根路径单一事实源 `DATA_ROOT`（环境变量 `CHEXIAN_DATA_ROOT` 可覆盖，默认本机路径不变）；`queries.py` / `report_queries.py` / `push.py` 共 5 处硬编码绝对路径改为从 `DATA_ROOT` 派生，云端/他机/持续集成环境可整体重定向数据湖。现有 API 只增不改不删，基座 24 测试全绿
 - **v1.21.0（2026-05-28）**：diagnose-period-trend 通用渲染能力收编（6 Phase）：主题切换交互层（`render_page(show_theme_toggle=...)` + localStorage）；增强版 `sparkline()`（area fill + dots）；跨维异常排名 `lib/anomaly_cross.py`（`CrossAnomaly` 17 字段 + `compute_top_anomalies` + `build_drilldown_data`，pandas 进壳库）；V1 驾驶舱 `lib/render/dashboard.py`；V3 叙事周报 `lib/render/deck.py`（含 `DECK_CSS` A4 打印）；V4 超表 `lib/render/supertable.py`（列冻结 + 客户端搜索/排序/行展开/交叉下钻）。壳库现有 API 只增不改不删，DPT 侧改薄委托
 - **v1.20.0（2026-05-28）**：render.py 1851 行 → `lib/render/` 子包（7 子模块 + `_assets.py` 存放 PAGE_HEAD）；`lib/render.py` 保留为历史标记（Python package 优先级高于同名 .py）；新增 `lib/time_windows.py`（`Period` + `build_periods` + `WEEKLY_KEYS` + `TREND_KEYS`，`make_weekly_windows` 改薄包装）；新增 `lib/anomaly_base.py`（`Anomaly` + `SEV_WEIGHT` + `rank_anomalies`）；新增 `lib/loader.py`（`load_shell()` importlib 隔离一行入口）；`lib/__init__.py` 补显式 `__all__` + `get_threshold(metric_key, index)` + `render_status_bar` 导出；删除空目录 `examples/` / `styles/`；`tests/test_sections_contract.py` 全量重写为 18 个 v1.20 契约测试（TestTimeWindows/TestAnomalyBase/TestRenderFacade/TestLoader/TestThresholdAPI），全 PASS；3 个下游 skill + 2 个 ad-hoc 脚本向后兼容，零改动
