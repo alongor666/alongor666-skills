@@ -98,6 +98,9 @@ npx skills add LearnPrompt/luban-skill -g
 ```text
 luban-skill/
 ├── SKILL.md                        # 工作流本体：五个动作、九步流程、班规与验收单
+├── references/
+│   ├── report-templates.md        # 打磨报告13节输出模板（渐进披露，按步取用）
+│   └── polish-guides.md           # README/Showcase结构与Skill类型适配指南
 ├── examples/
 │   └── ai-news-radar-case.md      # 实战案例：真实仓库、真实数字、全程可查证
 ├── README.md
