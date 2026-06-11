@@ -27,12 +27,12 @@
 | 4 | diagnose-org-weekly | P2：重资产 L1，README/SKILL 与渲染器入口不变量（SHELL_ROOT 注入）对账 | ✅ #27 |
 | 5 | diagnose-period-trend | P2：重资产 L1，同上口径对账 | ✅ #28 |
 | 6 | diagnose-loss-development | P2：重资产 L1，同上口径对账 | ✅ #29 |
-| 7 | xcl-html2pdf | P2：L0 基座，driver/bundle 文档命令活体对账，三套皮肤引用完整性 | 🔨 本轮 |
-| 8 | chexian-channel | 轻量：description 触发词与正文一致性 | ⏳ |
-| 9 | chexian-market-analysis | 轻量：同上 | ⏳ |
-| 10 | chexian-pricing-decision | 轻量：同上 | ⏳ |
-| 11 | chexian-ops-review | L2：编排边（调 market/channel/pricing）记录在正文而非 requires_skills 的口径核对 | ⏳ |
-| 12 | company-vortex-card | L2：产物消费边（读 vortex 的 .md）口径核对 | ⏳ |
+| 7 | xcl-html2pdf | P2：L0 基座，driver/bundle 文档命令活体对账，三套皮肤引用完整性 | ✅ #30 |
+| 8 | chexian-channel | 轻量：description 触发词与正文一致性 | ✅ 过尺通过·免刨 |
+| 9 | chexian-market-analysis | 轻量：同上 | ✅ 过尺通过·免刨 |
+| 10 | chexian-pricing-decision | 轻量：同上 | ✅ 过尺通过·免刨（注：正文引用的 chexian-pricing-redline 不在本仓，疑为项目侧技能，待用户确认是否仍在用） |
+| 11 | chexian-ops-review | L2：编排边（调 market/channel/pricing）记录在正文而非 requires_skills 的口径核对 | ✅ 过尺通过·免刨 |
+| 12 | company-vortex-card | L2：产物消费边（读 vortex 的 .md）口径核对 | 🔨 本轮（driver.mjs 与 xcl-html2pdf 同款 findChrome 假探测） |
 | 13 | rewrite-conclusion | 轻量 | ⏳ |
 | 14 | commit-push-pr-core | L0：与实际提交流程对账 | ⏳ |
 | 15 | sync-skills | 轻量（v1.1 护栏刚收口） | ⏳ |
