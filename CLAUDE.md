@@ -18,8 +18,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # 全仓技能巡检（frontmatter 模式 / 依赖声明一致性 / 死链 / 分层红线 / 明文凭据，规则见脚本头注释）
 python3 scripts/validate_skills.py            # 0 错误才可提交；--strict 警告也算失败
 
-# 测试（基座 + 纯逻辑脚本 + 巡检器；无 pytest.ini/conftest，测试自注入 sys.path）
-python3 -m pytest skills/chexian-report-shell/tests/ skills/extract-backlog-governance/tests/ scripts/test_validate_skills.py -q
+# 测试（基座 + 纯逻辑脚本 + 同步器护栏 + 巡检器；无 pytest.ini/conftest，测试自注入 sys.path）
+python3 -m pytest skills/chexian-report-shell/tests/ skills/extract-backlog-governance/tests/ skills/sync-skills/tests/ scripts/test_validate_skills.py -q
 python3 -m pytest skills/chexian-report-shell/tests/test_skill_path.py -v   # 单文件
 python3 -m pytest skills/chexian-report-shell/tests/test_skill_path.py -k sibling_walkup -v  # 单用例（-k 子串匹配）
 
