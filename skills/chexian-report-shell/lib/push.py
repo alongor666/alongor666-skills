@@ -41,7 +41,13 @@ IM_PUSH_TOOLS = _im_push_tools()
 SEND_LARK = IM_PUSH_TOOLS / "send-lark-html.sh"
 SEND_WECOM = IM_PUSH_TOOLS / "send-wecom-html.sh"
 
-DEFAULT_BASE_URL = "https://chexian.cretvalu.com"
+DEFAULT_BASE_URL = os.environ.get("CHEXIAN_BASE_URL", "https://chexian.cretvalu.com")
+
+# VPS 同步目标（user@host:path）。环境变量可重定向到新机器/测试机，免改代码
+VPS_TARGET = os.environ.get(
+    "CHEXIAN_VPS_TARGET",
+    "deployer@162.14.113.44:/var/www/chexian/server/data/reports/",
+)
 
 
 def push_to_im(html_path: Path | str,
@@ -112,7 +118,7 @@ def push_to_im(html_path: Path | str,
                 "rsync", "-az", "--exclude", ".DS_Store",
                 "-e", f"ssh -i {ssh_key}",
                 f"{local_reports}/",
-                "deployer@162.14.113.44:/var/www/chexian/server/data/reports/",
+                VPS_TARGET,
             ], capture_output=True, text=True)
             results["vps_sync"] = {
                 "ok": r.returncode == 0,
