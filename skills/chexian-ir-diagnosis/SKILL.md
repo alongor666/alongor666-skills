@@ -2,7 +2,7 @@
 name: chexian-ir-diagnosis
 description: Use when diagnosing auto insurance incident rate deterioration, investigating why 出险率 is worsening, or performing root cause analysis on loss frequency (ir = Incident Rate 出险率). Trigger phrases — 分析出险率, 出险率恶化, 出险率诊断, 为什么出险率上升, incident rate drill-down.
 user_invocable: true
-version: "1.1.0"
+version: "1.1.1"
 ---
 
 # 出险率自主诊断
@@ -42,7 +42,7 @@ version: "1.1.0"
 - `python3 04_工程/脚本/生成费用率下钻.py` → 费用率交叉验证
 - `python3 04_工程/脚本/生成车型深度分析.py --province 四川 --city X --label Y` → 月度趋势
 - `04_工程/脚本/knowledge.py` → `scan_knowledge(keywords)` 知识库查询
-- 保单级 parquet → `~/Downloads/底层数据湖DUD/chexian-api/数据管理/warehouse/fact/policy/daily/`
+- 保单级 parquet → `${CHEXIAN_DATA_ROOT:-~/Downloads/底层数据湖DUD/chexian-api}/数据管理/warehouse/fact/policy/daily/`（数据湖根与 chexian-report-shell 的 `lib/paths.py` 同一环境变量）
 
 ### Step 2 — 运行主下钻脚本
 
