@@ -7,7 +7,7 @@ description: >-
   等 diagnose-* 业务诊断 skill import 复用。本 skill 本身不直接面向用户，
   不通过 /xxx 调用——直接跑业务 skill 即可。
 user_invocable: false
-version: "1.23.0"
+version: "1.24.0"
 requires_skills:
   - chexian-im-push   # 可选 · 外部技能（不在本仓）· 仅 lib/push.py 飞书/企微推送用，缺失时降级兜底，不影响渲染主链路
 ---
@@ -370,6 +370,7 @@ class SectionContext:
 
 ## 变更日志
 
+- **v1.24.0（2026-06-11）**：VPS 同步目标的 IP/用户名字面量彻底出仓（用户决策"务必解决"）——push.py 不再内置任何默认目标，解析顺序：环境变量 `CHEXIAN_VPS_TARGET` > 本机配置文件 `~/.config/chexian/vps_target`（一行 user@host:path）> 未配置则 vps_sync 跳过并报可操作错误。**本机需一次性配置**（写配置文件或设环境变量），否则推送降级（lark/wecom 不受影响）。git 历史中的旧字面量不可由代码层消除，缓解靠基础设施侧（密钥登录/轮换 IP）
 - **v1.23.0（2026-06-11）**：push.py 基础设施信息下沉环境变量——`CHEXIAN_BASE_URL`（HTML 公网域名）与 `CHEXIAN_VPS_TARGET`（rsync 推送目标 user@host:path），默认值不变、本机零感知；换机器/测试机免改代码。注：历史提交中的 IP 仍在 git 历史里，真要隐藏需轮换 IP/加固 SSH，代码层只解耦不消历史
 - **v1.22.0（2026-06-11）**：新增 `lib/paths.py`——数据湖根路径单一事实源 `DATA_ROOT`（环境变量 `CHEXIAN_DATA_ROOT` 可覆盖，默认本机路径不变）；`queries.py` / `report_queries.py` / `push.py` 共 5 处硬编码绝对路径改为从 `DATA_ROOT` 派生，云端/他机/持续集成环境可整体重定向数据湖。现有 API 只增不改不删，基座 24 测试全绿
 - **v1.21.0（2026-05-28）**：diagnose-period-trend 通用渲染能力收编（6 Phase）：主题切换交互层（`render_page(show_theme_toggle=...)` + localStorage）；增强版 `sparkline()`（area fill + dots）；跨维异常排名 `lib/anomaly_cross.py`（`CrossAnomaly` 17 字段 + `compute_top_anomalies` + `build_drilldown_data`，pandas 进壳库）；V1 驾驶舱 `lib/render/dashboard.py`；V3 叙事周报 `lib/render/deck.py`（含 `DECK_CSS` A4 打印）；V4 超表 `lib/render/supertable.py`（列冻结 + 客户端搜索/排序/行展开/交叉下钻）。壳库现有 API 只增不改不删，DPT 侧改薄委托

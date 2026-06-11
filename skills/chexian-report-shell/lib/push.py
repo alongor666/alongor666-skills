@@ -43,11 +43,24 @@ SEND_WECOM = IM_PUSH_TOOLS / "send-wecom-html.sh"
 
 DEFAULT_BASE_URL = os.environ.get("CHEXIAN_BASE_URL", "https://chexian.cretvalu.com")
 
-# VPS 同步目标（user@host:path）。环境变量可重定向到新机器/测试机，免改代码
-VPS_TARGET = os.environ.get(
-    "CHEXIAN_VPS_TARGET",
-    "deployer@162.14.113.44:/var/www/chexian/server/data/reports/",
-)
+
+def _vps_target():
+    """VPS 同步目标（user@host:path）。基础设施信息不入仓（2026-06-11 用户决策）：
+    环境变量 CHEXIAN_VPS_TARGET > 本机配置文件 ~/.config/chexian/vps_target > 未配置（跳过同步）。
+    """
+    env = os.environ.get("CHEXIAN_VPS_TARGET")
+    if env:
+        return env.strip()
+    try:
+        cfg = Path.home() / ".config" / "chexian" / "vps_target"
+        if cfg.is_file():
+            return cfg.read_text(encoding="utf-8").strip() or None
+    except (RuntimeError, KeyError, OSError):
+        pass
+    return None
+
+
+VPS_TARGET = _vps_target()
 
 
 def push_to_im(html_path: Path | str,
@@ -107,6 +120,13 @@ def push_to_im(html_path: Path | str,
             }
 
     if sync_vps and base_url == DEFAULT_BASE_URL:
+        if not VPS_TARGET:
+            results["vps_sync"] = {
+                "ok": False,
+                "error": "未配置 VPS 同步目标：设环境变量 CHEXIAN_VPS_TARGET，"
+                         "或写入 ~/.config/chexian/vps_target（一行 user@host:path）",
+            }
+            return results
         ssh_key = Path.home() / ".ssh/chexian_deploy"
         try:
             from .paths import DATA_ROOT
