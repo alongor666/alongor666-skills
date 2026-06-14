@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<!--
+═══════════════════════════════════════════════════════════════════
+ 涡旋结构诊断 · 视觉卡片骨架（16:9 演示版 · 国家地理风 · 大字号）
+ 调用 xcl-html2pdf 基座：本骨架只放「内容 + 涡旋专属组件」，机制/视觉/字号全来自外链。
+ ───────────────────────────────────────────────────────────────────
+ 用法：把本骨架 + 下列 5 个文件复制到同一工作目录，按页型替换正文与 SVG，按需增删页：
+   ① deck-16x9.css    （xcl-html2pdf/assets，16:9 版面盒 + 翻页机制，勿改）
+   ② report-skin.css  （xcl-html2pdf/assets，配色/字体/通用组件，勿改）
+   ③ skin-16x9.css    （xcl-html2pdf/assets，演示字号放大层，勿改）
+   ④ deck-16x9.js     （xcl-html2pdf/assets，演示翻页：方向键/序号条/缩略图/全屏/触摸，勿改）
+   ⑤ vortex-16x9.css  （company-vortex-card/assets，涡旋专属组件 stage/triad/shape/vortex）
+ 引入顺序务必：deck-16x9.css → report-skin.css → skin-16x9.css → vortex-16x9.css。
+ 版面铁律：可用高 .inner≈604px（分母）、宽≈1152px；每页填充率 80–100%、零溢出、内容不跨页。
+ 演示风铁律：每页只讲一件事、大字、留白；内容量约为 A4 的六成——阶段页三才文字务必精简。
+ 阶段页 SVG：放进 .inner.flexcol，加 class="vortex grow" 自动撑满下半屏；
+   viewBox 比例设到 ≈ 宽:高（下半屏 ≈ 1152×300，约 3.8:1）即不被纵向拉伸（用 driver 实测调）。
+ 验收：node <xcl-html2pdf>/driver.mjs 本卡片.html 12 --open
+ 分发：node <xcl-html2pdf>/bundle.mjs 本卡片.html → 本卡片.standalone.html（发这一个单文件）
+═══════════════════════════════════════════════════════════════════
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{公司名}结构诊断 · {一句话物理隐喻} | 商业地理 16:9</title>
+<link rel="stylesheet" href="deck-16x9.css">
+<link rel="stylesheet" href="report-skin.css">
+<link rel="stylesheet" href="skin-16x9.css">
+<link rel="stylesheet" href="vortex-16x9.css">
+</head>
+<body>
+
+<!-- ════════ P1 封面 ════════ -->
+<section class="page cover-page">
+  <div class="inner">
+    <div class="top">
+      <div class="logo"><b>商业地理</b>BUSINESS GEOGRAPHIC</div>
+      <div class="iss">结构诊断特辑 · 第 {代码} 号 · 2026</div>
+    </div>
+    <div class="kicker">深度勘探 · {行业版图}</div>
+    <h1>{公司名}<br><span class="red">{一句话物理隐喻标题}</span></h1>
+    <div class="sub">{副标题：一句话定位，物理学+哲学词汇}</div>
+    <div><span class="code">{英文名} ｜ {代码} ｜ 涡旋体结构模型</span></div>
+    <div class="defn">{总定义：物理学隐喻，可独立成立；关键数字用 <b>…</b> 强调}</div>
+  </div>
+</section>
+
+<!-- ════════ P2 档案 + 五阶段总览 ════════ -->
+<section class="page">
+  <div class="rhead"><div class="l">商业地理<span>BUSINESS GEOGRAPHIC</span></div><div class="r">{公司名} · {代码} · 结构诊断</div></div>
+  <div class="inner">
+    <div class="sec-head"><div class="sec-no">壹</div><div><div class="sec-title">天体档案</div><div class="sec-en">The Dossier</div></div></div>
+    <div class="rule"></div>
+    <div class="dossier">
+      <div class="row"><span class="k">全称</span><span class="v">{公司全称}</span></div>
+      <div class="row"><span class="k">代码</span><span class="v">{代码}</span></div>
+      <div class="row"><span class="k">前身</span><span class="v">{前身}</span></div>
+      <div class="row"><span class="k">创始人</span><span class="v">{创始人}</span></div>
+      <div class="row"><span class="k">上市</span><span class="v">{上市时间/地}</span></div>
+      <div class="row"><span class="k">主业</span><span class="v">{主业}</span></div>
+      <div class="row"><span class="k">控制人</span><span class="v">{实控人/第一股东}</span></div>
+      <div class="row"><span class="k">最新</span><span class="v">{最新营收/净利}</span></div>
+    </div>
+    <div class="caption">图注：{一句话点出理解该公司结构的前提}。</div>
+    <div class="sec-head" style="margin-top:14px;"><div class="sec-no">序</div><div><div class="sec-title">五个相变阶段</div><div class="sec-en">Five Phases</div></div></div>
+    <div class="rule"></div>
+    <table class="data">
+      <tr><th>阶段</th><th>时期</th><th>结构形态</th></tr>
+      <tr><td>一 · {名}</td><td>{年}</td><td>{形态}</td></tr>
+      <tr><td>二 · {名}</td><td>{年}</td><td>{形态}</td></tr>
+      <tr><td class="hot">三 · {名}</td><td>{年}</td><td class="hot">{临界/越界形态}</td></tr>
+      <tr><td>四 · {名}</td><td>{年}</td><td>{形态}</td></tr>
+      <tr><td>五 · {名}</td><td>{年}</td><td>{形态}</td></tr>
+    </table>
+  </div>
+  <div class="rfoot"><div>李继刚『商业结构』· 涡旋体模型</div><div><span class="pg">01</span></div></div>
+</section>
+
+<!-- ════════ 阶段页 archetype（复制此页 5 次 → P3–P7 五阶段；临界阶段 stage-tag 加 .crit） ════════ -->
+<section class="page">
+  <div class="rhead"><div class="l">结构演化<span>STRUCTURAL EVOLUTION</span></div><div class="r">{公司名} · {代码} · 结构诊断</div></div>
+  <div class="inner flexcol">
+    <span class="stage-tag">PHASE 0N · {年份}</span>
+    <div class="stage-h">{阶段名}</div>
+    <div class="stage-yr">{一句话定位}</div>
+    <div class="triad">
+      <div class="t tian"><div class="lab"><span class="dot"></span>天 · 外部压力</div><p>{时代制约/熵增威胁来源，≤3 行}</p></div>
+      <div class="t ren"><div class="lab"><span class="dot"></span>人 · 向心力</div><p>{核心凝聚力/最高密度点，≤3 行}</p></div>
+      <div class="t di"><div class="lab"><span class="dot"></span>地 · 离心力</div><p>{业务边界/扩张疆域，≤3 行}</p></div>
+    </div>
+    <div class="shape"><div class="name">▸ 形态：{物理/几何隐喻}</div><p>{为什么必须是这个形状，≤2 行}</p></div>
+    <svg class="vortex grow" viewBox="0 0 1152 300" role="img" preserveAspectRatio="xMidYMid meet">
+      <defs><radialGradient id="gN" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff4cf"/><stop offset="55%" stop-color="#e6b24f"/><stop offset="100%" stop-color="#8a5a16"/></radialGradient></defs>
+      <text x="576" y="34" fill="#6b5f44" font-size="20" text-anchor="middle">{外部压力：向下箭头标注}</text>
+      <circle cx="576" cy="170" r="78" fill="url(#gN)" stroke="#c47a2a" stroke-width="2"/>
+      <text class="core" x="576" y="166" fill="#1a140a" font-size="22" text-anchor="middle">◉ {核心}</text>
+      <text x="576" y="196" fill="#3a2a12" font-size="16" text-anchor="middle">{向心力}</text>
+      <text x="200" y="170" fill="#2f6b4f" font-size="19">{离心/利好 →}</text>
+      <text x="952" y="170" fill="#a8431f" font-size="19" text-anchor="end">{压力/越界 ←}</text>
+      <text x="576" y="286" fill="#a8341f" font-size="18" text-anchor="middle">{关键节点/矛盾点}</text>
+    </svg>
+  </div>
+  <div class="rfoot"><div>李继刚『商业结构』· 涡旋体模型</div><div><span class="pg">0N</span></div></div>
+</section>
+
+<!-- ════════ P8 财务（数据条 + 数据表） ════════ -->
+<section class="page">
+  <div class="rhead"><div class="l">财务地层<span>FINANCIAL STRATA</span></div><div class="r">{公司名} · {代码} · 结构诊断</div></div>
+  <div class="inner">
+    <div class="sec-head"><div class="sec-no">叁</div><div><div class="sec-title">营收与盈利剖面</div><div class="sec-en">Financials</div></div></div>
+    <div class="rule"></div>
+    <div class="lede">{一句话点出财务结构特征}</div>
+    <div class="bar-row"><span class="lbl">{年}</span><div class="bar-track"><div class="bar-fill bar-rev" style="width:60%">{值}</div></div></div>
+    <div class="bar-row"><span class="lbl">{年}</span><div class="bar-track"><div class="bar-fill bar-peak" style="width:100%">{峰值}</div></div></div>
+    <div class="bar-row"><span class="lbl">{年}</span><div class="bar-track"><div class="bar-fill bar-rev" style="width:78%">{值}</div></div></div>
+    <table class="data">
+      <tr><th>关键年份</th><th>营收</th><th>净利</th><th>{指标}</th><th>结构含义</th></tr>
+      <tr><td>{年}</td><td class="hot">{值}</td><td>{值}</td><td>{值}</td><td>{含义}</td></tr>
+      <tr><td>{年}</td><td>{值}</td><td class="hot">{值}</td><td>{值}</td><td>{含义}</td></tr>
+    </table>
+    <div class="caption">数据来源：{年报/快报}；{口径说明}。</div>
+  </div>
+  <div class="rfoot"><div>李继刚『商业结构』· 涡旋体模型</div><div><span class="pg">07</span></div></div>
+</section>
+
+<!-- ════════ P9 竞争格局（表 + 注 + 引文） ════════ -->
+<section class="page">
+  <div class="rhead"><div class="l">竞争版图<span>CARTOGRAPHY</span></div><div class="r">{公司名} · {代码} · 结构诊断</div></div>
+  <div class="inner">
+    <div class="sec-head"><div class="sec-no">肆</div><div><div class="sec-title">{行业}版图 · {公司}坐标</div><div class="sec-en">Competition</div></div></div>
+    <div class="rule"></div>
+    <table class="data">
+      <tr><th>战场</th><th>地位</th><th>结构判断</th></tr>
+      <tr><td>{细分}</td><td class="hot">{地位}</td><td>{判断}</td></tr>
+      <tr><td>{细分}</td><td>{地位}</td><td>{判断}</td></tr>
+      <tr><td>{细分}</td><td class="hot">{地位}</td><td>{判断}</td></tr>
+    </table>
+    <div class="note" style="margin-top:14px;">对手画像：{主要对手与各自卡位}。</div>
+    <div class="quote">{一句话竞争本质判断}</div>
+  </div>
+  <div class="rfoot"><div>李继刚『商业结构』· 涡旋体模型</div><div><span class="pg">08</span></div></div>
+</section>
+
+<!-- ════════ P10 专题（核心矛盾 · 对比行 + 引文） ════════ -->
+<section class="page">
+  <div class="rhead"><div class="l">勘探专题<span>THE PARADOX</span></div><div class="r">{公司名} · {代码} · 结构诊断</div></div>
+  <div class="inner">
+    <div class="sec-head"><div class="sec-no">伍</div><div><div class="sec-title">{核心矛盾名}</div><div class="sec-en">Core Tension</div></div></div>
+    <div class="rule"></div>
+    <div class="note" style="color:var(--cng-red);font-weight:700;">核心结论：{一句话点出该公司最深的结构性张力}。</div>
+    <div class="opt-row head"><div class="c c0">方向 / 资产</div><div class="c">兑现度</div><div class="c c2">性质判断</div></div>
+    <div class="opt-row"><div class="c c0">{项}</div><div class="c"><span class="badge b-eng">{标签}</span></div><div class="c c2">{判断}</div></div>
+    <div class="opt-row"><div class="c c0">{项}</div><div class="c"><span class="badge b-zero">{标签}</span></div><div class="c c2">{判断}</div></div>
+    <div class="opt-row"><div class="c c0">{项}</div><div class="c"><span class="badge b-opt">{标签}</span></div><div class="c c2">{判断}</div></div>
+    <div class="quote">{一句话：用看涨期权/光度≠温度等框架收束核心矛盾}</div>
+  </div>
+  <div class="rfoot"><div>李继刚『商业结构』· 涡旋体模型</div><div><span class="pg">09</span></div></div>
+</section>
+
+<!-- ════════ P11 量级测算（calc 三块 + 矢量表） ════════ -->
+<section class="page">
+  <div class="rhead"><div class="l">勘探专题<span>SCALE TEST</span></div><div class="r">{公司名} · {代码} · 结构诊断</div></div>
+  <div class="inner">
+    <div class="sec-head"><div class="sec-no">陆</div><div><div class="sec-title">量级测算</div><div class="sec-en">The Arithmetic</div></div></div>
+    <div class="rule"></div>
+    <div class="note">基数（{年}）：{营收/净利/关键基数}。</div>
+    <div class="calc">
+      <div class="cc"><div class="big">{数}<span class="unit">{单位}</span></div><div class="desc">{含义}</div></div>
+      <div class="cc"><div class="big">{数}<span class="unit">{单位}</span></div><div class="desc">{含义}</div></div>
+      <div class="cc"><div class="big">{数}<span class="unit">{单位}</span></div><div class="desc">{含义}</div></div>
+    </div>
+    <div class="sec-head" style="margin-top:8px;"><div class="sec-no">柒</div><div><div class="sec-title">该跟踪的矢量</div><div class="sec-en">What to Track</div></div></div>
+    <div class="rule"></div>
+    <table class="data">
+      <tr><th>信号</th><th>含义</th></tr>
+      <tr><td class="hot">① {信号}</td><td>{含义}</td></tr>
+      <tr><td>② {信号}</td><td>{含义}</td></tr>
+      <tr><td>③ {信号}</td><td>{含义}</td></tr>
+    </table>
+  </div>
+  <div class="rfoot"><div>李继刚『商业结构』· 涡旋体模型</div><div><span class="pg">10</span></div></div>
+</section>
+
+<!-- ════════ P12 终局判断（verdict 四维 + 收尾引文） ════════ -->
+<section class="page">
+  <div class="rhead"><div class="l">诊断收束<span>SYNTHESIS</span></div><div class="r">{公司名} · {代码} · 结构诊断</div></div>
+  <div class="inner">
+    <div class="seal">结构<br>诊断</div>
+    <div class="sec-head"><div class="sec-no">终</div><div><div class="sec-title">终局判断</div><div class="sec-en">The Verdict</div></div></div>
+    <div class="rule"></div>
+    <div class="verdict">
+      <div class="vbox"><div class="vt">核心密度</div><div class="stars">★★★★☆</div><p>{判断}</p></div>
+      <div class="vbox"><div class="vt">边界扩张力</div><div class="stars">★★★☆☆</div><p>{判断}</p></div>
+      <div class="vbox"><div class="vt">抗熵增能力</div><div class="stars">★★★☆☆</div><p>{判断}</p></div>
+      <div class="vbox" style="border-color:#d8a99e;background:#f6e7d8;"><div class="vt" style="color:var(--rust);">相变概率 · {低/中/中高/高}</div><div class="stars">⤴</div><p>{判断}</p></div>
+    </div>
+    <div class="quote">{收尾：一句话总括当前结构本质}</div>
+  </div>
+  <div class="rfoot"><div>商业地理 · 结构诊断特辑 ｜ 数据截止 {YYYY-MM} ｜ 非投资建议</div><div><span class="pg">11</span></div></div>
+</section>
+
+<script src="deck-16x9.js"></script>
+</body>
+</html>

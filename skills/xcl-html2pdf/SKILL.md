@@ -10,7 +10,7 @@ description: >-
   自包含单文件、跨平台适配、Windows 打不开、手机翻页、
   文字错位。内容专属模板（如涡旋诊断卡片）见 company-vortex-card。
 user_invocable: true
-version: "1.8.1"
+version: "1.8.2"
 ---
 
 # xcl-html2pdf：HTML → 印刷级 PDF / 演示级 PPT 基座
@@ -86,6 +86,7 @@ node --version   # 需 ≥ 21（内置全局 WebSocket / fetch；实测 v22.16.0
    - 每页 = 一个 `.page`，内容放进 `.inner`（`overflow:hidden`）。**可用高（填充率分母）：PDF ≈ 1005px@96dpi（A4 210×297mm）；PPT ≈ 604px（16:9 1280×720px）。**
    - 封面用 `.page.cover-page`；要让一张图撑满下半页/下半屏，用 `.inner.flexcol` + 给图加 `class="grow"`。
    - **每页填充率 80–100%、零溢出、内容不跨页。** PPT 可用高更矮、字更大，每页内容量约为 PDF 的六成——每页只讲一件事；不足就补实质内容（小表/说明/引言），不靠拉间距充数。
+   - **禁止同页双标题**：页眉 running head（`rhead` 左栏）只放板块/栏目名，**不得与页内大标题（`sec-head` 的 `sec-title` 等）用相同文字**——同一页同一个标题只出现一次（正文与配图互为补充强调不算重复）。
 4. 反复跑 driver 验收到全 PASS（同一个 driver，画幅无关）。**全 PASS 后即开**：agent 跑最终验收时带 `--open`，driver 会在全 PASS 时自动用系统默认浏览器打开成品给用户预览（FAIL 不开）。
 5. **分发前打包成自包含单文件**（见顶部 ⚑ 分发铁律）：`node bundle.mjs your.html` → `your.standalone.html`。**只要会发给别的电脑/手机，就交付这个单文件**，不要只发原始 `.html`（外链 404 会导致对方文字错位 + 翻不动）。打包后建议再跑一次 `node driver.mjs your.standalone.html N` 确认单文件也全 PASS。
 

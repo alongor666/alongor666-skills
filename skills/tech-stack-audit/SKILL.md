@@ -1,8 +1,8 @@
 ---
 name: tech-stack-audit
 description: 技术栈审计与治理路线生成（跨项目通用，只读）。Use when 用户说"审计技术栈 / 依赖审计 / 技术栈体检 / 出依赖升级路线 / tech stack audit"。实测包管理器的过期与安全数据、按暴露面分级、核对技术栈文档漂移与工具链缺口，产出中文审计报告 + 分 PR 治理热启动 prompt。不直接执行任何升级。
-version: 1.0
 user_invocable: true
+version: "1.0.0"
 ---
 
 # 技术栈审计（tech-stack-audit）
