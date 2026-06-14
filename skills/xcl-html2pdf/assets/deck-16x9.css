@@ -30,10 +30,16 @@ body{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei","Source Han Sans
 
 /* ====== 屏幕：GPU transform 单步推入（丝滑演示引擎，仅屏幕生效；deck-16x9.js 驱动） ====== */
 @media screen{
-  /* 视口即舞台：一屏一页，无滚动条、无惯性回弹 */
-  body.deck{margin:0;width:100vw;height:100vh;overflow:hidden;padding:0;position:relative;background:#cdbf9c;}
+  /* 视口即舞台：一屏一页，无滚动条、无惯性回弹。
+     舞台底用中性深色「剧场底」（非页面米色）——视口比例≠16:9 时多出的 letterbox 边
+     读作有意的画框/投影背景，而非「下一页探头」；对浅色(国家地理/仪表盘)与暗色(墨水)皮肤都成立。 */
+  body.deck{margin:0;width:100vw;height:100vh;overflow:hidden;padding:0;position:relative;
+    background:radial-gradient(circle at 50% 42%, #2a241a 0%, #16140f 78%);}
   /* 每页铺满主体区（底部留 56px 切换带）；只对 transform 做过渡 → GPU 合成、丝滑。左/右页停在 ±100%（移出视口） */
-  body.deck .slide{position:absolute;top:0;left:0;width:100vw;height:calc(100vh - 56px);
+  /* overflow:hidden 精确裁掉「渗出本 slide 盒的页面阴影」：满宽(letterbox=0)时相邻页停在 ±100vw，
+     其 .page 的 box-shadow(blur 40px) 本会越过视口边界渗入当前页——渗入量正好等于渗出本盒量，被裁掉；
+     有 letterbox 时页面四周阴影仍在盒内、立体感保留。自适应任意屏幕比例，不影响过渡与打印态。 */
+  body.deck .slide{position:absolute;top:0;left:0;width:100vw;height:calc(100vh - 56px);overflow:hidden;
     display:flex;align-items:center;justify-content:center;backface-visibility:hidden;
     transition:transform .52s cubic-bezier(.22,.61,.36,1);will-change:transform;}
   body.deck-no-anim .slide{transition:none!important;} /* 初始摆位 / 远跳预置：临时关过渡 */

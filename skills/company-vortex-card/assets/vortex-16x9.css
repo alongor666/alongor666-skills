@@ -1,0 +1,42 @@
+/* ===========================================================================
+ * vortex-16x9.css —— 涡旋结构诊断 · 专属组件层（16:9 演示尺度）
+ *   只补 xcl-html2pdf 基座没有的「涡旋诊断专属组件」：
+ *     .stage-tag / .stage-h / .stage-yr / .triad(天人地) / .shape / .vortex
+ *   配色/字体/通用组件(cover/dossier/table/verdict/calc/quote/note/seal)继承
+ *   report-skin.css；字号留白由 skin-16x9.css 放大——本表只补涡旋组件，且已按
+ *   16:9 演示尺度(分母 .inner≈604px、宽≈1152px)调校字号，勿与基座组件重复定义。
+ *   引入顺序（务必，放在最后一层覆盖）：
+ *     deck-16x9.css → report-skin.css → skin-16x9.css → vortex-16x9.css
+ *   语义色契约（与 report-skin 同源）：
+ *     向心/吸积金 #7a6433/#bd9b52 · 离心/利好玉绿 #2f6b4f/#3f8a66
+ *     外部压力橙 #a8541f/#c06a3a · 警示朱红 #a8341f · 核心暖色径向渐变
+ * ========================================================================= */
+
+/* —— 阶段标签 / 标题 / 年份 —— */
+.stage-tag{display:inline-block;font-size:14px;letter-spacing:.24em;color:#1a140a;
+  background:var(--gold);padding:6px 18px;border-radius:2px;font-weight:700;}
+.stage-tag.crit{background:#cf4a26;color:#fff;}            /* 临界/越界阶段：朱红 */
+.stage-h{font-size:42px;font-weight:900;color:var(--ink);margin:14px 0 4px;letter-spacing:.03em;line-height:1.1;}
+.stage-yr{font-size:16px;color:var(--gold-d);letter-spacing:.16em;margin-bottom:14px;}
+
+/* —— 三才（天=外部压力 / 人=向心力 / 地=离心力） —— */
+.triad{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:8px 0 14px;}
+.triad .t{background:#f1e8d4;border:1px solid #d4c6a2;border-radius:3px;padding:16px 18px;}
+.triad .t .lab{font-size:16px;font-weight:900;letter-spacing:.06em;margin-bottom:8px;
+  display:flex;gap:8px;align-items:center;}
+.triad .t .lab .dot{width:10px;height:10px;border-radius:50%;flex:none;}
+.triad .t.tian .dot{background:#c06a3a;} .triad .t.tian .lab{color:#a8541f;}  /* 天·压力·橙 */
+.triad .t.ren  .dot{background:#bb301a;} .triad .t.ren  .lab{color:#a8341f;}  /* 人·向心·朱红 */
+.triad .t.di   .dot{background:#3f8a66;} .triad .t.di   .lab{color:#2f6b4f;}  /* 地·离心·玉绿 */
+.triad .t p{font-size:16px;line-height:1.55;color:var(--ink2);}
+
+/* —— 结构形态命名 —— */
+.shape{border-left:3px solid var(--rust);padding:2px 0 2px 18px;margin:4px 0 12px;}
+.shape .name{font-family:"Noto Serif SC","Songti SC","STSong","SimSun",serif;
+  font-size:22px;color:var(--rust);font-weight:700;margin-bottom:5px;}
+.shape p{font-size:16.5px;color:var(--ink2);line-height:1.6;}
+
+/* —— 涡旋 SVG（仅视觉皮；撑满下半屏靠 .inner.flexcol .grow，机制在 deck-16x9.css） —— */
+.vortex{width:100%;height:auto;display:block;background:#efe6d0;
+  border:1px solid #cbbd9b;border-radius:3px;}
+.vortex .core{font-family:"Noto Serif SC","Songti SC","STSong","SimSun",serif;font-weight:700;}
