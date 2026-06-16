@@ -51,7 +51,7 @@ version: "1.0.0"
 5. 跑正确性验证 + 该任务类型的回归 / 度量
 6. 同命令、同数据、同环境做前后对比
 7. 决策：promote / rollback / continue
-8. 结论沉淀到项目约定位置（`.claude/shared-memory/` 或同等机制），**不为单次结论新建 docs/ 目录**
+8. 结论沉淀到**项目允许 AI 写入的 evidence/scorecard 位置**（必须由 wrapper 显式声明）。若项目无授权位置，或唯一候选位置被项目 policy（AGENTS.md / CLAUDE.md / 等价机制）标为 user-only（AI 只读），本步**报 BLOCKED**而非默认写入受保护路径。**不为单次结论新建 docs/ 目录**
 
 ---
 
@@ -166,7 +166,7 @@ verifier 结果：
 1. 跑项目回归门禁（§4 对应列），贴输出
 2. 调 `evidence-verifier` agent（fresh context）试图证伪本轮改进
 3. 发布安全评估：现有灰度 / 健康检查 / sentinel / rollback 能否支撑；无机制则报"推进受阻"
-4. scorecard 写入项目约定位置（基线 / 候选 / 测试 / 风险 / 决策 / 下一实验），**不新建目录**
+4. scorecard 写入 wrapper 声明的 AI 可写位置（基线 / 候选 / 测试 / 风险 / 决策 / 下一实验）；若该位置被项目 policy 标为 user-only 或 wrapper 未声明，**报 BLOCKED 而非默认写入受保护路径**。**不新建目录**
 
 ---
 
@@ -181,7 +181,7 @@ verifier 结果：
 5 前后同命令/同数据/同环境并排打印
 6 回归门禁通过（项目 verify:full 或 governance）
 7 发布安全：灰度/sentinel/rollback 可支撑，否则报推进受阻
-8 scorecard 写入项目约定位置
+8 scorecard 写入 wrapper 声明的 AI 可写位置（位置被项目 policy 标 user-only 或 wrapper 未声明 → 报 BLOCKED）
 遇 无法建基线/正确性不过/噪声过大/数据缺失/需未授权破坏性改动 → 报 BLOCKED。
 无命令输出或产物路径不得宣称成功。
 ```
@@ -197,7 +197,7 @@ verifier 结果：
 | 项目 rule | `.claude/rules/<project>-evidence-loop.md` | §4 项目专属 harness 映射表 + 项目特例 + 引用基座 |
 | 项目命令 | `.claude/commands/<project>-evidence-loop.md` | §8 三阶段执行器，调用本基座 + 项目 rule |
 | verifier agent | `.claude/agents/evidence-verifier.md` 或 `~/.claude/agents/evidence-verifier.md` | 复制本仓 `verifier-agent-template.md` 即可 |
-| scorecard 落位 | `.claude/shared-memory/` 或同等 | 阶段 C 步骤 4 写入位置 |
+| scorecard 落位 | `<项目允许 AI 写入的 evidence/scorecard 位置>`（wrapper 必须显式声明） | 阶段 C 步骤 4 写入位置。**禁止默认写入 `.claude/shared-memory/` / `~/.claude/projects/**/memory/` 等常见 user-only 路径**——若项目 policy（AGENTS.md §8 / 等价机制）将候选位置标为 user-only，wrapper 必须改写到项目授权的 append-only 位置（如 `.claude/workflow/pr-evolution.md` 已被 `commit-push-pr-core` 用作自进化日志），或在阶段 C step 4 报 BLOCKED |
 
 **薄 wrapper 写法**：
 > 「执行 evidence-loop-core 协议（§1 合同 / §2 loop / §5 verifier 隔离 / §6 停止 / §7 阈值）。
