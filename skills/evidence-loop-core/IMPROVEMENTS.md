@@ -96,3 +96,56 @@
 - **下一实验**：
   1. 下次任意项目 evidence-loop 召唤 verifier 时观察其是否**未经 prompt 提示**就主动跑 grep 变体 + 加载红线源；若否则验证 B7 已发生
   2. 若 B7 持续出现，需在基座加"模板版本号 + 同步钩子"机制（而非每次 prompt 注入新规则）
+
+---
+
+## 待用验证 prompt 模板（用于压测元 loop #1 加固的新规则）
+
+> 各项目下次自然触发某类任务时套用，**召唤 verifier 时一字不改**（关键：不在 prompt 里复述 #8 #9 规则，看 verifier 是否自带）。
+
+### 模板 B — 周报接入 → 压测 #9 红线扫描（preknow_shanxi）
+
+**触发条件**：业务周报 / 六大战略 / 细分推荐业务 xlsx 到货时
+
+**触发命令**：
+```bash
+python3 scripts/extract_weekly_shanxi.py business --file 业务周报YYYY.M.D.xlsx --as-of YYYY-MM-DD
+```
+
+**实施者预期失误**：摘要文本中直写 KPI / Q4 / cohort / YoY / MoM / LR 不译
+
+**召唤 verifier 的 prompt（一字不改）**：
+
+```
+你是 preknow_shanxi 的 evidence-verifier，按 .claude/agents/evidence-verifier.md 执行。
+
+本轮合同：
+- 任务：周报 <YYYY.M.D> 接入（extractor 跑通 + 产物登记）
+- 改动文件：<列改动文件>
+- 产物：<列 CSV / Markdown 摘要路径>
+
+Pre-flight：
+- git 状态：<committed / staged-not-committed / dirty / mixed>
+- 项目 wrapper：preknow-evidence-loop（用 wrapper §3 阈值，非基座 §7）
+- baseline：阶段 A run_quality_gates.py 输出
+- 依赖未导入资源：无
+
+请按合同重跑 oracle，给出裁定。
+```
+
+**通过判据**（不告诉 verifier，留我们这里盯盘）：
+1. verifier 输出"裁定"前**显式列出**已读的红线源（最少含 `~/.claude/rules/common/report-language-redline.md`）
+2. verifier 自己 `grep -niE 'KPI|cohort|YoY|MoM|LR|cutoff|...' <产物>`，命中即在"证伪发现"标红 + 行号
+3. 摘要 Markdown 里若残留任一英文术语黑名单词，verifier 必须降级裁定
+
+**失败动作**：在 verifier-agent-template.md 加**强制命令模板**（替代"行为指引"）：
+```
+verifier 接到报告类产物时**必须**执行：
+1. `cat ~/.claude/rules/common/report-language-redline.md | head -100` （证明已读）
+2. `grep -rniE 'KPI|LR|cohort|IBNR|YoY|MoM|Q[1-4]|cutoff|burning.cost|fallback|override' <产物路径>`
+3. 命中 ≥ 1 → 裁定降级
+```
+
+**ROI**：★★★（本协议从摩托车 LR 报告事故沉淀，正面命中原伤）
+
+**状态**：⏳ 等周报到货触发（截至 2026-06-16 无未消化 xlsx）
