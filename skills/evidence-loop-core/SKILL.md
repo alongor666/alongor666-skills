@@ -65,6 +65,11 @@ commit/工作树状态 + 回归结果 + 风险与回滚条件
 任何声明若无 工具结果 / 测试输出 / 度量输出 / 日志 / 文件 diff / 已提交产物 支撑
 → 必须显式标 **"未验证"**。**禁止凭记忆总结、从代码结构推断效果**。
 
+**工作树状态的最小可接受形式**（B1 — 2026-06-16 加固）：
+
+- 必含 `git status --short` 完整输出，而非自然语言摘要——**显式区分** `D ` / ` M` / `M ` / `??` 四种符号。`Edit` / `Write` 工具改文件**只影响工作树，不自动 `git add`**：` M`（空格在前）= 工作树脏未 staged；`M ` = 已 staged；`D ` = 已 `git rm` staged；`??` = 未跟踪。混看这四种符号是首要盲点（D1 verifier 第二轮抓到的真缺陷"`run_quality_gates.py` 未 staged"即此）。
+- 数字陈述（baseline / oracle 输出）需含命令获取的**相对时点**（如"本轮阶段 A 跑 / 本轮阶段 C 复跑"），避免阶段 A 数字被后续改动 stale 后仍当 baseline 引用（D6 中 "cross_refs = 201" 过期实际 253 即此）。
+
 ---
 
 ## 4. 任务类型 → 项目现成 harness（wrapper 必填）
@@ -95,6 +100,24 @@ commit/工作树状态 + 回归结果 + 风险与回滚条件
   不用 LLM subagent 去做。
 - 探索用只读 subagent；收尾用 **1 个 fresh-context verifier** 试图证伪。
   **不要 7 个 verifier**——多数验证已是脚本。
+
+### 5.1 verifier 必查项（白名单，B2 — 2026-06-16 加固）
+
+verifier 模板 "What to attack" 的最小覆盖面，**任一缺位即裁定"证据不足"**。具体执行细则在 `verifier-agent-template.md`，本节是基座白名单（wrapper 不得删项，可加项）：
+
+| # | 必查项 | 失守样本 |
+|---|---|---|
+| 1 | baseline 有效性（同命令/同环境/同数据，重复次数足够） | — |
+| 2 | 正确性 oracle 重跑命中合同 | — |
+| 3 | 可比性 + 噪声（CV ≤ 10%） | — |
+| 4 | scope creep（diff 仅含假设必需文件） | — |
+| 5 | 回归门禁绿（项目 §4 对应列） | — |
+| 6 | 发布安全（灰度 / sentinel / rollback 就位） | — |
+| 7 | 阈值清算（默认 §7 或 wrapper §3 阈值） | — |
+| 8 | **grep "零命中"声明的术语边界**——同义词 / 上位词 / 拼写变体 / 注释 / 字符串 / CSS class / HTML attr / 配置 key 都跑一遍；只搜一个词宣称"全无"= 假阳性 | preknow_shanxi D6 scorecard L34：`grep 'pii' = 0` 实际 CSS class 2 命中 |
+| 9 | **全局/项目语言、安全、脱敏红线扫描**——`~/.claude/rules/common/*.md` 与项目 `CLAUDE.md` / `AGENTS.md` 标红线条款（含 `report-language-redline.md` 中英文术语黑名单）逐条对照产物，违一条即降级裁定 | preknow_shanxi D6 scorecard L35：报告含 "KPI" 未译，违 `report-language-redline.md` |
+
+> 第 8/9 条由本基座 backlog B2-a/B2-b 提取，属"零命中陷阱"和"红线泄漏"两类系统性盲点，verifier 必须主动触发，**不依赖实施者自述**。
 
 verifier 提示词模板见 `verifier-agent-template.md`，由 wrapper 复制到
 `<project>/.claude/agents/evidence-verifier.md` 或 `~/.claude/agents/evidence-verifier.md`
@@ -164,9 +187,14 @@ verifier 结果：
 ### 阶段 C — 收尾
 
 1. 跑项目回归门禁（§4 对应列），贴输出
-2. 调 `evidence-verifier` agent（fresh context）试图证伪本轮改进
+2. 调 `evidence-verifier` agent（fresh context）试图证伪本轮改进。**召唤时必填的最小输入清单**（B3 — 2026-06-16 加固，缺一项 verifier 会按错误默认走，已发生 2 次 hash 混淆 + 1 次 staged-未-commit 漏看）：
+   - **当前 git 状态**：`committed`（HEAD = sha on 分支 X） / `staged-not-committed`（diff 在 index 但未 commit） / `dirty`（在工作树未 staged） / `mixed`
+   - **改动是否依赖未导入资源**（本机不存在但 oracle 必需的文件 / 网络 / 凭证 / 敏感数据）
+   - **项目 wrapper 名**（让 verifier 用 wrapper §3 阈值而非基座 §7）
+   - **本轮 baseline vs after 命令输出的获取时点**（避免 verifier 复跑跨 commit 后用了不同 baseline）
 3. 发布安全评估：现有灰度 / 健康检查 / sentinel / rollback 能否支撑；无机制则报"推进受阻"
 4. scorecard 写入 wrapper 声明的 AI 可写位置（基线 / 候选 / 测试 / 风险 / 决策 / 下一实验）；若该位置被项目 policy 标为 user-only 或 wrapper 未声明，**报 BLOCKED 而非默认写入受保护路径**。**不新建目录**
+5. **协议短板速记**（C — 2026-06-16 自进化通道）：本轮 loop 中 verifier 抓到的实施者失误、协议本身盲点、反复出现的同类问题，逐条追加到 `~/.claude/skills/evidence-loop-core/IMPROVEMENTS.md`（与本轮 scorecard 分开记，归基座本地 backlog）。攒满 20 条或满 1 个月触发"用 evidence-loop 协议优化协议自身"的元任务（基线 = 当前协议表现 metric，oracle = 同类问题下轮发生数下降）。**不阻塞本轮 promote**——本步只产 backlog 不改基座；元任务由用户在合适时机发起。
 
 ---
 
