@@ -155,6 +155,21 @@ wrapper 命令实现"三阶段执行器"，每阶段输出固定结构：
 
 ### 阶段 A — HARNESS 就绪报告（只读，不改代码）
 
+#### Step 0.5: 用户痛点调研（user friction probe）
+
+阶段 A 不是从代码 harness 起步，而是从用户痛点起步。先 1-2 个调研动作：
+
+- **任务涉及现有工具/命令** → grep git log / issue tracker / chat memory 找该工具在最近 30-90 天的使用频率 + 用户反馈关键词（"踩坑" / "忘记" / "为什么" / "怎么"）
+- **任务涉及代码模块** → 读该模块最近 N 个 commit message 看坑点 + 关联 PR review 评论
+- **新功能任务** → 必问 "用户具体哪个场景痛？" 不接受"凭直觉这个 feature 好"
+
+如果调研没找到具体痛点 → 阶段 A 必须先 AskUserQuestion 澄清痛点再继续。
+**禁止：阶段 A 跳过 user friction 调研直接给候选清单。**
+
+> 来源：chexian-api PR #662 复盘——cx CLI feature 选择凭直觉给 4 个候选（watch/diff/export/wizard），缺真实使用频率支撑，幸运选中 wizard 用户接受但后续返工 review 揭示该选择可能不是最优 ROI。
+
+#### Step 1+: harness 与证据盘点
+
 1. **当前状态**：已实现 / 部分 / 未实现 / 未知（每项附文件路径或命令输出）
 2. **harness 现状核对**：按 §4 表逐项确认能否跑、最近产物在哪、容差 / 阈值是多少
 3. **证据表**：每条结论附 路径 / 命令输出 / 测试结果 / commit，否则标"未验证"
