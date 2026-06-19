@@ -57,6 +57,34 @@ do_remove() { local wt="$1" br="$2" force="${3:-}"
   git worktree unlock "$wt" 2>/dev/null || true
   git worktree remove ${force:+--force} "$wt" && git branch -D "$br" 2>/dev/null; }
 
+find_sync_skills() {  # 定位本机 sync-skills 修复器；项目无关：缺失则调用方只报告死链，不强依赖
+  local self_dir sib cand
+  self_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  sib="$(dirname "$self_dir")/sync-skills/sync-skills.sh"          # 兄弟技能目录优先
+  [ -f "$sib" ] && { echo "$sib"; return 0; }
+  cand="${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}/sync-skills/sync-skills.sh"
+  [ -f "$cand" ] && echo "$cand"
+}
+check_skill_links() {  # 清理后自检：worktree 被删可能令 ~/.claude/skills 软链变死链→技能全失效却极难归因
+  local skills_dir="${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}"
+  [ -d "$skills_dir" ] || return 0
+  local dead=() lnk
+  for lnk in "$skills_dir"/*; do
+    [ -L "$lnk" ] || continue
+    [ -e "$lnk" ] || dead+=("$(basename "$lnk")")                 # 软链在、目标不在 = 死链
+  done
+  [ "${#dead[@]}" -eq 0 ] && return 0
+  echo ""
+  echo "⚠ 检测到 ${skills_dir} 下 ${#dead[@]} 条死软链（本次清理可能删除了它们指向的 worktree）："
+  printf '  ✗ %s\n' "${dead[@]}"
+  local fixer; fixer="$(find_sync_skills)"
+  if [ -n "${fixer}" ]; then
+    echo "  修复：bash '${fixer}' doctor --dest '${skills_dir}'（有「需处理」再跟 link 一键修回）"
+  else
+    echo "  请用你的技能同步器重建软链（如 sync-skills doctor/link），或手动重建。"
+  fi
+}
+
 REMOVED=(); SKIPPED=(); LISTED=()
 
 while IFS= read -r line; do
@@ -128,4 +156,5 @@ echo ""; echo "================ 清理报告（MODE=${MODE:-默认安全}, BASE=
 echo "清理 ${#REMOVED[@]} 个:"; printf '  ✓ %s\n' "${REMOVED[@]:-（无）}"
 echo "待定 ${#LISTED[@]} 个（建议加 --archive）:"; printf '  • %s\n' "${LISTED[@]:-（无）}"
 echo "跳过 ${#SKIPPED[@]} 个:"; printf '  - %s\n' "${SKIPPED[@]:-（无）}"
+[ "$MODE" != "--dry-run" ] && [ "${#REMOVED[@]}" -gt 0 ] && check_skill_links
 echo ""; git worktree list
