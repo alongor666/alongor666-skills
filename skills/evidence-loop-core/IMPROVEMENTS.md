@@ -184,3 +184,20 @@ verifier 接到报告类产物时**必须**执行：
 **verifier 留置 UNVERIFIED（非错误）**：① `evidence-verifier` 作为项目级 `subagent_type` 能否被 Agent 工具实际加载，需新会话运行时验证（本会话新建文件，会话初已加载的 agent 注册表不含它）；② rule 称「破坏性脚本 `--dry-run` 灰度」未逐一核查每个技能脚本是否真实实现该 flag。
 
 **状态**：✅ 当轮 promote（verifier 通过，wrapper 三件套就位）；§10 基座澄清与 2 项 UNVERIFIED 留 backlog。
+
+---
+
+### 两条 UNVERIFIED 消化确认 + wrapper 首次真实 dogfood（2026-06-18 · cleanup-worktrees --archive oracle loop）
+
+**触发**：跑 `/skills-evidence-loop` 给 cleanup-worktrees 的 `--archive` 模式补专项回归 oracle——本身即 PR#41 新建 wrapper 的**首次真实 dogfood**（前两轮 wrapper 尚未就位/由本会话新建，verifier 用 general-purpose 顶替）。
+
+**两条历史 UNVERIFIED 本轮均✅闭合（正面结果，非协议短板）**：
+- **「`--archive` 无专项 oracle」（PR#40 verifier 留置 ①）→ ✅ 已补**：新增 3 例覆盖 archive_wt 全部三类分支（脏+HEAD已合并 / clean+领先commit判不出落地 / 备份失败安全网），断言「format-patch/dirty.patch/meta.txt 三件落盘 → 备份成功才删 / 失败拒删」。pytest 12→15 零回归。
+- **「`evidence-verifier` 能否作为项目级 `subagent_type` 加载」（建 wrapper 轮 verifier 留置 ①）→ ✅ 实测可加载**：本会话以 `subagent_type: "evidence-verifier"` 召唤，agent 成功加载并以 fresh-context / read-only 执行（亲自重跑安全网失败路径确认 `mkdir -p <file>/…` exit=1 非假过），**全程无需 fallback 到 general-purpose**。结论：`.claude/agents/evidence-verifier.md`（git 跟踪、随仓分发）能被 Agent 工具正常解析为项目级 subagent_type，无需放 `~/.claude/agents/`。
+
+**可复用教训（安全网类 oracle 构造法）**：要测「破坏性动作的前置守卫失败 → 拒绝执行」，需**确定性地令守卫失败**且与运行用户/权限无关——本轮用「把 `$WT_ARCHIVE` 指向普通文件令 `mkdir -p <file>/sub` 必报 Not a directory」即得稳定 exit≠0，比 `chmod 000`（root 下失效）更稳。
+- **ROI**：★★★（所有「失败安全网」类 oracle 通用）
+
+**本轮无新增协议盲点**：verifier 裁定通过、未找到证伪、无未验证项；scorecard 走 rule「产物即证据」分布式落点（commit body + tests + SKILL.md changelog + 本条），未触 user-only 路径。
+
+**状态**：✅ 当轮 promote；两条历史 UNVERIFIED 闭合，backlog 相应项可勾除。

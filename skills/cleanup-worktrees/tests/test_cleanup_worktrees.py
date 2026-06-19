@@ -237,3 +237,146 @@ def test_selfcheck_skipped_in_dry_run(tmp_path):
     (skills / "ghost").symlink_to(tmp_path / "nonexistent_target")
     out = run_cleanup(repo, skills, mode="--dry-run").stdout
     assert "死软链" not in out
+
+
+# ———— --archive 模式专项 oracle（破坏性备份路径，P2）————
+#
+# --archive 是唯一会「先备份再删」的破坏性路径，决策矩阵里两类候选会进入：
+#   ① 脏 + HEAD 已合并(拓扑祖先)      → 备份脏改动(dirty.patch) → --force 删
+#   ② clean + 有领先 commit 判不出落地 → 备份领先提交(format-patch) → 删
+# 安全网：archive_wt 任一步失败 → 返回非 0 → 调用方拒删（落入 SKIP "备份失败"）。
+# 这三条此前零专项测试（仅覆盖 dry-run + 默认删除），是最该覆盖的破坏性路径。
+# 全程临时仓 + 临时 $WT_ARCHIVE，不触碰真实 ~/.worktree-archive、不触碰真实 worktree。
+
+
+def run_archive(repo, skills_dir, archive_root):
+    """跑 --archive：CLAUDE_SKILLS_DIR + WT_ARCHIVE 双重指向临时目录（双重隔离）。"""
+    env = dict(os.environ, CLAUDE_SKILLS_DIR=str(skills_dir), WT_ARCHIVE=str(archive_root))
+    return subprocess.run(
+        ["/bin/bash", str(SCRIPT), "--archive"],
+        cwd=repo, env=env, capture_output=True, text=True,
+    )
+
+
+def find_archive_dir(archive_root, name):
+    """脚本归档落点 = $WT_ARCHIVE/orphan-worktrees-<YYYYMMDD>/<worktree名>/。
+    用 glob 跳过日期拼接，返回该 worktree 的归档目录（不存在则 None）。"""
+    hits = sorted(Path(archive_root).glob(f"orphan-worktrees-*/{name}"))
+    return hits[0] if hits else None
+
+
+def test_archive_clean_ahead_backs_up_then_removes(tmp_path):
+    """② clean + 领先 commit 判不出落地 → --archive 先落 format-patch 再删。
+
+    断言：领先提交补丁(format-patch) / dirty.patch / meta.txt 三件齐落 $WT_ARCHIVE
+    → 备份成功才删 worktree（磁盘目录消失 + git 清单移除）。
+    """
+    repo, wtdir = make_origin_repo(tmp_path)
+    path = wtdir / "wt-ahead"
+    git("worktree", "add", "-q", str(path), "-b", "claude/ahead", cwd=repo)
+    # 领先 1 个 commit（新增文件）、不合并、无 PR → landed() 判不出 → 进 --archive 备份桶
+    (path / "ahead.txt").write_text("lead\n")
+    git("add", "-A", cwd=path)
+    git("commit", "-q", "-m", "ahead-commit", cwd=path)
+
+    skills = tmp_path / "skills_home"; skills.mkdir()
+    archive = tmp_path / "wt_archive"
+    out = run_archive(repo, skills, archive).stdout
+
+    # 报告：落「清理」桶并标 archived
+    buckets = parse_report(out)
+    assert "wt-ahead" in buckets["removed"], out
+    assert "archived" in buckets["removed"]["wt-ahead"]
+    assert "ARCHIVE+REMOVE" in out
+
+    # 备份三件真落盘
+    d = find_archive_dir(archive, "wt-ahead")
+    assert d is not None and d.is_dir(), f"归档目录未生成: {list(Path(archive).rglob('*'))}"
+    patches = [p for p in d.glob("*.patch") if p.name != "dirty.patch"]
+    assert patches, f"format-patch 补丁缺失: {[p.name for p in d.iterdir()]}"  # 0001-ahead-commit.patch
+    assert "ahead.txt" in patches[0].read_text()          # 补丁确含领先提交内容
+    assert (d / "dirty.patch").exists()                    # clean → 空 dirty.patch 仍落盘
+    meta = d / "meta.txt"
+    assert meta.is_file() and meta.stat().st_size > 0
+    meta_text = meta.read_text()
+    assert "branch=claude/ahead" in meta_text and "HEAD=" in meta_text
+
+    # 备份成功 → worktree 真删
+    assert not path.exists(), "备份成功后 worktree 目录应被删除"
+    assert "wt-ahead" not in run(["git", "worktree", "list"], cwd=repo).stdout
+
+
+def test_archive_dirty_merged_backs_up_dirty_then_removes(tmp_path):
+    """① 脏 + HEAD 已合并(拓扑祖先) → --archive 先落 dirty.patch 再 --force 删。
+
+    构造："worktree 的提交已并入 origin/main(故 HEAD 是其拓扑祖先) + 残留未提交脏改动"。
+    断言 dirty.patch 真含脏改动内容 + meta.txt 落盘 → 备份成功才删（且 force 删脏 worktree）。
+    """
+    repo, wtdir = make_origin_repo(tmp_path)
+    path = wtdir / "wt-dirty-merged"
+    git("worktree", "add", "-q", str(path), "-b", "claude/dirty-merged", cwd=repo)
+    # worktree 提交 C1 → 把 C1 并入 origin/main → HEAD 成为 origin/main 的拓扑祖先（已落地）
+    (path / "g.txt").write_text("merged-work\n")
+    git("add", "-A", cwd=path)
+    git("commit", "-q", "-m", "merged-commit", cwd=path)
+    git("merge", "--no-ff", "-m", "merge dirty-merged", "claude/dirty-merged", cwd=repo)
+    git("push", "-q", "origin", "main", cwd=repo)
+    # worktree 残留未提交脏改动：改 tracked 文件，确保 `git diff HEAD` 捕获到内容
+    (path / "f.txt").write_text("DIRTY-RESIDUE\n")
+
+    skills = tmp_path / "skills_home"; skills.mkdir()
+    archive = tmp_path / "wt_archive"
+    out = run_archive(repo, skills, archive).stdout
+
+    buckets = parse_report(out)
+    assert "wt-dirty-merged" in buckets["removed"], out
+    assert "archived" in buckets["removed"]["wt-dirty-merged"]
+    assert "脏残留" in out and "HEAD已合并" in out
+
+    d = find_archive_dir(archive, "wt-dirty-merged")
+    assert d is not None and d.is_dir()
+    dirty = d / "dirty.patch"
+    assert dirty.is_file() and "DIRTY-RESIDUE" in dirty.read_text()  # 脏改动真备份
+    meta = d / "meta.txt"
+    assert meta.is_file() and meta.stat().st_size > 0
+    assert "branch=claude/dirty-merged" in meta.read_text()
+    # HEAD 是 origin/main 拓扑祖先 → format-patch(origin/main..HEAD) 必空（无领先提交）
+    assert not [p for p in d.glob("*.patch") if p.name != "dirty.patch"]
+
+    # 备份成功 → 脏 worktree 被 --force 删
+    assert not path.exists(), "备份成功后脏 worktree 应被 --force 删除"
+    assert "wt-dirty-merged" not in run(["git", "worktree", "list"], cwd=repo).stdout
+
+
+def test_archive_backup_failure_refuses_delete(tmp_path):
+    """安全网：archive_wt 备份失败(返回非 0) → 拒删 worktree，落 SKIP "备份失败"。
+
+    构造备份必失败：把 $WT_ARCHIVE 指向一个【普通文件】，脚本
+    `mkdir -p "<文件>/orphan-worktrees-.../<name>"` 必因路径中段是文件而失败
+    → archive_wt 在第一步 `mkdir -p ... || return 1` 即返回 1。
+    确定性、与运行用户/权限无关（即便 root，over-a-file 的 mkdir 也报 Not a directory）。
+    这是 --archive 最关键的安全断言：备份没成 → 绝不能删。
+    """
+    repo, wtdir = make_origin_repo(tmp_path)
+    path = wtdir / "wt-ahead"
+    git("worktree", "add", "-q", str(path), "-b", "claude/ahead", cwd=repo)
+    (path / "ahead.txt").write_text("lead\n")
+    git("add", "-A", cwd=path)
+    git("commit", "-q", "-m", "ahead-commit", cwd=path)
+
+    skills = tmp_path / "skills_home"; skills.mkdir()
+    blocker = tmp_path / "archive_is_a_file"   # 普通文件，非目录 → mkdir -p 必失败
+    blocker.write_text("x")
+    out = run_archive(repo, skills, blocker).stdout
+
+    buckets = parse_report(out)
+    assert "wt-ahead" not in buckets["removed"], "备份失败时绝不能删除"
+    assert "wt-ahead" in buckets["skipped"], out
+    reason = buckets["skipped"]["wt-ahead"]
+    assert "备份失败" in reason and ("拒绝删除" in reason or "安全网" in reason)
+
+    # worktree 必须原封不动留存
+    assert path.is_dir(), "备份失败 → worktree 目录必须留存"
+    assert "wt-ahead" in run(["git", "worktree", "list"], cwd=repo).stdout
+    # blocker 仍是文件（没被脏写成目录），即确无任何真备份产物落地
+    assert blocker.is_file()
