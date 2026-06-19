@@ -167,3 +167,20 @@ verifier 接到报告类产物时**必须**执行：
 **verifier 留置 UNVERIFIED（下轮 backlog，非错误）**：① `--archive` 模式无专项 oracle（本轮仅覆盖 dry-run + 默认删除）；② `DEAD_PID=999999` 在 Linux（`pid_max` 可调 >999999）非绝对安全，宜改用 fork 子进程拿真实回收 pid；③ locked 文件 pid 行格式跨 git 版本一致性未验证。
 
 **状态**：✅ 当轮 promote（verifier 通过）；wrapper 缺口与 UNVERIFIED 三项留 backlog。
+
+---
+
+### §10 应接纳「产物即证据」scorecard 模式（2026-06-18 · 建 skills-evidence-loop wrapper loop）
+
+**触发**：消化上一条「源仓缺 wrapper」盲点——给本仓建 `.claude/{commands,rules,agents}/` 三件套 wrapper（命令 `skills-evidence-loop` + rule §4 映射 + verifier agent 项目级实例）。**「源仓缺 wrapper」盲点至此 ✅ 已消化**。
+
+**协议歧义（基座 §10 / §8 step 4 表述盲点）**：基座 §10 表格与 §8 step 4 默认假设每个项目声明**一个集中持久化 scorecard 文件**，否则「报 BLOCKED」。但本仓是技能集，无 `docs/evidence/` 目录、且 §2 step 8 禁止为单次结论新建目录——合理的形态是**「产物即证据」**：scorecard 各要素分布式嵌入 commit message / 技能 `tests/` / `SKILL.md` changelog / `IMPROVEMENTS.md`。verifier 抓到 rule「会话内呈现」与 §10「显式声明一个位置」形式不吻合，险些被读成「未声明 → 该 BLOCKED」。
+- **已当轮修（wrapper 侧）**：rule scorecard 节改为**显式声明**「产物即证据是对 §10 的项目特例」+ 给出要素→落点映射表，消除「未声明=BLOCKED」歧义。
+- **基座侧修复方向（backlog）**：§10 表格「scorecard 落位」一行应**显式承认两种合法形态**——(a) 集中文件（append-only 日志，如 `pr-evolution.md`）；(b) 产物即证据（分布式嵌入 commit/tests/changelog）。只要 wrapper 显式声明其一即不 BLOCKED。
+- **ROI**：★★（澄清后所有「无独立 evidence 目录」的项目接入 evidence-loop 不再卡 §10）
+
+**第二点（worktree 时序，已当轮在 rule 加注）**：基座 §8 step 5 指向 `~/.claude/skills/evidence-loop-core/IMPROVEMENTS.md`（软链→主仓），但在 git worktree 内追加写的是 worktree 内副本，须 commit + merge 才进主仓软链。未来 loop 实施者易误以为软链实时可见。rule scorecard 节已加 ⚠ 时序注。
+
+**verifier 留置 UNVERIFIED（非错误）**：① `evidence-verifier` 作为项目级 `subagent_type` 能否被 Agent 工具实际加载，需新会话运行时验证（本会话新建文件，会话初已加载的 agent 注册表不含它）；② rule 称「破坏性脚本 `--dry-run` 灰度」未逐一核查每个技能脚本是否真实实现该 flag。
+
+**状态**：✅ 当轮 promote（verifier 通过，wrapper 三件套就位）；§10 基座澄清与 2 项 UNVERIFIED 留 backlog。
