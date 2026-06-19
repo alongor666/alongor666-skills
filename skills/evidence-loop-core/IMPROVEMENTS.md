@@ -149,3 +149,21 @@ verifier 接到报告类产物时**必须**执行：
 **ROI**：★★★（本协议从摩托车 LR 报告事故沉淀，正面命中原伤）
 
 **状态**：⏳ 等周报到货触发（截至 2026-06-16 无未消化 xlsx）
+
+---
+
+### 协议盲点 + oracle 弱断言（2026-06-18 · cleanup-worktrees 自进化 loop）
+
+**触发**：跑「让 cleanup-worktrees 技能自进化」evidence-loop（产物：决策矩阵回归 oracle 12 例 + 清理后软链自愈收尾，verifier 裁定通过）。
+
+**协议盲点（落地缺口）**：本仓 `alongor666-skills` 是 evidence-loop-core 的**源仓**，自身却**无 evidence-loop wrapper**（无 `.claude/commands` / `.claude/rules` / `.claude/agents`）。导致本轮 §4 harness 映射表、scorecard 落位、verifier agent 三者全靠单轮口头临时约定，verifier 只能用 `general-purpose` 顶替未安装的 `evidence-verifier`。
+- **修复方向**：给本仓建最小 wrapper —— §4 固化为「基线/回归 = `validate_skills.py`；oracle = 各技能 `tests/` pytest；发布安全 = 软链直连 + `--dry-run` + `git checkout`」；scorecard 落位 = 技能 changelog + tests（产物即证据）；复制 `verifier-agent-template.md` → `~/.claude/agents/evidence-verifier.md`。
+- **ROI**：★★（一次配置，此后本仓所有「技能自进化」loop 复用，免每轮临时凑）
+
+**实施者失误（已当轮修）**：oracle 首版 `test_dry_run_removes_nothing` 用「名字 ∈ 报告文本」断言 dry-run 零删除，但 dry-run 候选名也会进「清理 N 个」列表，**区分不出「留存」还是「候选」**。verifier 抓到判"断言弱"，已补 `test_dry_run_keeps_worktree_dirs_on_disk`（直接断言磁盘目录 `.is_dir()` + git worktree 清单逐字不变）。
+- **可复用教训**：断言「破坏性动作没发生」时，要断言**可观测的副作用状态**（磁盘/DB/git 清单），而非「标识符出现在某段输出文本」——文本含该标识符可能有多条无关路径。
+- **ROI**：★★★（所有「验证 X 未发生」类 oracle 通用）
+
+**verifier 留置 UNVERIFIED（下轮 backlog，非错误）**：① `--archive` 模式无专项 oracle（本轮仅覆盖 dry-run + 默认删除）；② `DEAD_PID=999999` 在 Linux（`pid_max` 可调 >999999）非绝对安全，宜改用 fork 子进程拿真实回收 pid；③ locked 文件 pid 行格式跨 git 版本一致性未验证。
+
+**状态**：✅ 当轮 promote（verifier 通过）；wrapper 缺口与 UNVERIFIED 三项留 backlog。
