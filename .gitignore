@@ -3,3 +3,6 @@ node_modules/
 *.log
 __pycache__/
 *.pyc
+
+# 本仓首次跟踪 .claude/（wrapper：commands/rules/agents），但 worktree checkout 绝不入库
+.claude/worktrees/
