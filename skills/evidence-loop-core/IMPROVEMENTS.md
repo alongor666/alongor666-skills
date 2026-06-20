@@ -201,3 +201,21 @@ verifier 接到报告类产物时**必须**执行：
 **本轮无新增协议盲点**：verifier 裁定通过、未找到证伪、无未验证项；scorecard 走 rule「产物即证据」分布式落点（commit body + tests + SKILL.md changelog + 本条），未触 user-only 路径。
 
 **状态**：✅ 当轮 promote；两条历史 UNVERIFIED 闭合，backlog 相应项可勾除。
+
+---
+
+## 条目 N+1 — Phase A 前置依赖"可行性"必须**实跑**而非从产物推断（2026-06-18 cx-cli UX 黄金标准）
+
+**现象**：建 cx-cli UX 黄金标准时，Phase A 探测旅程维度前置依赖，我看到 `~/.chexian/config.json` 含 `token` 字段就在合同里写"本地 PAT 有效，旅程维度不阻塞"。进 Phase B 实测 `cx whoami` → exit 2 `Token invalid or expired`。"有 token 字段 ≠ token 有效"——合同里的前置依赖判断是**未验证声明**。
+
+**根因**：§8 阶段 A Step 1+ 的"harness 现状核对 / 缺口清单"要求确认"能否跑"，但我把"能否跑"误执行为"资源是否存在"（文件在 = 能跑），而非"资源是否真能完成 oracle"（实跑一次 whoami）。这与 §3 证据七项「工作树状态必须实测符号、不靠自然语言摘要」是同一类病的不同面：**前置依赖也必须实测，不靠产物存在性推断**。
+
+**协议短板**：§8 阶段 A 缺一条硬约束——「凡 oracle 依赖外部凭据/网络/数据，Phase A 必须实跑一次最小探测（如 whoami / health / 一行直查），把退出码写进缺口清单；禁止从'文件/配置/资源存在'推断'可用'」。
+
+**修法建议**：在 SKILL.md §8 阶段 A Step 1+ 第 2 条"harness 现状核对"后加：「**前置依赖实跑探测**：每个 live oracle 依赖项跑一次最小命令验证（非看文件存在），退出码入缺口清单」。
+
+**正面**：harness 的功能门禁（measureJourney 先 whoami exit≠0 即返回 unavailable）**正确拦住了伪造**——没产 0ms 假数据。说明"确定性脚本做 oracle、不靠 LLM 自述"（§5）落地有效。
+
+**ROI**：★★（高频——任何带 live 维度的 evidence-loop 都会踩；修法是一句硬约束）
+
+**状态**：⏳ 待批量元任务时并入 SKILL.md §8
