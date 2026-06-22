@@ -1,6 +1,6 @@
 ---
 name: ppt-agent
-description: Turns raw material into a presentation-ready deck by orchestrating humanize-ppt (brief), guizang-ppt-skill (default HTML render), and academic-pptx-skill (formal .pptx render). Use when 用户说"帮我做 PPT / 演讲 / 分享 / 答辩 / deck / slides / 把材料做成 PPT / 做一份汇报"时触发。
+description: Turns raw material into a presentation-ready deck by orchestrating humanize-ppt (brief), guizang-ppt-skill (default magazine HTML), guizang-dark-dashboard (dark-dashboard HTML for 工程复盘/技术分享), and academic-pptx-skill (formal .pptx render). Use when 用户说"帮我做 PPT / 演讲 / 分享 / 答辩 / deck / slides / 把材料做成 PPT / 做一份汇报"时触发。
 user_invocable: true
 version: "0.1.0"
 ---
@@ -13,6 +13,7 @@ When the user wants to turn raw material into a presentation, run this skill ins
 
 - `humanize-ppt` — narrative brief director (LearnPrompt/humanize-ppt)
 - `guizang-ppt-skill` — default magazine-style HTML renderer (op7418)
+- `guizang-dark-dashboard` — 深色仪表盘风 HTML renderer，工程复盘/技术分享/数据汇报（alongor666 自有仓）
 - `academic-pptx-skill` — formal / academic .pptx renderer (Gabberflast)
 
 If any skill is missing, stop and print the install one-liner from README before proceeding.
@@ -44,7 +45,12 @@ Block on humanize-ppt's 6 acceptance questions. Question 6 ("which renderer") is
 
 ### Step 2 — Route
 
-**Default: guizang-ppt-skill.**
+**Default: guizang-ppt-skill（杂志风 HTML）。**
+
+Switch to `guizang-dark-dashboard`（深色仪表盘风 HTML）if ANY signal hits:
+- Keywords: 深色 / 暗色 / dark / 仪表盘 / dashboard / 控制台 / console / 工程复盘 / 技术分享 / 架构介绍 / 系统机制 / loop / pipeline
+- Audience: 工程同行 / 研发团队 / 技术 leader
+- Content: 系统机制 / 流程 / 指标账本 为主，强工程气质
 
 Switch to `academic-pptx-skill` if ANY signal hits:
 - Keywords: 学术 / academic / 论文 / 答辩 / thesis / seminar / conference / grant / 评审 / 监管 / 合规 / SOX / 审计 / 董事会
@@ -53,7 +59,7 @@ Switch to `academic-pptx-skill` if ANY signal hits:
 - Citations required
 
 Ambiguous → ask ONE question:
-> "严肃风（.pptx，action title + 引用规范）还是杂志风（HTML 单文件，强叙事节奏）？"
+> "三选一：杂志风（HTML 单文件，人文叙事）/ 深色仪表盘风（HTML 单文件，工程·数据复盘）/ 严肃风（.pptx，action title + 引用规范）？"
 
 ### Step 3 — Render
 
@@ -70,6 +76,18 @@ Pass brief artifacts to the chosen renderer. Map AST roles to layout:
 | takeaway | 章节幕封 / 大引用 |
 
 Run guizang's 6-question clarification ONLY for fields not in brief (theme color, hard constraints). Run `references/checklist.md` P0 before delivery.
+
+**guizang-dark-dashboard path:**
+
+| AST role | Layout candidates |
+|---|---|
+| hook | 封面 / 大引用悬念 |
+| conflict | 数据大字报 / Before-After（`.panel` 对照）|
+| method | 左文右图（带标签 SVG）/ Pipeline 九宫 |
+| proof | 数据大字报 / 2x2 网格 / Before-After |
+| takeaway | 三栏教训 / 大引用收束 |
+
+拷贝 `assets/template-dark-dashboard.html` 当种子；SVG 取自 `references/svg-patterns.md`；交付前过 `references/checklist.md` P0（navhint 右上 / 内容填满 / SVG 带标签 / 标题不孤字 四条铁律）。
 
 **academic path:**
 - Rewrite every title as action title (complete sentence stating the takeaway)

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>[必填] 替换为 PPT 标题 · Deck Title</title>
+<style>
+:root{
+  /* ===== 主题色：深色仪表盘（唯一一套，禁自定义 hex） ===== */
+  --bg:#0d1117; --bg2:#111722; --panel:#161b22; --panel2:#1c2330;
+  --text:#e6edf3; --muted:#9aa7b4; --dim:#6b7785;
+  --accent:#3ea6ff; --accent2:#2dd4bf; --warn:#f59e0b; --p0:#ef4444;
+  --line:rgba(255,255,255,.09); --line2:rgba(255,255,255,.05);
+  --sans:"PingFang SC","Microsoft YaHei UI","Noto Sans SC",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"SF Mono","JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+.track{display:flex;height:100vh;width:100vw;transition:transform .5s cubic-bezier(.7,0,.2,1)}
+.slide{position:relative;min-width:100vw;width:100vw;height:100vh;flex-shrink:0;padding:6.5vh 7vw 9vh;display:flex;flex-direction:column;justify-content:center;background:
+  radial-gradient(1200px 600px at 85% -10%, rgba(62,166,255,.07), transparent 60%),
+  radial-gradient(900px 500px at -5% 110%, rgba(45,212,191,.05), transparent 55%),
+  linear-gradient(180deg,var(--bg),var(--bg2));}
+.slide.alt{background:linear-gradient(180deg,#0b0f16,#0e141d)}
+/* footer */
+.foot{position:absolute;left:7vw;right:7vw;bottom:3.4vh;display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.04em;border-top:1px solid var(--line2);padding-top:1.1vh}
+.foot .pg b{color:var(--accent)}
+/* type */
+.kicker{font-family:var(--mono);font-size:13px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:2.6vh}
+.h-hero{font-weight:200;font-size:min(9vw,15vh);line-height:.98;letter-spacing:-.01em}
+.h-hero b{font-weight:600;color:var(--accent)}
+.h-xl{font-weight:300;font-size:min(4.6vw,8vh);line-height:1.05;letter-spacing:-.005em}
+.h-md{font-weight:600;font-size:clamp(20px,2vw,30px);line-height:1.25}
+.t-cat{font-weight:600;font-size:13px;letter-spacing:.12em;color:var(--accent2);text-transform:uppercase}
+.lead{font-weight:300;font-size:clamp(16px,1.5vw,22px);line-height:1.6;color:var(--muted)}
+.sub{font-weight:300;font-size:clamp(15px,1.35vw,20px);color:var(--muted);line-height:1.6}
+.mono{font-family:var(--mono)}
+.hl{color:var(--text)} .accent{color:var(--accent)} .acc2{color:var(--accent2)} .warn{color:var(--warn)} .p0{color:var(--p0)}
+.title-row{display:flex;align-items:baseline;gap:1.4vw;margin-bottom:4vh}
+.title-row .num{font-family:var(--mono);font-size:14px;color:var(--dim)}
+/* grids */
+.row{display:flex;gap:2vw;align-items:stretch}
+.col{flex:1}
+.panel{background:var(--panel);border:1px solid var(--line);padding:3vh 2.2vw;position:relative}
+.panel.acc{border-left:3px solid var(--accent)}
+.panel.warnb{border-left:3px solid var(--warn)}
+/* stat cards */
+.stats{display:grid;gap:1.6vw;margin-top:1vh}
+.stats.g2{grid-template-columns:1fr 1fr}
+.stats.g4{grid-template-columns:repeat(4,1fr)}
+.stat{background:var(--panel);border:1px solid var(--line);padding:3.2vh 1.6vw;display:flex;flex-direction:column;gap:.8vh}
+.stat .big{font-weight:200;font-size:min(6vw,9vh);line-height:1;color:var(--accent);font-variant-numeric:tabular-nums}
+.stat .big.w{color:var(--warn)} .stat .big.t{color:var(--accent2)}
+.stat .lab{font-weight:600;font-size:clamp(14px,1vw,17px)}
+.stat .det{font-size:clamp(12px,.85vw,14px);color:var(--muted);line-height:1.45}
+/* list */
+.ulist{list-style:none;display:flex;flex-direction:column;gap:1.6vh;margin-top:1vh}
+.ulist li{position:relative;padding-left:1.5em;font-size:clamp(14px,1.15vw,18px);line-height:1.55;color:var(--text)}
+.ulist li::before{content:"";position:absolute;left:0;top:.62em;width:8px;height:8px;background:var(--accent)}
+.ulist li b{color:var(--accent2);font-weight:600}
+/* pipeline */
+.pipe{display:flex;flex-wrap:wrap;gap:1vh 0.9vw;margin-top:1vh}
+.pstep{flex:1 1 28%;min-width:200px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);padding:1.7vh 1.1vw;font-size:clamp(13px,.95vw,16px);line-height:1.4}
+.pstep.gate{border-left-color:var(--accent2);background:linear-gradient(180deg,var(--panel),#13201e)}
+.pstep .pn{font-family:var(--mono);color:var(--dim);font-size:12px}
+/* gates */
+.gate-card{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--accent2);padding:2.6vh 1.8vw}
+.gate-card .k{font-weight:600;font-size:clamp(15px,1.2vw,19px);color:var(--accent2);margin-bottom:1vh}
+.gate-card .v{font-size:clamp(13px,1vw,16px);color:var(--muted);line-height:1.55}
+/* lessons / 3-col cards */
+.lessons{display:grid;grid-template-columns:repeat(3,1fr);gap:1.6vw;margin-top:2vh}
+.lesson{background:var(--panel);border:1px solid var(--line);padding:3vh 1.5vw;display:flex;flex-direction:column;gap:1.4vh}
+.lesson .n{font-family:var(--mono);font-size:28px;font-weight:200;color:var(--accent)}
+.lesson .k{font-weight:600;font-size:clamp(15px,1.15vw,19px)}
+.lesson .v{font-size:clamp(12px,.9vw,15px);color:var(--muted);line-height:1.5}
+/* grid 2x2 */
+.g2x2{display:grid;grid-template-columns:1fr 1fr;gap:1.4vw;margin-top:1vh}
+.gcell{background:var(--panel);border:1px solid var(--line);padding:2.4vh 1.5vw}
+.gcell .t{font-weight:600;color:var(--accent);font-size:clamp(14px,1.05vw,17px);margin-bottom:.8vh}
+.gcell .d{font-size:clamp(12px,.88vw,15px);color:var(--muted);line-height:1.5}
+/* redline */
+.redline{margin-top:2.4vh;background:linear-gradient(90deg,rgba(245,158,11,.12),transparent);border-left:3px solid var(--warn);padding:1.8vh 1.4vw;font-size:clamp(14px,1.1vw,18px);line-height:1.5}
+.quote{font-weight:200;font-size:min(5vw,8vh);line-height:1.18;letter-spacing:-.01em}
+.quote .em{color:var(--accent);font-style:italic;font-weight:300}
+.cmds{display:flex;gap:1vw;flex-wrap:wrap;margin-top:2.6vh}
+.cmd{font-family:var(--mono);font-size:clamp(12px,1vw,15px);background:var(--panel2);border:1px solid var(--line);padding:1.1vh 1vw;color:var(--accent2)}
+.svgwrap{display:flex;align-items:center;justify-content:center;height:100%}
+svg .lbl{font-family:var(--mono);font-size:11px;fill:var(--muted)}
+svg .lblb{font-family:var(--sans);font-size:13px;font-weight:600;fill:var(--text)}
+/* nav —— 铁律 L1：控件放右上，绝不与页脚右栏目堆在右下角 */
+.progress{position:fixed;left:0;bottom:0;height:3px;background:var(--accent);width:0;z-index:50;transition:width .4s}
+.navhint{position:fixed;right:2vw;top:2.6vh;font-family:var(--mono);font-size:11px;color:var(--dim);z-index:50;opacity:.6;letter-spacing:.04em}
+.dots{position:fixed;left:50%;transform:translateX(-50%);bottom:1.4vh;display:flex;gap:7px;z-index:50}
+.dot{width:7px;height:7px;border:1px solid var(--dim);background:transparent}
+.dot.on{background:var(--accent);border-color:var(--accent)}
+@media print{
+  html,body{overflow:visible;height:auto}
+  .track{display:block;transform:none!important}
+  .slide{page-break-after:always;break-after:page;height:100vh;width:100%}
+  .progress,.navhint,.dots{display:none}
+  @page{size:landscape;margin:0}
+}
+</style>
+</head>
+<body>
+<div class="track" id="track">
+
+<!-- ============================================================
+     示例版式（保留 1-2 张当样板，其余替换为你的内容）
+     版式速查：
+       hook 封面 / 大引用悬念 · conflict 数据大字报 / Before-After
+       method 左文右图(SVG) / Pipeline 九宫 · proof 数据大字报 / 2x2
+       takeaway 三栏教训 / 大引用收束
+     铁律 L2：内容页务必填满——短内容用「左文+右SVG」双栏 flex:1 撑开。
+     铁律 L3：每张 SVG 节点必须带标签+方向箭头；中文标题 ≤ 一行，禁孤字成行。
+     节奏：相邻页交替 class="slide" / "slide alt"。
+============================================================ -->
+
+<!-- 1 封面 hook -->
+<section class="slide">
+  <div class="kicker">[栏目 · KICKER]</div>
+  <div class="h-hero">主标题 <b>关键词</b></div>
+  <div style="margin-top:3vh" class="h-xl">副标题一句话</div>
+  <div class="lead" style="margin-top:3.4vh;max-width:60ch">引子段落 —— 一句话价值主张，点明数据来源（真实可追溯）。</div>
+  <div class="foot"><span class="pg">DECK · <b>01</b>/NN</span><span>日期 · 数据源：xxx</span></div>
+</section>
+
+<!-- 2 数据大字报 conflict/proof -->
+<section class="slide alt">
+  <div class="title-row"><span class="num">02</span><div class="h-xl">数据大字报标题</div></div>
+  <div class="lead" style="margin-bottom:2vh">一句导语，交代口径与范围</div>
+  <div class="stats g4">
+    <div class="stat"><span class="big">71%</span><span class="lab">指标名</span><span class="det">口径释义</span></div>
+    <div class="stat"><span class="big t">7/7</span><span class="lab">指标名</span><span class="det">口径释义</span></div>
+    <div class="stat"><span class="big">+42</span><span class="lab">指标名</span><span class="det">口径释义</span></div>
+    <div class="stat"><span class="big w">3</span><span class="lab">指标名</span><span class="det">口径释义</span></div>
+  </div>
+  <div class="foot"><span class="pg">DECK · <b>02</b>/NN</span><span>证据 · 量化</span></div>
+</section>
+
+<!-- 3 左文右图 method（短内容靠双栏填满 + 带标签 SVG） -->
+<section class="slide">
+  <div class="title-row"><span class="num">03</span><div class="h-xl">左文右图标题</div></div>
+  <div class="row" style="flex:1;align-items:center">
+    <div class="col" style="flex:1.05">
+      <ul class="ulist">
+        <li><b>要点一</b>：一句话说清</li>
+        <li>要点二：命令用 <span class="mono accent">bun run xxx</span></li>
+        <li><b>要点三</b>：英文专名首次出现括注中文释义</li>
+      </ul>
+    </div>
+    <div class="col" style="flex:.95">
+      <div class="svgwrap">
+        <!-- SVG 占位：见 references/svg-patterns.md 取现成配方；务必给每个节点加标签 -->
+        <svg viewBox="0 0 300 240" width="100%" style="max-height:48vh">
+          <circle cx="150" cy="120" r="86" fill="none" stroke="var(--line)" stroke-width="1.5"/>
+          <text x="150" y="124" text-anchor="middle" class="lblb">系统图占位</text>
+          <text x="150" y="222" text-anchor="middle" class="lbl">替换为带标签的关系/流程图</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span class="pg">DECK · <b>03</b>/NN</span><span>方法 · 模型</span></div>
+</section>
+
+<!-- 4 Pipeline 九宫 method -->
+<section class="slide alt">
+  <div class="title-row"><span class="num">04</span><div class="h-xl">流程总览（N 段）</div></div>
+  <div class="pipe">
+    <div class="pstep"><span class="pn">①</span> 步骤一</div>
+    <div class="pstep gate"><span class="pn">②</span> 闸/关键步（青色高亮）</div>
+    <div class="pstep"><span class="pn">③</span> 步骤三</div>
+    <div class="pstep"><span class="pn">④</span> 步骤四</div>
+    <div class="pstep gate"><span class="pn">⑤</span> 闸/关键步</div>
+    <div class="pstep"><span class="pn">⑥</span> 步骤六</div>
+  </div>
+  <div class="redline"><span class="warn">🔴</span> <b>红线/兜底</b>：一句强约束（仅 🟢🔵🟡🔴 + 🔴 红线 emoji 可用）。</div>
+  <div class="foot"><span class="pg">DECK · <b>04</b>/NN</span><span>方法 · 流程</span></div>
+</section>
+
+<!-- 5 大引用收束 takeaway -->
+<section class="slide">
+  <div class="kicker">收束</div>
+  <div class="quote">一句<span class="em">升华金句</span>。</div>
+  <div class="lead" style="margin-top:3vh;max-width:56ch">一句解读，落到可带走的原则。</div>
+  <div class="cmds">
+    <span class="cmd">bun run cmd-a</span>
+    <span class="cmd">bun run cmd-b</span>
+  </div>
+  <div class="foot"><span class="pg">DECK · <b>05</b>/NN</span><span>压轴 · 结论</span></div>
+</section>
+
+<!-- SLIDES_HERE -->
+
+</div>
+
+<div class="progress" id="progress"></div>
+<div class="navhint">← → 翻页 · 滚轮 · 数字键</div>
+<div class="dots" id="dots"></div>
+
+<script>
+(function(){
+  var track=document.getElementById('track');
+  var slides=Array.prototype.slice.call(track.children);
+  var n=slides.length, i=0, lock=false;
+  var dotsBox=document.getElementById('dots');
+  slides.forEach(function(_,k){var d=document.createElement('div');d.className='dot'+(k===0?' on':'');d.addEventListener('click',function(){go(k)});dotsBox.appendChild(d);});
+  var dots=Array.prototype.slice.call(dotsBox.children);
+  function render(){
+    track.style.transform='translateX('+(-i*100)+'vw)';
+    document.getElementById('progress').style.width=((i+1)/n*100)+'%';
+    dots.forEach(function(d,k){d.className='dot'+(k===i?' on':'');});
+  }
+  function go(k){i=Math.max(0,Math.min(n-1,k));render();}
+  document.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key===' '||e.key==='PageDown'){e.preventDefault();go(i+1);}
+    else if(e.key==='ArrowLeft'||e.key==='ArrowUp'||e.key==='PageUp'){e.preventDefault();go(i-1);}
+    else if(e.key==='Home'){go(0);} else if(e.key==='End'){go(n-1);}
+    else if(/^[1-9]$/.test(e.key)){go(parseInt(e.key,10)-1);}
+  });
+  var acc=0;
+  window.addEventListener('wheel',function(e){
+    if(lock)return; acc+=e.deltaY;
+    if(Math.abs(acc)>60){go(i+(acc>0?1:-1));acc=0;lock=true;setTimeout(function(){lock=false;},520);}
+  },{passive:true});
+  var x0=null;
+  window.addEventListener('touchstart',function(e){x0=e.touches[0].clientX;},{passive:true});
+  window.addEventListener('touchend',function(e){if(x0===null)return;var dx=e.changedTouches[0].clientX-x0;if(Math.abs(dx)>50)go(i+(dx<0?1:-1));x0=null;},{passive:true});
+  render();
+})();
+</script>
+</body>
+</html>
