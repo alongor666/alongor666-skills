@@ -147,7 +147,11 @@ METRIC_DEFS_T23: list[tuple[str, str, str, Optional[str]]] = [
 
 
 def policy_glob(project_root: Path) -> str:
-    return str(project_root / "数据管理/warehouse/fact/policy/current/*.parquet")
+    # [!S]* 排除 SX_ 前缀：fact/current 物理混放 SC+SX（Phase A 前缀架构），裸 *.parquet 会混入
+    # SX 致四川报告虚高约 70%（本技能 build_sql 无 branch_code 过滤）。与 chexian-api
+    # diagnose_common.branch_paths SC policy_glob 同款隔离；文件名前缀可靠性由 chexian-api
+    # governance「SC policy glob前缀隔离」闸校验（读同一份 warehouse/fact 数据）。
+    return str(project_root / "数据管理/warehouse/fact/policy/current/[!S]*.parquet")
 
 
 def claims_glob(project_root: Path) -> str:
