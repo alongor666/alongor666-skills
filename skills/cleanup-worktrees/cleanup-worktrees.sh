@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# cleanup-worktrees v2.0 — 多来源 git worktree 安全回收器
+# cleanup-worktrees v2.2 — 多来源 git worktree 安全回收器
 # 用法: bash cleanup-worktrees.sh [--dry-run|--archive]
 # 抽为独立脚本(非内联 SKILL.md)：避免 skill 模板渲染插值掉位置参数 $1/$2/$3
 
@@ -85,6 +85,20 @@ check_skill_links() {  # 清理后自检：worktree 被删可能令 ~/.claude/sk
   fi
 }
 
+# ——— 活跃会话 cwd 保护（项目无关，补 git-lock 盲区）———
+# git-lock 只在 worktree 被显式 lock 时存在；EnterWorktree / 多代理扇出等创建的 worktree
+# 默认不打 lock，旧版仅认 lock → 会把"活跃会话正坐着、但分支已落地"的 worktree 当零损失删掉，
+# 把运行中会话的工作目录从底下抽走。
+# 实现要点（规避中文路径坑）：把【候选路径本身】喂给 lsof 做匹配，靠 lsof 按 inode/路径
+# 内部匹配——绝不去字符串比对 lsof 的 -F 输出，因其会把非 ASCII（如中文路径）转义成 \xNN
+# 导致比对失配（本仓踩过的 import.meta.url / 中文路径同类坑）。
+HAVE_LSOF=0; command -v lsof >/dev/null 2>&1 && HAVE_LSOF=1
+[ "$HAVE_LSOF" = 0 ] && echo "ℹ lsof 不可用：跳过活跃会话 cwd 检测，仅靠 git lock 保护运行中会话（保护力下降）"
+cwd_held() {  # return 0 = 有活进程 cwd 落在 $1（精确目录匹配）→ 运行中会话持有
+  [ "$HAVE_LSOF" = 1 ] || return 1
+  [ -n "$(lsof -t -a -d cwd -- "$1" 2>/dev/null)" ]
+}
+
 REMOVED=(); SKIPPED=(); LISTED=()
 
 while IFS= read -r line; do
@@ -103,6 +117,7 @@ while IFS= read -r line; do
       if ! in_scope "$P"; then SKIPPED+=("$name: 路径不纳管($P)"); P=""; continue; fi
       if [ "$B" = "__detached__" ]; then SKIPPED+=("$name: detached HEAD"); P=""; continue; fi
       if ! prefix_ok "$B"; then SKIPPED+=("$name: 分支前缀'$B'不在白名单"); P=""; continue; fi
+      if cwd_held "$P"; then SKIPPED+=("$name: 有活进程 cwd 在内 → 保护运行中会话（未 git-lock 也护）"); P=""; continue; fi
       if [ "$LK" = 1 ]; then
         pid="$(lock_pid "$P")"
         if [ -n "$pid" ] && ps -p "$pid" >/dev/null 2>&1; then
