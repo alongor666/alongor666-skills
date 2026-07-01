@@ -18,8 +18,10 @@ from .queries import register_udfs
 PLAN_PARQUET = str(DATA_ROOT / "数据管理/warehouse/dim/plan/latest.parquet")
 RENEWAL_PARQUET = str(DATA_ROOT / "数据管理/warehouse/fact/renewal_tracker/latest.parquet")
 CROSS_SELL_PARQUET = str(DATA_ROOT / "数据管理/warehouse/fact/cross_sell/latest.parquet")
-# 山西年计划：主库 dim/plan 仅四川机构，SX 用 skill 内 data/sx_plan_2026.parquet（10 个三级机构车险年计划，万元）
-SX_PLAN_PARQUET = str(Path(__file__).resolve().parent.parent / "data" / "sx_plan_2026.parquet")
+# 山西年计划：由 chexian-api ETL（generate_dim_tables.py --branch-code SX）产出，
+# 落 validation/SX/dim/plan/latest.parquet（与 claims/renewal 同隔离区）。源 csv 在
+# chexian-api 数据管理/存量数据/sx_plan_<year>_by_org.csv（本地，gitignored）。
+SX_PLAN_PARQUET = str(DATA_ROOT / "数据管理/warehouse/validation/SX/dim/plan/latest.parquet")
 
 
 _BRANCH_NAME_TO_CODE: dict[str, str] = {
@@ -124,11 +126,11 @@ def policy_glob_for_branch(branch_code: str | None) -> str:
 def plan_parquet_for_branch(branch_code: str | None) -> str:
     """按省份返回 plan parquet 路径（与 policy/claims/renewal 四件套对称）。
 
-    山西(SX)：主库 dim/plan/latest.parquet 仅含四川机构（无山西），用 skill 内
-    data/sx_plan_2026.parquet——10 个纯三级机构（太原一部/二部 + 大同/阳泉/长治/晋城/
-    晋中/运城/临汾/吕梁）车险年计划，单位万元，SUM=23240 万。渠道类（车商/经代/金融同业/
-    重客）+「其他」因与三级机构重复计算、规则复杂暂不统计（留待后续）。
-    其余用主库 PLAN_PARQUET。SX 计划数据每年更新 data/sx_plan_2026.parquet。
+    山西(SX)：读 chexian-api ETL 产出的 validation/SX/dim/plan/latest.parquet
+    （generate_dim_tables.py --branch-code SX，从 数据管理/存量数据/sx_plan_<year>_by_org.csv
+    填实 10 个纯三级机构：太原一部/二部 + 大同/阳泉/长治/晋城/晋中/运城/临汾/吕梁，SUM=23240 万）。
+    渠道类（车商/经代/金融同业/重客）+「其他」因与三级机构重复计算暂不统计；salesman 层待补。
+    其余用主库 PLAN_PARQUET。SX 源 csv 每年更新（chexian-api 侧，本地 gitignored）+ 重跑 ETL。
     """
     if branch_code == "SX" and Path(SX_PLAN_PARQUET).exists():
         return SX_PLAN_PARQUET
