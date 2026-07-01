@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 from datetime import date
+from pathlib import Path
 
 import pandas as pd
 
@@ -17,6 +18,8 @@ from .queries import register_udfs
 PLAN_PARQUET = str(DATA_ROOT / "数据管理/warehouse/dim/plan/latest.parquet")
 RENEWAL_PARQUET = str(DATA_ROOT / "数据管理/warehouse/fact/renewal_tracker/latest.parquet")
 CROSS_SELL_PARQUET = str(DATA_ROOT / "数据管理/warehouse/fact/cross_sell/latest.parquet")
+# 山西年计划：主库 dim/plan 仅四川机构，SX 用 skill 内 data/sx_plan_2026.parquet（10 个三级机构车险年计划，万元）
+SX_PLAN_PARQUET = str(Path(__file__).resolve().parent.parent / "data" / "sx_plan_2026.parquet")
 
 
 _BRANCH_NAME_TO_CODE: dict[str, str] = {
@@ -118,6 +121,20 @@ def policy_glob_for_branch(branch_code: str | None) -> str:
     return POLICY_GLOB
 
 
+def plan_parquet_for_branch(branch_code: str | None) -> str:
+    """按省份返回 plan parquet 路径（与 policy/claims/renewal 四件套对称）。
+
+    山西(SX)：主库 dim/plan/latest.parquet 仅含四川机构（无山西），用 skill 内
+    data/sx_plan_2026.parquet——10 个纯三级机构（太原一部/二部 + 大同/阳泉/长治/晋城/
+    晋中/运城/临汾/吕梁）车险年计划，单位万元，SUM=23240 万。渠道类（车商/经代/金融同业/
+    重客）+「其他」因与三级机构重复计算、规则复杂暂不统计（留待后续）。
+    其余用主库 PLAN_PARQUET。SX 计划数据每年更新 data/sx_plan_2026.parquet。
+    """
+    if branch_code == "SX" and Path(SX_PLAN_PARQUET).exists():
+        return SX_PLAN_PARQUET
+    return PLAN_PARQUET
+
+
 def fetch_standard_window(con, org, time_field, start, end, level="org", claims_glob=None,
                           policy_glob=None):
     """跑一次合计查询，截止 end 日；起保口径 BETWEEN start AND end。"""
@@ -201,7 +218,7 @@ def fetch_renewal_rate(con, org, end, level="org", renewal_parquet=None):
     return r[0] if r and r[0] is not None else None
 
 
-def fetch_cross_sell_completion(con, org, end, level="org"):
+def fetch_cross_sell_completion(con, org, end, level="org", plan_parquet=None):
     """交叉销售达成率 = 实际驾意保费 × 100 ÷ (年计划驾意保费 × 时间进度)。
 
     数据源：
@@ -220,10 +237,11 @@ def fetch_cross_sell_completion(con, org, end, level="org"):
 
     plan_pred, plan_pp = _org_pred(level, org, col="organization")
     cs_pred, cs_pp = _org_pred(level, org)
+    pp = plan_parquet or PLAN_PARQUET
     sql = f"""
     WITH plan AS (
       SELECT SUM(plan_personal) * 10000.0 AS yp_yuan  -- branch 层 SUM 全机构；单机构 SUM=自身
-      FROM read_parquet('{PLAN_PARQUET}')
+      FROM read_parquet('{pp}')
       WHERE plan_year=? AND {plan_pred} AND level='organization'
     ),
     actual AS (
@@ -244,7 +262,7 @@ def fetch_cross_sell_completion(con, org, end, level="org"):
     return ap * 100.0 / (yp_yuan * progress)
 
 
-def fetch_plan_completion(con, org, time_field, start, end, level="org", policy_glob=None):
+def fetch_plan_completion(con, org, time_field, start, end, level="org", policy_glob=None, plan_parquet=None):
     """计划达成率 = SUM(实际签单保费) × 100 ÷ (SUM(车险年计划) × 时间进度)。
 
     口径（v1.8 修正）：
@@ -263,10 +281,11 @@ def fetch_plan_completion(con, org, time_field, start, end, level="org", policy_
     plan_pred, plan_pp = _org_pred(level, org, col="organization")
     pol_pred, pol_pp = _org_pred(level, org)
     pg = policy_glob or POLICY_GLOB
+    pp = plan_parquet or PLAN_PARQUET
     sql = f"""
     WITH plan AS (
       SELECT SUM(plan_vehicle) * 10000.0 AS yp_yuan  -- 万元转元；仅车险，与 policy.premium 同口径；branch 层 SUM 全机构
-      FROM read_parquet('{PLAN_PARQUET}')
+      FROM read_parquet('{pp}')
       WHERE plan_year=? AND {plan_pred} AND level='organization'
     ),
     actual AS (

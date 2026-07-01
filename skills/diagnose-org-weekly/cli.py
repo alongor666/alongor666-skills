@@ -64,7 +64,7 @@ from lib import (  # noqa: E402
     auto_cutoff, make_weekly_windows,
     render_threshold_card, render_page,
     fetch_standard_window, claims_glob_for_branch, renewal_parquet_for_branch,
-    policy_glob_for_branch,
+    policy_glob_for_branch, plan_parquet_for_branch,
     fetch_plan_completion, fetch_renewal_rate, fetch_premium_growth,
     fetch_household_share, fetch_cross_sell_completion,
     fetch_team_salesman_periods,
@@ -153,6 +153,8 @@ def main() -> int:
     # SX 保单/赔案/续保三件套同源切 validation/SX/（policy_glob 与 claims/renewal 对称）；
     # SC 用主库裸 POLICY_GLOB + SQL branch_code=? 过滤隔离。
     policy_glob = policy_glob_for_branch(branch_code)
+    # SX 计划：主库 dim/plan 无山西机构，切 skill 内 data/sx_plan_2026.parquet（10 三级机构车险年计划）。
+    plan_parquet = plan_parquet_for_branch(branch_code)
 
     if not args.org:
         if is_branch:
@@ -206,11 +208,11 @@ def main() -> int:
     standard_rows = [
         ({
             **dict(row),
-            "plan_completion_pct":       fetch_plan_completion(con, args.org, args.time_field, s, e, level=args.level, policy_glob=policy_glob),
+            "plan_completion_pct":       fetch_plan_completion(con, args.org, args.time_field, s, e, level=args.level, policy_glob=policy_glob, plan_parquet=plan_parquet),
             "renewal_rate_pct":          fetch_renewal_rate(con, args.org, e, level=args.level, renewal_parquet=renewal_parquet),
             "premium_growth_pct":        fetch_premium_growth(con, args.org, args.time_field, s, e, level=args.level, policy_glob=policy_glob),
             "household_share_pct":       fetch_household_share(con, args.org, args.time_field, s, e, level=args.level, policy_glob=policy_glob),
-            "cross_sell_completion_pct": fetch_cross_sell_completion(con, args.org, e, level=args.level),
+            "cross_sell_completion_pct": fetch_cross_sell_completion(con, args.org, e, level=args.level, plan_parquet=plan_parquet),
         } if row is not None else None)
         for row, (_, s, e) in zip(standard_rows, windows)
     ]
