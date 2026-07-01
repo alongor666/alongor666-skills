@@ -103,26 +103,44 @@ def renewal_parquet_for_branch(branch_code: str | None) -> str:
     return RENEWAL_PARQUET
 
 
-def fetch_standard_window(con, org, time_field, start, end, level="org", claims_glob=None):
+def policy_glob_for_branch(branch_code: str | None) -> str:
+    """按省份返回 policy glob（与 claims_glob_for_branch / renewal_parquet_for_branch 对称）。
+
+    山西(SX)签单清单以 validation/SX/（顶层 *.parquet，已按省机构规范化）为权威源；
+    主库 fact/policy/current/SX_*.parquet 是同源副本（DuckDB 实证两路径逐位一致：
+    1,835,242 行 / 1,777,387 单 / 15.32 亿保费）。SX 切 validation/SX/ 既与 claims/renewal
+    三件套心智统一，又让 SX 报告只扫山西文件（裸 POLICY_GLOB 会扫 SC+SX 全量 445 万行）；
+    其余情况用主库 POLICY_GLOB（SC 靠 SQL branch_code=? 过滤隔离）。
+    ⚠️ 治理债：current/SX_* 与 validation/SX/ 双写是 SSOT 隐患，未来应消除副本。
+    """
+    if branch_code == "SX":
+        return str(DATA_ROOT / "数据管理/warehouse/validation/SX/*.parquet")
+    return POLICY_GLOB
+
+
+def fetch_standard_window(con, org, time_field, start, end, level="org", claims_glob=None,
+                          policy_glob=None):
     """跑一次合计查询，截止 end 日；起保口径 BETWEEN start AND end。"""
     pred, pp = _org_pred(level, org)
     where = f"{pred} AND {time_field} BETWEEN ? AND ?"
     df = standard_query(
         con, where_clause=where, params=pp + [start.isoformat(), end.isoformat()],
         cutoff=end.isoformat(),
+        policy_glob=policy_glob or POLICY_GLOB,
         claims_glob=claims_glob or CLAIMS_GLOB,
     )
     return df.iloc[0] if not df.empty else None
 
 
-def fetch_household_share(con, org, time_field, start, end, level="org"):
+def fetch_household_share(con, org, time_field, start, end, level="org", policy_glob=None):
     """家自车占比 = 客户类别='非营业个人客车' 的保单数 / 全部保单数。"""
     pred, pp = _org_pred(level, org)
+    pg = policy_glob or POLICY_GLOB
     sql = f"""
     SELECT
       100.0 * COUNT(DISTINCT CASE WHEN customer_category='非营业个人客车' THEN policy_no END)
             / NULLIF(COUNT(DISTINCT policy_no), 0) AS share_pct
-    FROM read_parquet('{POLICY_GLOB}', union_by_name=true)
+    FROM read_parquet('{pg}', union_by_name=true)
     WHERE {pred} AND {time_field} BETWEEN ? AND ?
       AND insurance_start_date IS NOT NULL
     """
@@ -130,20 +148,21 @@ def fetch_household_share(con, org, time_field, start, end, level="org"):
     return r[0] if r and r[0] is not None else None
 
 
-def fetch_premium_growth(con, org, time_field, start, end, level="org"):
+def fetch_premium_growth(con, org, time_field, start, end, level="org", policy_glob=None):
     """保费增长率（同比）= (本期保费 - 去年同期保费) × 100 / 去年同期保费。"""
     base_start = start.replace(year=start.year - 1) if start.month != 2 or start.day != 29 else start.replace(year=start.year - 1, day=28)
     base_end = end.replace(year=end.year - 1) if end.month != 2 or end.day != 29 else end.replace(year=end.year - 1, day=28)
     pred, pp = _org_pred(level, org)
+    pg = policy_glob or POLICY_GLOB
     sql = f"""
     WITH cur AS (
       SELECT SUM(premium) AS p
-      FROM read_parquet('{POLICY_GLOB}', union_by_name=true)
+      FROM read_parquet('{pg}', union_by_name=true)
       WHERE {pred} AND {time_field} BETWEEN ? AND ?
     ),
     base AS (
       SELECT SUM(premium) AS p
-      FROM read_parquet('{POLICY_GLOB}', union_by_name=true)
+      FROM read_parquet('{pg}', union_by_name=true)
       WHERE {pred} AND {time_field} BETWEEN ? AND ?
     )
     SELECT
@@ -225,7 +244,7 @@ def fetch_cross_sell_completion(con, org, end, level="org"):
     return ap * 100.0 / (yp_yuan * progress)
 
 
-def fetch_plan_completion(con, org, time_field, start, end, level="org"):
+def fetch_plan_completion(con, org, time_field, start, end, level="org", policy_glob=None):
     """计划达成率 = SUM(实际签单保费) × 100 ÷ (SUM(车险年计划) × 时间进度)。
 
     口径（v1.8 修正）：
@@ -243,6 +262,7 @@ def fetch_plan_completion(con, org, time_field, start, end, level="org"):
     # 不加 level 过滤 → 两份都 SUM → 数值翻倍
     plan_pred, plan_pp = _org_pred(level, org, col="organization")
     pol_pred, pol_pp = _org_pred(level, org)
+    pg = policy_glob or POLICY_GLOB
     sql = f"""
     WITH plan AS (
       SELECT SUM(plan_vehicle) * 10000.0 AS yp_yuan  -- 万元转元；仅车险，与 policy.premium 同口径；branch 层 SUM 全机构
@@ -251,7 +271,7 @@ def fetch_plan_completion(con, org, time_field, start, end, level="org"):
     ),
     actual AS (
       SELECT SUM(premium) AS ap
-      FROM read_parquet('{POLICY_GLOB}', union_by_name=true)
+      FROM read_parquet('{pg}', union_by_name=true)
       WHERE {pol_pred} AND {time_field} BETWEEN ? AND ?
     )
     SELECT plan.yp_yuan, actual.ap FROM plan, actual
@@ -273,7 +293,8 @@ def fetch_plan_completion(con, org, time_field, start, end, level="org"):
 
 
 def fetch_team_salesman_periods(con, org, time_field, periods, year,
-                                level="org", top_n=None) -> pd.DataFrame:
+                                level="org", top_n=None, policy_glob=None,
+                                claims_glob=None) -> pd.DataFrame:
     """team / salesman 维度的多窗长表（drill_long_df 兼容格式）。
 
     level='branch' 时：不加 org 过滤（聚合全部三级机构）、**仅产出 team 维度**
@@ -297,6 +318,8 @@ def fetch_team_salesman_periods(con, org, time_field, periods, year,
     register_udfs(con)
     st_plan_pred, st_plan_pp = _org_pred(level, org, col="organization")
     pol_pred, pol_pp = _org_pred(level, org, col="p.org_level_3" if level == "org" else "p.branch_code")
+    pg = policy_glob or POLICY_GLOB
+    cg = claims_glob or CLAIMS_GLOB
     frames: list[pd.DataFrame] = []
     for label, start, end in periods:
         cutoff_str = end.isoformat()
@@ -315,7 +338,7 @@ def fetch_team_salesman_periods(con, org, time_field, periods, year,
             COALESCE(NULLIF(short_salesman_name(p.salesman_name), ''), '未知') AS salesman,
             p.premium,
             COALESCE(p.fee_amount, 0) AS fee_amount
-          FROM read_parquet('{POLICY_GLOB}', union_by_name=true) p
+          FROM read_parquet('{pg}', union_by_name=true) p
           LEFT JOIN salesman_team st
             ON short_salesman_name(p.salesman_name) = st.s_short
           WHERE {pol_pred} AND p.{time_field} BETWEEN ? AND ?
@@ -340,7 +363,7 @@ def fetch_team_salesman_periods(con, org, time_field, periods, year,
                                   ELSE COALESCE(reserve_amount, 0) END)
                        ELSE 0
                      END) AS reported_claims
-          FROM read_parquet('{CLAIMS_GLOB}', union_by_name=true)
+          FROM read_parquet('{cg}', union_by_name=true)
           WHERE policy_no IS NOT NULL
             AND CAST(accident_time AS DATE) <= DATE '{cutoff_str}'
           GROUP BY policy_no
@@ -424,7 +447,7 @@ def fetch_team_salesman_periods(con, org, time_field, periods, year,
               WHERE s2.plan_year=? AND {yp_plan_pred} AND s2.level='salesman'
                 AND short_team_name(s2.team)=?
             ) AS yp
-            FROM read_parquet('{POLICY_GLOB}', union_by_name=true) p
+            FROM read_parquet('{pg}', union_by_name=true) p
             LEFT JOIN (
               SELECT DISTINCT short_salesman_name(salesman_name) AS s_short, team
               FROM read_parquet('{PLAN_PARQUET}')
@@ -446,7 +469,7 @@ def fetch_team_salesman_periods(con, org, time_field, periods, year,
             ),
             actual AS (
               SELECT SUM(premium) AS ap
-              FROM read_parquet('{POLICY_GLOB}', union_by_name=true)
+              FROM read_parquet('{pg}', union_by_name=true)
               WHERE org_level_3=? AND {time_field} BETWEEN ? AND ?
                 AND short_salesman_name(salesman_name)=?
             )
@@ -473,6 +496,7 @@ def fetch_dim_growth_rates(
     year: int,
     dim_keys: list[str],
     level: str = "org",
+    policy_glob: str | None = None,
 ) -> pd.DataFrame:
     """各维度同比保费增长率序列。
 
@@ -486,6 +510,7 @@ def fetch_dim_growth_rates(
     register_udfs(con)
 
     pred, pp = _org_pred(level, org)
+    pg = policy_glob or POLICY_GLOB
     frames: list[pd.DataFrame] = []
     for label, start, end in periods:
         prev_start = start.replace(year=start.year - 1) if not (start.month == 2 and start.day == 29) \
@@ -507,7 +532,7 @@ def fetch_dim_growth_rates(
             WITH cur AS (
               SELECT CAST({dim_expr} AS VARCHAR) AS dim_value,
                      SUM(premium) AS cur_prem
-              FROM read_parquet('{POLICY_GLOB}', union_by_name=true)
+              FROM read_parquet('{pg}', union_by_name=true)
               WHERE {pred} AND {time_field} BETWEEN ? AND ?
                 AND insurance_start_date IS NOT NULL
               GROUP BY dim_value
@@ -515,7 +540,7 @@ def fetch_dim_growth_rates(
             base AS (
               SELECT CAST({dim_expr} AS VARCHAR) AS dim_value,
                      SUM(premium) AS base_prem
-              FROM read_parquet('{POLICY_GLOB}', union_by_name=true)
+              FROM read_parquet('{pg}', union_by_name=true)
               WHERE {pred} AND {time_field} BETWEEN ? AND ?
                 AND insurance_start_date IS NOT NULL
               GROUP BY dim_value
@@ -629,6 +654,7 @@ def fetch_org_cross_data(
     level: str = "org",
     extra_dims: dict | None = None,
     claims_glob: str | None = None,
+    policy_glob: str | None = None,
 ) -> pd.DataFrame:
     """org-weekly 维度交叉下钻数据（5 YTD 窗口 × N 维互相交叉）。
 
@@ -669,6 +695,7 @@ def fetch_org_cross_data(
             extra_fields=base_extra,
             cutoff=cutoff_str,
             where_clause=where_clause,
+            policy_glob=policy_glob or POLICY_GLOB,
             claims_glob=claims_glob or CLAIMS_GLOB,
         )
         # 临时物化 policy_exposure（复用 multi_dim_periods_query 模式）
@@ -714,6 +741,8 @@ def fetch_org_team_cross_data(
     level: str = "branch",
     top_teams: set | None = None,
     extra_dims: dict | None = None,
+    policy_glob: str | None = None,
+    claims_glob: str | None = None,
 ) -> pd.DataFrame:
     """team 维作主维的交叉下钻数据（team × 全部业务维 [+ org3]）。
 
@@ -737,6 +766,8 @@ def fetch_org_team_cross_data(
 
     st_plan_pred, st_plan_pp = _org_pred(level, org, col="organization")
     pol_pred, pol_pp = _org_pred(level, org, col="p.org_level_3" if level == "org" else "p.branch_code")
+    pg = policy_glob or POLICY_GLOB
+    cg = claims_glob or CLAIMS_GLOB
     raw_cols = ["customer_category", "insurance_type", "coverage_combination",
                 "is_nev", "is_new_car", "is_transfer", "is_renewal", "org_level_3"]
     cols_sel = ", ".join(raw_cols)
@@ -759,7 +790,7 @@ def fetch_org_team_cross_data(
             {cols_p},
             p.premium,
             COALESCE(p.fee_amount, 0) AS fee_amount
-          FROM read_parquet('{POLICY_GLOB}', union_by_name=true) p
+          FROM read_parquet('{pg}', union_by_name=true) p
           LEFT JOIN salesman_team st
             ON short_salesman_name(p.salesman_name) = st.s_short
           WHERE {pol_pred} AND YEAR(p.{time_field})=? AND p.{time_field} <= DATE '{cutoff_str}'
@@ -784,7 +815,7 @@ def fetch_org_team_cross_data(
                                   ELSE COALESCE(reserve_amount, 0) END)
                        ELSE 0
                      END) AS reported_claims
-          FROM read_parquet('{CLAIMS_GLOB}', union_by_name=true)
+          FROM read_parquet('{cg}', union_by_name=true)
           WHERE policy_no IS NOT NULL
             AND CAST(accident_time AS DATE) <= DATE '{cutoff_str}'
           GROUP BY policy_no

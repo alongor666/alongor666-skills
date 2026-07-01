@@ -64,6 +64,7 @@ from lib import (  # noqa: E402
     auto_cutoff, make_weekly_windows,
     render_threshold_card, render_page,
     fetch_standard_window, claims_glob_for_branch, renewal_parquet_for_branch,
+    policy_glob_for_branch,
     fetch_plan_completion, fetch_renewal_rate, fetch_premium_growth,
     fetch_household_share, fetch_cross_sell_completion,
     fetch_team_salesman_periods,
@@ -149,6 +150,9 @@ def main() -> int:
     # 否则 SX 报告赔付率/出险率分子为 0（失真）。
     claims_glob = claims_glob_for_branch(branch_code)
     renewal_parquet = renewal_parquet_for_branch(branch_code)
+    # SX 保单/赔案/续保三件套同源切 validation/SX/（policy_glob 与 claims/renewal 对称）；
+    # SC 用主库裸 POLICY_GLOB + SQL branch_code=? 过滤隔离。
+    policy_glob = policy_glob_for_branch(branch_code)
 
     if not args.org:
         if is_branch:
@@ -170,7 +174,7 @@ def main() -> int:
             cutoff_where = f"org_level_3=? AND YEAR({args.time_field})={args.year}"
             cutoff_params = [args.org]
 
-        args.cutoff = auto_cutoff(con, cutoff_where, cutoff_params)
+        args.cutoff = auto_cutoff(con, cutoff_where, cutoff_params, policy_glob=policy_glob)
         if not args.cutoff:
             print("未找到数据", file=sys.stderr); return 1
 
@@ -190,7 +194,8 @@ def main() -> int:
     print(">> 取数中...")
     standard_rows = []
     for label, start, end in windows:
-        row = fetch_standard_window(con, args.org, args.time_field, start, end, level=args.level, claims_glob=claims_glob)
+        row = fetch_standard_window(con, args.org, args.time_field, start, end, level=args.level,
+                                   claims_glob=claims_glob, policy_glob=policy_glob)
         standard_rows.append(row)
         n = int(row["policy_count"]) if row is not None else 0
         print(f"   {label}（{start}~{end}）：{n:,} 张保单")
@@ -201,10 +206,10 @@ def main() -> int:
     standard_rows = [
         ({
             **dict(row),
-            "plan_completion_pct":       fetch_plan_completion(con, args.org, args.time_field, s, e, level=args.level),
+            "plan_completion_pct":       fetch_plan_completion(con, args.org, args.time_field, s, e, level=args.level, policy_glob=policy_glob),
             "renewal_rate_pct":          fetch_renewal_rate(con, args.org, e, level=args.level, renewal_parquet=renewal_parquet),
-            "premium_growth_pct":        fetch_premium_growth(con, args.org, args.time_field, s, e, level=args.level),
-            "household_share_pct":       fetch_household_share(con, args.org, args.time_field, s, e, level=args.level),
+            "premium_growth_pct":        fetch_premium_growth(con, args.org, args.time_field, s, e, level=args.level, policy_glob=policy_glob),
+            "household_share_pct":       fetch_household_share(con, args.org, args.time_field, s, e, level=args.level, policy_glob=policy_glob),
             "cross_sell_completion_pct": fetch_cross_sell_completion(con, args.org, e, level=args.level),
         } if row is not None else None)
         for row, (_, s, e) in zip(standard_rows, windows)
@@ -212,6 +217,39 @@ def main() -> int:
 
     sample_n = [int(r["policy_count"]) if r is not None else 0 for r in standard_rows]
     total_premiums = [(r["premium"] if r is not None else None) for r in standard_rows]
+
+    # ── 分省隔离防线（防回归）+ 计划数据缺口显式化 ──────────────────────
+    if is_branch and branch_code:
+        # 防线①：SX 走 validation/SX/ 应纯 SX；检出 >1 个 branch_code → 隔离路径被污染，fail-closed
+        # （SC 用裸 current/ 含 SC+SX，靠 WHERE branch_code='SC' 过滤，不校验 glob 纯度）
+        if branch_code == "SX":
+            _bc_cnt = con.execute(
+                f"SELECT COUNT(DISTINCT branch_code) FROM "
+                f"read_parquet('{policy_glob}', union_by_name=true) "
+                f"WHERE branch_code IS NOT NULL AND YEAR({args.time_field})=? "
+                f"AND {args.time_field} <= DATE '{args.cutoff}'",
+                [args.year],
+            ).fetchone()[0]
+            if _bc_cnt > 1:
+                raise RuntimeError(
+                    f"分省隔离防线失败：SX policy_glob({policy_glob}) 检出 {_bc_cnt} 个 "
+                    f"branch_code，validation/SX/ 应只含 SX——疑似隔离路径被 SC 文件污染"
+                )
+        # 量级 sanity：单窗口 YTD 保单超 500 万 → 疑似跨省混查/口径异常（警告不阻断）
+        _latest_n = sample_n[-1] if sample_n else 0
+        if _latest_n > 5_000_000:
+            print(f"⚠ 警告：最新窗口保单数 {_latest_n:,} 超过 500 万上界，"
+                  "请核查是否跨省混查或口径异常", file=sys.stderr)
+        # 遗漏A：plan 表无目标省机构 → 计划/交叉销售达成率全程 None（缺口显式化，非静默"—"）
+        _all_plan_none = (
+            all(r is None or r.get("plan_completion_pct") is None
+                for r in standard_rows if r is not None)
+            if standard_rows else True
+        )
+        if _all_plan_none:
+            print(f">> ⚠ 提示：{args.org}（{branch_code}）全窗口计划达成率为空——"
+                  f"plan 表无 {branch_code} 机构数据，计划/交叉销售达成率将显示为空"
+                  "（新省计划数据待接入）", file=sys.stderr)
 
     # 下钻维度：分公司层用 org_level_3 替代 salesman（salesman 走 team 那条独立路径不产）。
     # org_level_3 是纯 policy 列，天然走 multi_dim_periods_query。
@@ -236,13 +274,15 @@ def main() -> int:
         periods=windows,
         dim_keys=drill_dims,
         time_field=args.time_field,
+        policy_glob=policy_glob,
         claims_glob=claims_glob,
     )
     # team 维度走独立派生查询（JOIN plan.parquet level='salesman' 派生归属）。
     # 分公司层：仅 team（Top20 按签单保费 YTD）；三级机构层：team + salesman。
     print(">> 取 team" + ("" if is_branch else "/salesman") + " 下钻数据（JOIN plan.parquet 派生归属）...")
     ts_df = fetch_team_salesman_periods(con, args.org, args.time_field, windows, args.year,
-                                        level=args.level, top_n=(20 if is_branch else None))
+                                        level=args.level, top_n=(20 if is_branch else None),
+                                        policy_glob=policy_glob, claims_glob=claims_glob)
     if ts_df is not None and not ts_df.empty:
         _ts_skip = {d for d in ("team", "salesman") if d in skip_secs}
         if _ts_skip:
@@ -256,7 +296,7 @@ def main() -> int:
     _extra_ts_dims = ["team"] if is_branch else ["team", "salesman"]
     _extra_ts_dims = [d for d in _extra_ts_dims if d not in skip_secs]
     all_drill_dim_keys = drill_dims + _extra_ts_dims
-    growth_df = fetch_dim_growth_rates(con, args.org, args.time_field, windows, args.year, drill_dims, level=args.level)
+    growth_df = fetch_dim_growth_rates(con, args.org, args.time_field, windows, args.year, drill_dims, level=args.level, policy_glob=policy_glob)
     if not growth_df.empty:
         drill_long_df = drill_long_df.merge(
             growth_df[["period", "dim_key", "dim_value", "premium_growth_pct"]],
@@ -311,7 +351,8 @@ def main() -> int:
     # 分公司层把 org_level_3 加进交叉维，使「三级机构」可下钻到其他所有业务维度。
     cross_extra_dims = {"org3": ("org_level_3", "org_level_3")} if (is_branch and "org3" not in skip_secs) else None
     cross_df = fetch_org_cross_data(con, args.org, args.time_field, windows, args.year,
-                                    level=args.level, extra_dims=cross_extra_dims, claims_glob=claims_glob)
+                                    level=args.level, extra_dims=cross_extra_dims,
+                                    claims_glob=claims_glob, policy_glob=policy_glob)
     # 分公司层：补 team（Top20）作主维的交叉数据 → Top20 团队可下钻全部业务维 + 三级机构。
     if is_branch and "team" not in skip_secs:
         ytd_label = windows[-1][0]
@@ -323,6 +364,7 @@ def main() -> int:
         team_cross = fetch_org_team_cross_data(
             con, args.org, args.time_field, windows, args.year,
             level=args.level, top_teams=top_teams, extra_dims=cross_extra_dims,
+            policy_glob=policy_glob, claims_glob=claims_glob,
         )
         if team_cross is not None and not team_cross.empty:
             cross_df = pd.concat([cross_df, team_cross], ignore_index=True)
