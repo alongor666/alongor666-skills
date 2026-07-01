@@ -94,18 +94,26 @@ DIM_KEY_TO_SEC = {
 # 分公司层：salesman 段 → org_level_3（三级机构，sec_id="org3" 对齐交叉数据 prim_sec_id）；
 #           team 段重命名为「Top20 团队」（数据侧已按签单保费 YTD 截取前 20）。
 
-def build_section_defs(level: str = "org") -> list[dict]:
-    """按层级返回段定义列表。"""
+def build_section_defs(level: str = "org", skip: set[str] | None = None) -> list[dict]:
+    """按层级返回段定义列表。
+
+    skip 为要剔除的 section id 集合（如 {"team","org3"}）。branch 层业务员段
+    实际是 org3（三级机构），故 skip 判 org3；team 段判 team。
+    """
+    skip = skip or set()
     if level != "branch":
-        return [dict(s) for s in SECTION_DEFS_ORG]
+        return [dict(s) for s in SECTION_DEFS_ORG if s["id"] not in skip]
     out = []
     for s in SECTION_DEFS_ORG:
         if s["id"] == "salesman":
-            out.append({"id": "org3", "label": "三级机构", "kind": "org", "field": "org_level_3"})
+            if "org3" not in skip:
+                out.append({"id": "org3", "label": "三级机构", "kind": "org", "field": "org_level_3"})
         elif s["id"] == "team":
-            out.append({**s, "label": "Top20 团队"})
+            if "team" not in skip:
+                out.append({**s, "label": "Top20 团队"})
         else:
-            out.append(dict(s))
+            if s["id"] not in skip:
+                out.append(dict(s))
     return out
 
 
@@ -600,7 +608,8 @@ def render_v1(ctx, drill_long_df, args):
     cs = cutoff.isoformat()
     out_dir = Path(args.output)
     level = getattr(args, "level", "org")
-    section_defs = build_section_defs(level)
+    skip = getattr(args, "skip_sections", None) or set()
+    section_defs = build_section_defs(level, skip=skip)
     dim_key_to_sec = build_dim_key_to_sec(level)
 
     # 1. KPI 卡

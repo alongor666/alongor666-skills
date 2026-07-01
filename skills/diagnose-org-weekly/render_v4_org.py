@@ -83,25 +83,38 @@ ORG_V4_DRILL_DIMS = {
 ORG_V4_DRILL_DIMS["team"] = _ORG_V4_ALL_SECS  # team 可下钻所有 7 维（不含 team 自身）
 
 
-def build_v4_drill(level: str = "org"):
+def build_v4_drill(level: str = "org", skip: set[str] | None = None):
     """按层级返回 (group_to_sec_id, drill_dims)。
 
     branch 层把 org3（三级机构）加进交叉维：org3 可下钻全部业务维，
     各业务维亦可下钻 org3；team 段重命名为「Top20 团队」。
+    skip 为要剔除的 section id 集合（如 {"team","org3"}）：被剔除的段不作主维入口、
+    也不作其他段的下钻目标。
     """
+    skip = skip or set()
+    base_secs = [s for s in _ORG_V4_ALL_SECS if s[0] not in skip]
     if level != "branch":
-        return ORG_V4_GROUP_TO_SEC_ID, ORG_V4_DRILL_DIMS
-    all_secs = _ORG_V4_ALL_SECS + [("org3", "三级机构")]
+        group_to_sec = {k: v for k, v in ORG_V4_GROUP_TO_SEC_ID.items() if v not in skip}
+        drill = {
+            sec_id: [(s2, lbl) for s2, lbl in base_secs if s2 != sec_id]
+            for sec_id, _ in base_secs
+        }
+        if "team" not in skip:
+            drill["team"] = base_secs  # team 可下钻所有未 skip 的 7 维
+        return group_to_sec, drill
+    all_secs = base_secs + ([("org3", "三级机构")] if "org3" not in skip else [])
     drill = {
         sec_id: [(s2, lbl) for s2, lbl in all_secs if s2 != sec_id]
         for sec_id, _ in all_secs
     }
-    drill["team"] = all_secs  # Top20 团队 可下钻全部业务维 + 三级机构
+    if "team" not in skip:
+        drill["team"] = all_secs  # Top20 团队 可下钻全部业务维 + 三级机构
     group_to_sec = {
         "客户类别": "customer", "Top20 团队": "team", "三级机构": "org3",
         "险类": "insurance", "险别组合": "combo", "能源类型": "energy",
         "新旧车": "newused", "是否过户": "transfer", "是否续保": "renewal",
     }
+    group_to_sec = {k: v for k, v in group_to_sec.items() if v not in skip}
     return group_to_sec, drill
 
 ORG_V4_COMPARE_OPTS = [("yoy", "vs 上周"), ("warn", "vs 警戒线")]
@@ -244,8 +257,9 @@ def render_v4(ctx, drill_long_df, args):
     )
 
     level = getattr(args, "level", "org")
-    section_defs = build_section_defs(level)
-    group_to_sec_id, drill_dims_v4 = build_v4_drill(level)
+    skip = getattr(args, "skip_sections", None) or set()
+    section_defs = build_section_defs(level, skip=skip)
+    group_to_sec_id, drill_dims_v4 = build_v4_drill(level, skip=skip)
     rows, meta = _build_rows(ctx, drill_long_df, section_defs=section_defs)
     rows_json = json.dumps(rows, ensure_ascii=False, separators=(",", ":"))
     dd_json = json.dumps(ctx.org_dd or {}, ensure_ascii=False, separators=(",", ":"))

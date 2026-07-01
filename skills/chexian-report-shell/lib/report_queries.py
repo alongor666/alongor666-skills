@@ -19,27 +19,98 @@ RENEWAL_PARQUET = str(DATA_ROOT / "数据管理/warehouse/fact/renewal_tracker/l
 CROSS_SELL_PARQUET = str(DATA_ROOT / "数据管理/warehouse/fact/cross_sell/latest.parquet")
 
 
-def _org_pred(level: str, org, col: str = "org_level_3"):
+_BRANCH_NAME_TO_CODE: dict[str, str] = {
+    "四川分公司": "SC",
+    "山西分公司": "SX",
+    "四川": "SC",
+    "山西": "SX",
+}
+
+
+def _resolve_branch_code(level: str, org) -> str | None:
+    if level != "branch" or not org:
+        return None
+    raw = str(org).strip()
+    if not raw:
+        return None
+    up = raw.upper()
+    if len(up) == 2 and up in {"SC", "SX"}:
+        return up
+    return _BRANCH_NAME_TO_CODE.get(raw)
+
+
+def _org_pred(level: str, org, col: str | None = None, branch_code: str | None = None):
     """构造机构过滤谓词。
 
-    level='org'    → ("{col}=?", [org])  仅当前三级机构
+     level='org'    → ("{col}=?", [org])  仅当前三级机构（col 默认 org_level_3）
     level='branch' → ("TRUE", [])        分公司层：聚合全部三级机构（去过滤）
+     level='branch' 且 org 为分公司名/简称/代码（SC/SX）→ 映射后过滤该分公司范围。
+     分公司范围内指标回填：
+       - policy/claims/cross_sell/renewal 等有 branch_code 字段：直接按 branch_code 过滤
+         （分公司层默认即此路径；修复 2026-06-30：原默认 org_level_3 白名单会因
+          fact/current 物理混放 SC+SX + 三级机构名撞名，把山西保单倒进四川报告，
+          保单数虚高约 30%——PR #842 只改了 diagnose_common，lib 渲染层漏改）
+       - 仅有 organization（如 plan.parquet）指标：按该分公司所有 organization 名称 IN 过滤
+       - 显式传带前缀的 branch_code（如 "p.branch_code"）：保留前缀，防多表 JOIN 列歧义
 
-    用于把单一事实源的 org 过滤逻辑从各 fetch_* 中抽出，
-    使三级机构层（org）/ 分公司层（branch）共用同一套取数。
+     col 语义：None=按 level 智能选（branch→branch_code，org→org_level_3）；
+              显式传则尊重调用方（organization 等无 branch_code 的维表走白名单）。
+
+     用于把单一事实源的 org 过滤逻辑从各 fetch_* 中抽出，
+     使三级机构层（org）/ 分公司层（branch）共用同一套取数。
     """
     if level == "branch":
-        return ("TRUE", [])
-    return (f"{col}=?", [org])
+        branch_code = branch_code or _resolve_branch_code(level, org)
+        if not branch_code:
+            return ("TRUE", [])
+        # 显式传非 branch_code 列（如 plan 的 organization）→ 该表无 branch_code，走白名单
+        if col and col != "branch_code" and not col.endswith(".branch_code"):
+            org_pred = (
+                f"{col} IN ("
+                "SELECT DISTINCT org_level_3 "
+                f"FROM read_parquet('{POLICY_GLOB}', union_by_name=true) "
+                f"WHERE branch_code=?)"
+            )
+            return (org_pred, [branch_code])
+        # 默认或显式 branch_code：直接按 branch_code 精确过滤（保留表别名前缀防 JOIN 歧义）
+        bc_col = col if (col and col.endswith(".branch_code")) else "branch_code"
+        return (f"{bc_col}=?", [branch_code])
+    # level='org'：默认 org_level_3（三级机构名），显式 col 优先
+    effective_col = col if col else "org_level_3"
+    return (f"{effective_col}=?", [org])
 
 
-def fetch_standard_window(con, org, time_field, start, end, level="org"):
+def claims_glob_for_branch(branch_code: str | None) -> str:
+    """按省份返回 claims glob。
+
+    山西(SX)赔案物理隔离在 validation/SX/claims_detail（未并入主库
+    fact/claims_detail），故 SX 单独指向该路径；其余情况用主库 CLAIMS_GLOB。
+    若不切换，SX 报告的赔付率/出险率因 claims 全为 SC 而 JOIN 不到，分子为 0。
+    """
+    if branch_code == "SX":
+        return str(DATA_ROOT / "数据管理/warehouse/validation/SX/claims_detail/*.parquet")
+    return CLAIMS_GLOB
+
+
+def renewal_parquet_for_branch(branch_code: str | None) -> str:
+    """按省份返回 renewal_tracker parquet 路径。
+
+    山西(SX)续保追踪同样物理隔离在 validation/SX/renewal_tracker（未并入
+    fact/renewal_tracker），故 SX 单独指向该路径；其余用主库 RENEWAL_PARQUET。
+    """
+    if branch_code == "SX":
+        return str(DATA_ROOT / "数据管理/warehouse/validation/SX/renewal_tracker/*.parquet")
+    return RENEWAL_PARQUET
+
+
+def fetch_standard_window(con, org, time_field, start, end, level="org", claims_glob=None):
     """跑一次合计查询，截止 end 日；起保口径 BETWEEN start AND end。"""
     pred, pp = _org_pred(level, org)
     where = f"{pred} AND {time_field} BETWEEN ? AND ?"
     df = standard_query(
         con, where_clause=where, params=pp + [start.isoformat(), end.isoformat()],
         cutoff=end.isoformat(),
+        claims_glob=claims_glob or CLAIMS_GLOB,
     )
     return df.iloc[0] if not df.empty else None
 
@@ -86,7 +157,7 @@ def fetch_premium_growth(con, org, time_field, start, end, level="org"):
     return r[0] if r and r[0] is not None else None
 
 
-def fetch_renewal_rate(con, org, end, level="org"):
+def fetch_renewal_rate(con, org, end, level="org", renewal_parquet=None):
     """商业险续保率（项目口径）= 已续件数 ÷ 应续件数 × 100（VIN 去重）。
 
     数据源：renewal_tracker fact 表（项目 RenewalTrackerFact 的本地 parquet）
@@ -97,11 +168,12 @@ def fetch_renewal_rate(con, org, end, level="org"):
       - 摩托/挂车在 RenewalTrackerFact 入库时已过滤（应续口径定义本身排除）
     """
     pred, pp = _org_pred(level, org)
+    rp = renewal_parquet or RENEWAL_PARQUET
     sql = f"""
     SELECT
       100.0 * COUNT(DISTINCT CASE WHEN is_renewed=true AND renewed_date <= ? THEN vehicle_frame_no END)
             / NULLIF(COUNT(DISTINCT vehicle_frame_no), 0) AS rate_pct
-    FROM read_parquet('{RENEWAL_PARQUET}')
+    FROM read_parquet('{rp}')
     WHERE {pred}
       AND expected_expiry_date >= DATE '{end.year}-01-01'
       AND expected_expiry_date <= ?
@@ -224,7 +296,7 @@ def fetch_team_salesman_periods(con, org, time_field, periods, year,
     """
     register_udfs(con)
     st_plan_pred, st_plan_pp = _org_pred(level, org, col="organization")
-    pol_pred, pol_pp = _org_pred(level, org, col="p.org_level_3")
+    pol_pred, pol_pp = _org_pred(level, org, col="p.org_level_3" if level == "org" else "p.branch_code")
     frames: list[pd.DataFrame] = []
     for label, start, end in periods:
         cutoff_str = end.isoformat()
@@ -473,6 +545,7 @@ def fetch_renewal_by_dim(
     periods: list,
     dim_keys: list[str],
     level: str = "org",
+    renewal_parquet: str | None = None,
 ) -> pd.DataFrame:
     """各维度续保率序列（从 renewal_tracker 聚合）。
 
@@ -501,6 +574,7 @@ def fetch_renewal_by_dim(
     }
 
     pred, pp = _org_pred(level, org)
+    rp = renewal_parquet or RENEWAL_PARQUET
     frames: list[pd.DataFrame] = []
     for label, _start, end in periods:
         year_start = date(end.year, 1, 1)
@@ -516,7 +590,7 @@ def fetch_renewal_by_dim(
               100.0 * COUNT(DISTINCT CASE WHEN is_renewed=true AND renewed_date <= ?
                                           THEN vehicle_frame_no END)
                     / NULLIF(COUNT(DISTINCT vehicle_frame_no), 0) AS renewal_rate_pct
-            FROM read_parquet('{RENEWAL_PARQUET}')
+            FROM read_parquet('{rp}')
             WHERE {pred}
               AND expected_expiry_date >= DATE '{year_start.isoformat()}'
               AND expected_expiry_date <= ?
@@ -554,6 +628,7 @@ def fetch_org_cross_data(
     year: int,
     level: str = "org",
     extra_dims: dict | None = None,
+    claims_glob: str | None = None,
 ) -> pd.DataFrame:
     """org-weekly 维度交叉下钻数据（5 YTD 窗口 × N 维互相交叉）。
 
@@ -594,6 +669,7 @@ def fetch_org_cross_data(
             extra_fields=base_extra,
             cutoff=cutoff_str,
             where_clause=where_clause,
+            claims_glob=claims_glob or CLAIMS_GLOB,
         )
         # 临时物化 policy_exposure（复用 multi_dim_periods_query 模式）
         temp = f"_org_cross_{abs(hash((label, cutoff_str))) % 10**9}"
@@ -660,7 +736,7 @@ def fetch_org_team_cross_data(
         sec_dims.update(extra_dims)  # 分公司层加 org3
 
     st_plan_pred, st_plan_pp = _org_pred(level, org, col="organization")
-    pol_pred, pol_pp = _org_pred(level, org, col="p.org_level_3")
+    pol_pred, pol_pp = _org_pred(level, org, col="p.org_level_3" if level == "org" else "p.branch_code")
     raw_cols = ["customer_category", "insurance_type", "coverage_combination",
                 "is_nev", "is_new_car", "is_transfer", "is_renewal", "org_level_3"]
     cols_sel = ", ".join(raw_cols)

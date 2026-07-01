@@ -63,7 +63,7 @@ import pandas as pd  # noqa: E402
 from lib import (  # noqa: E402
     auto_cutoff, make_weekly_windows,
     render_threshold_card, render_page,
-    fetch_standard_window,
+    fetch_standard_window, claims_glob_for_branch, renewal_parquet_for_branch,
     fetch_plan_completion, fetch_renewal_rate, fetch_premium_growth,
     fetch_household_share, fetch_cross_sell_completion,
     fetch_team_salesman_periods,
@@ -73,6 +73,40 @@ from lib import (  # noqa: E402
     multi_dim_periods_query, build_all_drill_pages,
 )
 from sections import SECTIONS  # noqa: E402
+
+
+BRANCH_NAME_TO_CODE: dict[str, str] = {
+    "四川分公司": "SC",
+    "山西分公司": "SX",
+    "四川": "SC",
+    "山西": "SX",
+}
+
+
+def _resolve_branch_code(org: str | None) -> str | None:
+    if not org:
+        return None
+    raw = org.strip()
+    if not raw:
+        return None
+    up = raw.upper()
+    if len(up) == 2 and up in {"SC", "SX"}:
+        return up
+    return BRANCH_NAME_TO_CODE.get(raw)
+
+
+def _parse_skip_sections(raw: str | None, level: str) -> set[str]:
+    """解析 --skip-sections 为当前层 section id 集合。
+
+    branch 层业务员段被三级机构（org3）替代，故 salesman 自动映射为 org3。
+    """
+    if not raw:
+        return set()
+    ids = {x.strip() for x in raw.split(",") if x.strip()}
+    if level == "branch" and "salesman" in ids:
+        ids.discard("salesman")
+        ids.add("org3")
+    return ids
 
 
 # v1.19：参与 GROUPING SETS 的 7 维（客户类别 + 6 业务属性）。
@@ -88,7 +122,8 @@ DRILL_DIMS = [
 def main() -> int:
     ap = argparse.ArgumentParser(description="经营诊断周报（板块化主入口）— 支持三级机构 / 分公司两级")
     ap.add_argument("--org", default=None,
-                    help="三级机构名（level=org 必填）；level=branch 时为分公司展示名，默认「分公司」，不进 SQL 过滤")
+                    help="三级机构名（level=org 必填）；level=branch 可传分公司名，如「山西分公司」/「四川分公司」，" 
+                         "或代码 SC/SX（不传则聚合全部）")
     ap.add_argument("--level", default="org", choices=["org", "branch"],
                     help="org=三级机构层（默认，按 org_level_3 过滤）；"
                          "branch=分公司层（聚合全部三级机构，团队→Top20、业务员→三级机构维度）")
@@ -101,9 +136,20 @@ def main() -> int:
                     choices=["legacy", "v1", "v3", "v4", "all"],
                     help="渲染模式：all=DPT三视图全部(默认，产出 cockpit+narrative+table)；"
                          "v1=驾驶舱；v3=叙事周报；v4=超表；legacy=旧版SPA卡片")
+    ap.add_argument("--skip-sections", default=None,
+                    help="跳过的板块 id（逗号分隔，如 team,org3）；"
+                         "branch 层 salesman 自动映射为 org3（业务员段的分支替身）")
     args = ap.parse_args()
 
     is_branch = args.level == "branch"
+    branch_code = _resolve_branch_code(args.org) if is_branch else None
+    skip_secs = _parse_skip_sections(args.skip_sections, "branch" if is_branch else "org")
+    args.skip_sections = skip_secs  # 覆盖为 set，供渲染层 getattr 读
+    # 山西赔案物理隔离在 validation/SX（未并入主 claims 库）；按 branch_code 切 claims glob，
+    # 否则 SX 报告赔付率/出险率分子为 0（失真）。
+    claims_glob = claims_glob_for_branch(branch_code)
+    renewal_parquet = renewal_parquet_for_branch(branch_code)
+
     if not args.org:
         if is_branch:
             args.org = "分公司"  # 分公司层展示名（不进 SQL 过滤）
@@ -113,9 +159,17 @@ def main() -> int:
     con = duckdb.connect()
 
     if not args.cutoff:
-        cutoff_where = (f"YEAR({args.time_field})={args.year}" if is_branch
-                        else f"org_level_3=? AND YEAR({args.time_field})={args.year}")
-        cutoff_params = [] if is_branch else [args.org]
+        if is_branch:
+            if branch_code:
+                cutoff_where = f"YEAR({args.time_field})={args.year} AND branch_code=?"
+                cutoff_params = [branch_code]
+            else:
+                cutoff_where = f"YEAR({args.time_field})={args.year}"
+                cutoff_params = []
+        else:
+            cutoff_where = f"org_level_3=? AND YEAR({args.time_field})={args.year}"
+            cutoff_params = [args.org]
+
         args.cutoff = auto_cutoff(con, cutoff_where, cutoff_params)
         if not args.cutoff:
             print("未找到数据", file=sys.stderr); return 1
@@ -123,7 +177,10 @@ def main() -> int:
     cutoff_date = date.fromisoformat(args.cutoff)
     口径名 = "起保口径" if args.time_field == "insurance_start_date" else "签单口径"
     层名 = "分公司（全部三级机构）" if is_branch else "三级机构"
-    print(f">> {层名}：{args.org}  {args.year} 年  {口径名}  截止 {args.cutoff}")
+    if is_branch and branch_code and args.org != branch_code:
+        print(f">> {层名}：{args.org}（{branch_code}） {args.year} 年  {口径名}  截止 {args.cutoff}")
+    else:
+        print(f">> {层名}：{args.org}  {args.year} 年  {口径名}  截止 {args.cutoff}")
 
     windows = make_weekly_windows(cutoff_date)
     time_labels = [f"{label} {end.strftime('%m-%d')}" for label, _, end in windows]
@@ -133,7 +190,7 @@ def main() -> int:
     print(">> 取数中...")
     standard_rows = []
     for label, start, end in windows:
-        row = fetch_standard_window(con, args.org, args.time_field, start, end, level=args.level)
+        row = fetch_standard_window(con, args.org, args.time_field, start, end, level=args.level, claims_glob=claims_glob)
         standard_rows.append(row)
         n = int(row["policy_count"]) if row is not None else 0
         print(f"   {label}（{start}~{end}）：{n:,} 张保单")
@@ -145,7 +202,7 @@ def main() -> int:
         ({
             **dict(row),
             "plan_completion_pct":       fetch_plan_completion(con, args.org, args.time_field, s, e, level=args.level),
-            "renewal_rate_pct":          fetch_renewal_rate(con, args.org, e, level=args.level),
+            "renewal_rate_pct":          fetch_renewal_rate(con, args.org, e, level=args.level, renewal_parquet=renewal_parquet),
             "premium_growth_pct":        fetch_premium_growth(con, args.org, args.time_field, s, e, level=args.level),
             "household_share_pct":       fetch_household_share(con, args.org, args.time_field, s, e, level=args.level),
             "cross_sell_completion_pct": fetch_cross_sell_completion(con, args.org, e, level=args.level),
@@ -158,13 +215,17 @@ def main() -> int:
 
     # 下钻维度：分公司层用 org_level_3 替代 salesman（salesman 走 team 那条独立路径不产）。
     # org_level_3 是纯 policy 列，天然走 multi_dim_periods_query。
-    drill_dims = list(DRILL_DIMS) + (["org_level_3"] if is_branch else [])
+    drill_dims = list(DRILL_DIMS) + (["org_level_3"] if (is_branch and "org3" not in skip_secs) else [])
 
     # v1.19：取多维下钻数据（5 窗 × N 维），供业务属性 sections + 下钻页生成器共享
     print(f">> 取多维下钻数据（5 窗 × {len(drill_dims)} 维）...")
     if is_branch:
-        where_clause = f"YEAR({args.time_field}) = ?"
-        params = [args.year]
+        if branch_code:
+            where_clause = f"YEAR({args.time_field}) = ? AND branch_code=?"
+            params = [args.year, branch_code]
+        else:
+            where_clause = f"YEAR({args.time_field}) = ?"
+            params = [args.year]
     else:
         where_clause = f"org_level_3 = ? AND YEAR({args.time_field}) = ?"
         params = [args.org, args.year]
@@ -175,6 +236,7 @@ def main() -> int:
         periods=windows,
         dim_keys=drill_dims,
         time_field=args.time_field,
+        claims_glob=claims_glob,
     )
     # team 维度走独立派生查询（JOIN plan.parquet level='salesman' 派生归属）。
     # 分公司层：仅 team（Top20 按签单保费 YTD）；三级机构层：team + salesman。
@@ -182,12 +244,18 @@ def main() -> int:
     ts_df = fetch_team_salesman_periods(con, args.org, args.time_field, windows, args.year,
                                         level=args.level, top_n=(20 if is_branch else None))
     if ts_df is not None and not ts_df.empty:
-        drill_long_df = pd.concat([drill_long_df, ts_df], ignore_index=True)
+        _ts_skip = {d for d in ("team", "salesman") if d in skip_secs}
+        if _ts_skip:
+            ts_df = ts_df[~ts_df["dim_key"].isin(_ts_skip)]
+        if not ts_df.empty:
+            drill_long_df = pd.concat([drill_long_df, ts_df], ignore_index=True)
     print(f"   长表 shape: {drill_long_df.shape}")
 
     # A2. 合并维度增长率序列（team 单独路径暂 None）
     print(">> 计算维度增长率序列...")
-    all_drill_dim_keys = drill_dims + (["team"] if is_branch else ["team", "salesman"])
+    _extra_ts_dims = ["team"] if is_branch else ["team", "salesman"]
+    _extra_ts_dims = [d for d in _extra_ts_dims if d not in skip_secs]
+    all_drill_dim_keys = drill_dims + _extra_ts_dims
     growth_df = fetch_dim_growth_rates(con, args.org, args.time_field, windows, args.year, drill_dims, level=args.level)
     if not growth_df.empty:
         drill_long_df = drill_long_df.merge(
@@ -200,7 +268,7 @@ def main() -> int:
 
     # A3. 合并维度续保率序列
     print(">> 计算维度续保率序列...")
-    renewal_dim_df = fetch_renewal_by_dim(con, args.org, windows, all_drill_dim_keys, level=args.level)
+    renewal_dim_df = fetch_renewal_by_dim(con, args.org, windows, all_drill_dim_keys, level=args.level, renewal_parquet=renewal_parquet)
     if not renewal_dim_df.empty:
         # renewal_by_dim 的 dim_value 对 team 维度是原始 team_name，需与 drill_long_df 对齐
         drill_long_df = drill_long_df.merge(
@@ -241,11 +309,11 @@ def main() -> int:
     # A5. 交叉下钻数据（7 维互相交叉，用于 V1/V4 drill panel）
     print(">> 计算维度交叉下钻数据（N 维 × 5 窗）...")
     # 分公司层把 org_level_3 加进交叉维，使「三级机构」可下钻到其他所有业务维度。
-    cross_extra_dims = {"org3": ("org_level_3", "org_level_3")} if is_branch else None
+    cross_extra_dims = {"org3": ("org_level_3", "org_level_3")} if (is_branch and "org3" not in skip_secs) else None
     cross_df = fetch_org_cross_data(con, args.org, args.time_field, windows, args.year,
-                                    level=args.level, extra_dims=cross_extra_dims)
+                                    level=args.level, extra_dims=cross_extra_dims, claims_glob=claims_glob)
     # 分公司层：补 team（Top20）作主维的交叉数据 → Top20 团队可下钻全部业务维 + 三级机构。
-    if is_branch:
+    if is_branch and "team" not in skip_secs:
         ytd_label = windows[-1][0]
         top_teams = set(
             drill_long_df[(drill_long_df["dim_key"] == "team") &

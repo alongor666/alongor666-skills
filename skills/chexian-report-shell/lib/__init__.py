@@ -43,6 +43,8 @@ from .queries import (
     DIM_EXPR, PRICE_BUCKETS, POLICY_GLOB, CLAIMS_GLOB,
 )
 from .report_queries import (
+    claims_glob_for_branch,
+    renewal_parquet_for_branch,
     fetch_standard_window, fetch_household_share, fetch_premium_growth,
     fetch_renewal_rate, fetch_cross_sell_completion, fetch_plan_completion,
     fetch_team_salesman_periods,
@@ -114,6 +116,8 @@ __all__ = [
     "standard_query", "auto_cutoff", "build_base_cte", "register_udfs",
     "make_weekly_windows",
     "DIM_EXPR", "PRICE_BUCKETS", "POLICY_GLOB", "CLAIMS_GLOB",
+    "claims_glob_for_branch",
+    "renewal_parquet_for_branch",
     "fetch_standard_window", "fetch_household_share", "fetch_premium_growth",
     "fetch_renewal_rate", "fetch_cross_sell_completion", "fetch_plan_completion",
     "fetch_team_salesman_periods",
